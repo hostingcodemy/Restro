@@ -3,6 +3,7 @@ import DataTable from "react-data-table-component";
 import DataTableSettings from "../../../helpers/DataTableSettings";
 import { Form, Button, InputGroup, Container } from "react-bootstrap";
 import { MdDeleteForever } from "react-icons/md";
+import Select from 'react-select';
 import {
     FaRegEdit,
     FaRegFile,
