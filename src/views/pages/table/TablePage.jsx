@@ -21,6 +21,7 @@ import { MdOutlineTableRestaurant } from "react-icons/md";
 import { MdOutlineTableBar } from "react-icons/md";
 import { GrDirections } from "react-icons/gr";
 import { LuType } from "react-icons/lu";
+import { IoLayersOutline } from "react-icons/io5";
 
 const TablePage = () => {
 
@@ -67,6 +68,7 @@ const TablePage = () => {
         type: "",
         serial: "",
         tableShapes: "",
+        section: "",
         openTable: false,
         isActive: false,
     }
@@ -200,7 +202,8 @@ const TablePage = () => {
             tableLocation: row.tableLocation,
             tableStatus: row.tableStatus,
             openTable: row.openTable,
-            isActive: row.isActive
+            isActive: row.isActive,
+            section: row.section
         });
         setShow(true);
     };
@@ -337,19 +340,24 @@ const TablePage = () => {
             type: formValues.type,
             isActive: formValues.isActive,
             serial: formValues.serial,
+            section: formValues.section,
             tableShapes: formValues.tableShapes,
             openTable: formValues.openTable
         };
-        console.log(payload, 'kk');
+
 
         try {
             let res;
             if (isEditMode) {
                 res = await api.put(`/tables/${formValues.tableId}`, payload);
+   fetchTableData();
             } else {
                 res = await api.post("/tables", payload);
             }
-            setFormValues(initialValues);
+
+            handleClose();
+         
+
             toast.success(res.data.successMessage || "Success!", {
                 position: "top-right",
                 autoClose: 3000,
@@ -359,9 +367,7 @@ const TablePage = () => {
                 draggable: true,
                 progress: undefined,
             });
-            setTimeout(() => {
-                navigate("/tables");
-            }, 3000);
+
         } catch (error) {
             console.error("API Error:", error);
             toast.error("Something went wrong! Please try again.", {
@@ -381,7 +387,7 @@ const TablePage = () => {
 
     return (
         <>
-         <ToastContainer />
+            <ToastContainer />
             {confirmOpen && (
                 <div
                     className="modal fade show"
@@ -434,32 +440,32 @@ const TablePage = () => {
                     </div>
                 </div>
             )}
-          {loading ? (
+            {loading ? (
                 <div className="d-flex justify-content-center" style={{ marginTop: '20%' }}>
-                  <Spinner animation="grow" variant="secondary" size="sm" />
-                  <Spinner animation="grow" variant="warning" />
-                  <Spinner animation="grow" variant="secondary" size="sm" />
-                  <Spinner animation="grow" variant="warning" />
+                    <Spinner animation="grow" variant="secondary" size="sm" />
+                    <Spinner animation="grow" variant="warning" />
+                    <Spinner animation="grow" variant="secondary" size="sm" />
+                    <Spinner animation="grow" variant="warning" />
                 </div>
-              ) : (
+            ) : (
                 <div className='d-flex'>
-                  <div className='p-3' style={{ width: "100vw" }}>
-                    <DataTable
-                      className='DataTable'
-                      columns={columns}
-                      data={DataTableSettings.filterItems(tableData, searchParam, filterText)}
-                      pagination
-                      paginationPerPage={DataTableSettings.paginationPerPage}
-                      paginationRowsPerPageOptions={DataTableSettings.paginationRowsPerPageOptions}
-                      progressPending={loadingIndicator}
-                      subHeader
-                      fixedHeaderScrollHeight="400px"
-                      subHeaderComponent={subHeaderComponentMemo}
-                      persistTableHead
-                    />
-                  </div>
+                    <div className='p-3' style={{ width: "100vw" }}>
+                        <DataTable
+                            className='DataTable'
+                            columns={columns}
+                            data={DataTableSettings.filterItems(tableData, searchParam, filterText)}
+                            pagination
+                            paginationPerPage={DataTableSettings.paginationPerPage}
+                            paginationRowsPerPageOptions={DataTableSettings.paginationRowsPerPageOptions}
+                            progressPending={loadingIndicator}
+                            subHeader
+                            fixedHeaderScrollHeight="400px"
+                            subHeaderComponent={subHeaderComponentMemo}
+                            persistTableHead
+                        />
+                    </div>
                 </div>
-              )}
+            )}
 
             <Offcanvas
                 show={show}
@@ -569,7 +575,7 @@ const TablePage = () => {
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
-                                        <GrDirections  size={24} color='#ffc800' />
+                                        <GrDirections size={24} color='#ffc800' />
                                     </InputGroup.Text>
                                     <Form.Control
                                         name="Direction"
@@ -610,7 +616,7 @@ const TablePage = () => {
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
-                                        <MdFormatListNumberedRtl  size={24} color='#ffc800' />
+                                        <MdFormatListNumberedRtl size={24} color='#ffc800' />
                                     </InputGroup.Text>
                                     <Form.Control
                                         name="Direction"
@@ -627,46 +633,23 @@ const TablePage = () => {
 
                             </Col>
                             <Col md={6}>
-                                <InputGroup className="mb-4">
-                                    <InputGroup.Text id="openTable">
-                                        <TbHandClick size={25} color="#ffc800" />
+                                <InputGroup hasValidation className="mb-4">
+                                    <InputGroup.Text>
+                                        <IoLayersOutline size={24} color='#ffc800' />
                                     </InputGroup.Text>
-                                    <Form.Check
-                                        type="checkbox"
-                                        id="custom-checkbox"
-                                        label="openTable"
-                                        name="openTable"
-
-                                        className="ms-3"
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            fontSize: '1rem',
-                                        }}
-                                        custom="true"
-                                    >
-                                        <Form.Check.Input
-                                              className="custom-yellow-checkbox"
-                                            type="checkbox"
-                                            onChange={(e) =>
-                                                setFormValues({ ...formValues, openTable: e.target.checked })
-                                            }
-                                            checked={formValues.openTable}
-                                            style={{
-                                                width: "20px",
-                                                height: "20px",
-                                                cursor: "pointer",
-                                                marginRight: "8px",
-                                            }}
-                                        />
-                                        <Form.Check.Label htmlFor="custom-checkbox">
-                                            Open Table
-                                        </Form.Check.Label>
-                                    </Form.Check>
+                                    <Form.Control
+                                        name="Direction"
+                                        value={formValues.section || ""}
+                                        onChange={(e) =>
+                                            setFormValues({ ...formValues, section: e.target.value })
+                                        }
+                                        placeholder="Enter Section"
+                                        aria-label="capacity"
+                                        isInvalid={!!errors.section}
+                                        isValid={formValues.section && !errors.section}
+                                    />
                                 </InputGroup>
-
                             </Col>
-
                         </Row>
 
                         <Row>
@@ -710,7 +693,7 @@ const TablePage = () => {
                                         custom="true"
                                     >
                                         <Form.Check.Input
-                                              className="custom-yellow-checkbox"
+                                            className="custom-yellow-checkbox"
                                             type="checkbox"
                                             onChange={(e) =>
                                                 setFormValues({ ...formValues, isActive: e.target.checked })

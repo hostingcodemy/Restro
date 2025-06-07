@@ -40,15 +40,19 @@ const ChannelOutlet = () => {
 
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    let timeout;
+    const cycleImages = () => {
       setFade(false);
-      setTimeout(() => {
+      timeout = setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % banner.length);
         setFade(true);
+        timeout = setTimeout(cycleImages, 4500);
       }, 500);
-    }, 5000);
+    };
 
-    return () => clearInterval(interval);
+    cycleImages();
+
+    return () => clearTimeout(timeout);
   }, []);
 
   const handleChange = (name, value) => {
@@ -260,10 +264,15 @@ const ChannelOutlet = () => {
       <div className='row main-img-div' >
         <div className="col-md-9 rounded h-100" >
           <img
-            style={{ height: "100%", width: "100%" }}
+            style={{
+              height: "100%",
+              width: "100%",
+              transition: "opacity 0.5s ease",
+              opacity: fade ? 1 : 0
+            }}
             src={banner[currentIndex]}
             alt=""
-            className={` rounded ${fade ? 'fade-in' : 'fade-out'}`}
+            className="rounded"
           />
         </div>
         <div className="col-md-3 d-flex align-items-end justify-content-center"
@@ -281,7 +290,7 @@ const ChannelOutlet = () => {
                   </InputGroup.Text>
                   <Form.Control
                     type="text"
-
+         className={`custom-input `}
                     required
                     placeholder="Channel Name"
                     isInvalid={!!errors.channel_name}
@@ -289,7 +298,7 @@ const ChannelOutlet = () => {
 
                     name="channel_name"
                     value={formValues.channel_name || ""}
-                    className={errors.channel_name ? 'input-error' : ''}
+ 
                     onChange={(e) =>
                       handleChange("channel_name", e.target.value.replace(/[^a-zA-Z ]/g, ""))
                     }
@@ -301,10 +310,11 @@ const ChannelOutlet = () => {
                     <BsTelephone size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
                     type="tel"
                     name="channel_phone"
                     value={formValues.channel_phone || ""}
-                    className={errors.channel_phone ? 'input-error' : ''}
+
                     onChange={(e) => {
                       if (/^\d*$/.test(e.target.value)) handleChange("channel_phone", e.target.value);
                     }}
@@ -324,6 +334,7 @@ const ChannelOutlet = () => {
                     <MdOutlineMailOutline size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
                     type="mail"
                     name="channel_email"
                     value={formValues.channel_email || ""}
@@ -342,6 +353,7 @@ const ChannelOutlet = () => {
                     <IoLocationOutline size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
                     type="text"
                     name="channel_address"
                     value={formValues.channel_address || ""}
@@ -361,6 +373,7 @@ const ChannelOutlet = () => {
                     <FaRegAddressCard size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
                     type="text"
 
                     name="channel_pan"
@@ -383,6 +396,7 @@ const ChannelOutlet = () => {
                     <TbTax size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
                     type="text"
 
                     name="channel_gstNo"
@@ -421,6 +435,7 @@ const ChannelOutlet = () => {
                     <GrChannel size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
                     type="text"
 
                     required
@@ -446,6 +461,7 @@ const ChannelOutlet = () => {
                     <GrChannel size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
 
                     type="text"
                     placeholder='Outlet Sac Code'
@@ -469,6 +485,7 @@ const ChannelOutlet = () => {
                     <BsTelephone size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
 
                     type="phone"
                     placeholder='Outlet Phone Number'
@@ -490,6 +507,7 @@ const ChannelOutlet = () => {
                     <MdOutlineMailOutline size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
+                           className={`custom-input `}
 
                     type="email"
                     placeholder='Outlet Email'

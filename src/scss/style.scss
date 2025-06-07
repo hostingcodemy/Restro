@@ -7,12 +7,18 @@ body {
   // background-color: var(--cui-tertiary-bg);
 }
 
-.custom-canvas{
+.custom-canvas {
   width: 700px !important;
 }
 
 .react-datepicker__input-container input {
-    width: 270px; /* apply desired width */
+  width: 270px;
+  /* apply desired width */
+}
+
+.primaryColor {
+  color: #ffc300;
+  
 }
 
 .custom-yellow-checkbox {
@@ -698,7 +704,7 @@ h5 {
   border: 0.01rem solid #ffe0c1;
   padding: 0.1rem 0.5rem;
   border-radius: 1rem;
-  font-weight: 300;
+  font-weight: 500;
   box-shadow: 1px 1px 8px 0.5px #f2ece6;
   transition: all ease-in-out 0.4s;
 }
@@ -2829,12 +2835,11 @@ h5 {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
 }
 
 .rightTop {
   height: 6%;
-  // background-color: rgb(0, 76, 255);
+  // background-color: rgb(245, 245, 245);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -2894,13 +2899,13 @@ h5 {
 }
 
 .btmTop {
-  height: 93%;
+  height: 100%;
   overflow: hidden;
   position: relative;
 }
 
 .movableArea {
-  /* background-color: #ffc107a8; */
+
   width: 300%;
   height: 500px;
   position: absolute;
@@ -2920,15 +2925,6 @@ h5 {
 //   font-weight: bold;
 // } */
 
-
-
-.btmBtm {
-  height: 7%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 0.3rem;
-}
 
 // .textTablests {
 //   cursor: pointer;
@@ -3933,26 +3929,26 @@ h5 {
 //   left: 71%;
 // }
 
-// .chair-modal-overlay {
-//   position: fixed;
-//   inset: 0;
-//   height: 100vh;
-//   width: 100vw;
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-//   z-index: 5000;
-//   backdrop-filter: blur(3px);
-// }
+.chair-modal-overlay {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+  backdrop-filter: blur(3px);
+}
 
-// .chair-modal-content {
-//   background: white;
-//   padding: 2rem;
-//   border-radius: 20px;
-//   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-//   animation: scaleIn 0.35s ease-out;
-//   transform-origin: center;
-// }
+.chair-modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: scaleIn 0.35s ease-out;
+  transform-origin: center;
+}
 
 // @keyframes scaleIn {
 //   0% {
@@ -3966,70 +3962,75 @@ h5 {
 //   }
 // }
 
-// .modal-input-group {
-//   display: flex;
-//   align-items: center;
-//   gap: 0.5rem;
-//   margin-bottom: 1.5rem;
-// }
+.modal-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
 
-// .step-btn {
-//   background-color: #f4f4f4;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   padding: 0.2rem 0.75rem;
-//   font-size: 1rem;
-//   border-radius: 0.5rem;
-//   box-shadow: 1px 1px 10px rgb(188, 188, 188);
-// }
+.step-btn {
+  background-color: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 1px 1px 10px rgb(188, 188, 188);
+}
 
-// .step-btn:hover {
-//   background-color: #e2e8f0;
-// }
+.step-btn:hover {
+  background-color: #e2e8f0;
+}
 
-// .modal-input {
-//   flex: 1;
-//   width: 2.5rem;
-//   padding: 0.25rem;
-//   font-size: 1.2rem;
-//   text-align: center;
-//   border-radius: 10px;
-//   border: 1px solid #ccc;
-// }
+.modal-input {
+  flex: 1;
+  width: 2.5rem;
+  padding: 0.25rem;
+  font-size: 1.2rem;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #ccc;
 
-// .modal-actions {
-//   display: flex;
-//   justify-content: flex-end;
-//   gap: 0.75rem;
-// }
+}
 
-// .modal-btn {
-//   padding: 0.3rem 1.2rem;
-//   border-radius: 1rem;
-//   font-weight: 500;
-//   cursor: pointer;
-//   transition: background-color 0.3s ease;
-// }
+.modal-input:focus{
+  outline: none;
+}
 
-// .modal-btn.cancel {
-//   background-color: #e2e8f0;
-//   color: #333;
-// }
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
 
-// .modal-btn.cancel:hover {
-//   background-color: #cbd5e1;
-// }
+.modal-btn {
+  padding: 0.3rem 1.2rem;
+  border-radius: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
 
-// .modal-btn.confirm {
-//   background-color: #f4f4f4;
-//   box-shadow: 1px 1px 10px rgb(203, 203, 203);
-//   color: black;
-// }
+.modal-btn.cancel {
+  background-color: #e2e8f0;
+  color: #333;
+}
 
-// .modal-btn.confirm:hover {
-//   background-color: #2563eb;
-// }
+.modal-btn.cancel:hover {
+  background-color: #cbd5e1;
+}
+
+.modal-btn.confirm {
+  background-color: #f4f4f4;
+  box-shadow: 1px 1px 10px rgb(203, 203, 203);
+  color: black;
+}
+
+.modal-btn.confirm:hover {
+  background-color: #2563eb;
+}
 
 
 
@@ -4374,6 +4375,10 @@ h5 {
   width: 800px !important;
 }
 
+.custom-offcanvass {
+  width: 1200px !important;
+}
+
 .custom-datepicker {
   width: 315px;
 }
@@ -4642,6 +4647,197 @@ h5 {
   background-color: #ffe7e7;
   font-weight: 600;
 }
+
+.transfer-toggle-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.transfer-toggle {
+  position: relative;
+  width: 13rem;
+  display: flex;
+  background: #fafafa;
+  border-radius: 50px;
+  overflow: hidden;
+  box-shadow: 1px 1px 8px 0.5px #f2ece6;
+  border: 0.01rem solid #ffe0c1;
+  font-size: 0.9rem;
+}
+
+.toggle-option {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #555;
+  z-index: 2;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.toggle-option.active {
+  color: #fff;
+}
+
+.slider {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: #ffc800;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.slider.item {
+  left: 50%;
+}
+
+
+.custom-select:focus {
+  border-color: #ffc800 !important;
+  box-shadow: 0 0 0 0.2rem rgba(255, 200, 0, 0.25);
+}
+
+.custom-offcanvasConversion {
+  width: 400px !important;
+}
+
+.toggle-button {
+  width: 60px;
+  height: 30px;
+  border-radius: 30px;
+  background-color: #f8f9fa;
+  overflow: hidden;
+}
+
+.toggle-circle {
+  width: 24px;
+  height: 24px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: left 0.3s ease;
+}
+
+.toggle-circle.left {
+  left: 4px;
+}
+
+.toggle-circle.right {
+  left: 32px;
+}
+
+
+/* Trigger Button */
+.sidebar-trigger {
+  cursor: pointer;
+  padding: 0.5rem;
+  background-color: #fafafa;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Overlay (Backdrop) */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  // background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+  z-index: 1040;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+
+.sidebar-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 50%;
+  max-width: 100%;
+  background-color: #ffffff;
+  z-index: 1050;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Open State */
+.sidebar-panel.open {
+  transform: translateX(0%);
+}
+
+/* Responsive Widths */
+@media (min-width: 768px) {
+  .sidebar-panel {
+    width: 400px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .sidebar-panel {
+    width: 200px;
+  }
+}
+
+/* Header */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Content */
+.sidebar-content {
+  padding: 1rem;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+/* Close Button */
+.close-btn {
+  font-size: 1.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #ffc300;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 
 
 // configuration all table styles end

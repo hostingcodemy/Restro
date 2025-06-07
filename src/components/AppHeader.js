@@ -31,13 +31,15 @@ import { PiBowlFoodThin } from "react-icons/pi";
 import { PiGlobeThin } from "react-icons/pi";
 import { CiDeliveryTruck } from "react-icons/ci";
 import { PiHandshakeThin } from "react-icons/pi";
-
+import { PiSealPercentThin } from "react-icons/pi";
+import { LuMessagesSquare } from "react-icons/lu";
 
 const AppHeader = ({ sidebarShow, setSidebarShow }) => {
 
   const location = useLocation();
-  const headerRef = useRef()
-  const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  const headerRef = useRef();
+  // const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
+  // const { colorMode, setColorMode } = useColorModes('light');
 
   const isTablePage = location.pathname === "/table-reservations";
 
@@ -67,7 +69,9 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
     '/departments': 'Department',
     '/employee-types': 'Employee Type',
     '/employees': 'Employee',
-    '/table-reservations' : 'Table Layout'
+    '/table-reservations': 'Table Layout',
+    '/facility-status': 'Facility Status',
+    '/table-reservations': 'Table Layout'
   };
 
   const currentPath = location.pathname
@@ -78,172 +82,201 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
       <CContainer className="border-bottom px-4" fluid>
         <div className='d-flex gap-2 align-items-center'>
 
-        <CHeaderToggler
-          onClick={() => setSidebarShow(!sidebarShow)}
-          style={{ marginInlineStart: '-14px' }}
-        >
-          <CIcon icon={cilMenu} size="lg" />
-        </CHeaderToggler>
+          <CHeaderToggler
+            onClick={() => setSidebarShow(!sidebarShow)}
+            style={{ marginInlineStart: '-14px' }}
+          >
+            <CIcon icon={cilMenu} size="lg" />
+          </CHeaderToggler>
 
-        <CHeaderNav className="d-none d-md-flex">
-          <CNavItem className='d-flex align-items-center gap-5'>
-            <CNavLink to="#" className="fw-bold">
-              {pageTitle}
-            </CNavLink>
-            <div className="d-flex gap-2 align-items-center"
-            >
-              {isTablePage ? (
-                <>
-                  <div className="d-flex gap-2 align-items-center ">
-                    <div
-                      className='tableReservationHeaderBtn d-flex align-items-center gap-1'
-                    >
-                      <PiInvoiceThin />
-                      Invoice Log
-                    </div>
-                    <div
-                      className='tableReservationHeaderBtn d-flex align-items-center gap-1'
-                    >
-                      <PiInvoiceThin />
-                      Kot Log
-                    </div>
-                  </div>
+          <CHeaderNav className="d-none d-md-flex">
+            <CNavItem className='d-flex align-items-center gap-5'>
+              <CNavLink to="#" className="fw-bold">
+                {pageTitle}
+              </CNavLink>
 
-                  <div className="d-flex gap-2 align-items-center">
-                    <div
-                      // style={{color:"#28A745"}}
-                      className=' tableReservationHeaderBtn d-flex align-items-center gap-1'
-
-                    >
-                      <IoAnalytics />
-                      Cost Analysis
-                    </div>
-                    <div
-                      // style={{color:"#28A745"}}
-                      className=' tableReservationHeaderBtn d-flex align-items-center gap-1'
-
-                    >
-                      <IoAnalytics />
-                      KOT Analysis
-                    </div>
-                  </div>
-
-                  <div className="d-flex gap-2 align-items-center">
-                    <div
-                      className=' tableReservationHeaderBtn d-flex align-items-center gap-1'
-
-                    >
-                      <PiPencilSimpleLineThin />
-                      Order Modification
-                    </div>
-                    <div
-                      className=' tableReservationHeaderBtn d-flex align-items-center gap-1'
-                    >
-                      <PiBowlFoodThin />
-                      KOT Modification
-                    </div>
-
-                  </div>
-
-                  <div className="d-flex gap-2 align-items-center">
-                    <div
-                      className=' tableReservationHeaderBtn d-flex align-items-center gap-1'
-
-                    >
-                      <PiHandshakeThin />
-                      Settlement
-                    </div>
-                    <div
-                      className=' tableReservationHeaderBtn d-flex align-items-center gap-1'
-
-                    >
-                      <CiDeliveryTruck />
-                      Dispatch
-                    </div>
-                    <div
-                      className=' tableReservationHeaderBtn d-flex align-items-center gap-1'
-                    >
-                      <PiGlobeThin />
-                      Online
-                    </div>
-                  </div>
-
-                  <div
-                    style={{ color: "orange" }}
-                    className='tableReservationHeaderBtn d-flex align-items-center gap-1'
-                  >
-                    Support Ticket
-                  </div>
-                </>
-              )
-                : ""}
-
-
-
-            </div>
-          </CNavItem>
-        </CHeaderNav>
+            </CNavItem>
+          </CHeaderNav>
 
         </div>
 
-   
 
-        <CHeaderNav>
+
+        <CHeaderNav className='d-flex gap-3'>
+          <div className="d-flex gap-3 align-items-center"
+          >
+            {isTablePage ? (
+              <>
+                <div className="d-flex gap-2 align-items-center ">
+                  <div
+                    className='tableHeaderButton d-flex align-items-center gap-1'
+                  >
+                    <PiInvoiceThin />
+                    Sales Analysis
+                  </div>
+
+                </div>
+
+                <div className="d-flex gap-2 align-items-center">
+                  <div
+                    // style={{color:"#28A745"}}
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+
+                  >
+                    <IoAnalytics />
+                    Cost Analysis
+                  </div>
+                  {/* <div
+                    // style={{color:"#28A745"}}
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+
+                  >
+                    <IoAnalytics />
+                    Order Analysis
+                  </div> */}
+                </div>
+
+                <div className="d-flex gap-2 align-items-center">
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+
+                  >
+                    <PiPencilSimpleLineThin />
+                    Order
+                  </div>
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+                  >
+                    <PiBowlFoodThin />
+                    Bill
+                  </div>
+
+                </div>
+
+
+                <div className="d-flex gap-2 align-items-center">
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+
+                  >
+                    <PiPencilSimpleLineThin />
+                    Order
+                  </div>
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+                  >
+                    <PiBowlFoodThin />
+                    Bill
+                  </div>
+
+                </div>
+
+
+                <div className="d-flex gap-2 align-items-center">
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+
+                  >
+                    <PiHandshakeThin />
+                    Settlement
+                  </div>
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+
+                  >
+                    <CiDeliveryTruck />
+                    Dispatch
+                  </div>
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+                  >
+                    <PiGlobeThin />
+                    Online
+                  </div>
+                </div>
+
+                <div
+                  style={{ color: "orange" }}
+                  className='tableHeaderButton d-flex align-items-center gap-1'
+                >
+                  Support Ticket
+                </div>
+              </>
+            )
+              : ""}
+          </div>
           <li className="nav-item py-1">
             <div className="vr h-100 mx-1 text-body text-opacity-75"></div>
           </li>
-     <CHeaderNav className="ms-auto">
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilBell} size="md" />
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilSettings} size="md" />
-            </CNavLink>
-          </CNavItem>
-        </CHeaderNav>
-          <CDropdown variant="nav-item" placement="bottom-end">
-            <CDropdownToggle caret={false}>
-              {colorMode === 'dark' ? (
-                <CIcon icon={cilMoon} size="md" />
-              ) : colorMode === 'auto' ? (
-                <CIcon icon={cilContrast} size="nd" />
-              ) : (
-                <CIcon icon={cilSun} size="md" />
-              )}
-            </CDropdownToggle>
-            <CDropdownMenu>
-              <CDropdownItem
-                active={colorMode === 'light'}
-                className="d-flex align-items-center"
-                as="button"
-                type="button"
-                onClick={() => setColorMode('light')}
-              >
-                <CIcon className="me-2" icon={cilSun} size="lg" /> Light
-              </CDropdownItem>
-              <CDropdownItem
-                active={colorMode === 'dark'}
-                className="d-flex align-items-center"
-                as="button"
-                type="button"
-                onClick={() => setColorMode('dark')}
-              >
-                <CIcon className="me-2" icon={cilMoon} size="lg" /> Dark
-              </CDropdownItem>
-              <CDropdownItem
-                active={colorMode === 'auto'}
-                className="d-flex align-items-center"
-                as="button"
-                type="button"
-                onClick={() => setColorMode('auto')}
-              >
-                <CIcon className="me-2" icon={cilContrast} size="lg" /> Auto
-              </CDropdownItem>
-            </CDropdownMenu>
-          </CDropdown>
+          <CHeaderNav className="ms-auto d-flex align-items-center">
+            <CNavItem>
+              <CNavLink href="#">
+                <CIcon icon={cilBell} size="md" />
+              </CNavLink>
+            </CNavItem>
+            {isTablePage ? (
+              <>
+                <CNavItem>
+                  <CNavLink href="#">
+                    <PiSealPercentThin size={19.5} />
+                  </CNavLink>
+
+                </CNavItem>
+                <CNavItem>
+                  <CNavLink href="#">
+                    <LuMessagesSquare size={19.5} />
+                  </CNavLink>
+
+                </CNavItem>
+
+              </>
+
+            ) : ""}
+
+            {/* <CDropdown variant="nav-item" placement="bottom-end">
+              <CDropdownToggle caret={false}>
+                {colorMode === 'dark' ? (
+                  <CIcon icon={cilMoon} size="md" />
+                ) : colorMode === 'auto' ? (
+                  <CIcon icon={cilContrast} size="nd" />
+                ) : (
+                  <CIcon icon={cilSun} size="md" />
+                )}
+              </CDropdownToggle>
+              <CDropdownMenu>
+                <CDropdownItem
+                  active={colorMode === 'light'}
+                  className="d-flex align-items-center"
+                  as="button"
+                  type="button"
+                  onClick={() => setColorMode('light')}
+                >
+                  <CIcon className="me-2" icon={cilSun} size="lg" /> Light
+                </CDropdownItem>
+                <CDropdownItem
+                  active={colorMode === 'dark'}
+                  className="d-flex align-items-center"
+                  as="button"
+                  type="button"
+                  onClick={() => setColorMode('dark')}
+                >
+                  <CIcon className="me-2" icon={cilMoon} size="lg" /> Dark
+                </CDropdownItem>
+                <CDropdownItem
+                  active={colorMode === 'auto'}
+                  className="d-flex align-items-center"
+                  as="button"
+                  type="button"
+                  onClick={() => setColorMode('auto')}
+                >
+                  <CIcon className="me-2" icon={cilContrast} size="lg" /> Auto
+                </CDropdownItem>
+              </CDropdownMenu>
+            </CDropdown> */}
+
+          </CHeaderNav>
+
+
           <li className="nav-item py-1">
             <div className="vr h-100 text-body text-opacity-75"></div>
           </li>

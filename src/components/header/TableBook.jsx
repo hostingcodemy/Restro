@@ -13,10 +13,34 @@ import { PiChairThin } from "react-icons/pi";
 import { RiArrowDownSFill } from "react-icons/ri";
 import { PiLayoutThin } from "react-icons/pi";
 import api from "../../config/AxiosInterceptor";
-// import 'src/index.scss';
-
+import Form from 'react-bootstrap/Form';
+import { FaPlus } from "react-icons/fa";
+import { PiHandshakeThin } from "react-icons/pi";
+import { MdOutlineSwitchAccount } from "react-icons/md";
+import { LiaWindowCloseSolid } from "react-icons/lia";
+import { PiMicrophoneThin } from "react-icons/pi";
+import { Spinner } from 'react-bootstrap';
+import { FaChair, FaUser, FaComments, FaHashtag } from "react-icons/fa";
+import { MdOutlineTableRestaurant } from "react-icons/md"
 
 const TableBook = () => {
+
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setLoading(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        document.body.style.overflow = isOpen ? "hidden" : "auto";
+    }, [isOpen]);
+
+    const [selected, setSelected] = useState("table");
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [selectionMode, setSelectionMode] = useState(false);
     const [showOrderModal, setShowOrderModal] = useState(false);
@@ -24,6 +48,7 @@ const TableBook = () => {
     const labels = ["Table Layout", "Floor Base", "Privilege Base"];
     const [labelIndex, setLabelIndex] = useState(0);
     const [selectedTables, setSelectedTables] = useState([]);
+    const [isToggled, setIsToggled] = useState(false);
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         tableName: "",
@@ -46,8 +71,18 @@ const TableBook = () => {
     const [dragEnabled, setDragEnabled] = useState(false);
     const [customizationMode, setCustomizationMode] = useState(null);
 
-    console.log(tableData);
+    // const openPanel = () => {
+    //     setShowPanel(true);
+    //     setIsClosing(false);
+    // };
 
+    // const closePanel = () => {
+    //     setIsClosing(true);
+    //     setTimeout(() => {
+    //         setShowPanel(false);
+    //         setIsClosing(false);
+    //     }, 300);
+    // };
 
 
     useEffect(() => {
@@ -58,20 +93,14 @@ const TableBook = () => {
     }, []);
 
 
-    // useEffect(() => {
-    //     if (fetchCalled.current) return;
-    //     fetchCalled.current = true;
-    //     fetchTableData();
-    // }, []);
 
     useEffect(() => {
-        const savedLayout = localStorage.getItem("tableLayout");
-        if (savedLayout) {
-            setTableData(JSON.parse(savedLayout));
-        } else {
+        
             fetchTableData();
-        }
+       
     }, []);
+
+
 
     const fetchTableData = async () => {
         try {
@@ -99,6 +128,8 @@ const TableBook = () => {
 
 
     const moveTable = (tableId, x, y) => {
+
+
         const updated = tableData.map((table) =>
             table.tableId === tableId ? { ...table, position: { x, y } } : table
         );
@@ -106,11 +137,7 @@ const TableBook = () => {
         localStorage.setItem("tableLayout", JSON.stringify(updated));
     };
 
-    const resetLayout = () => {
-        localStorage.removeItem("tableLayout");
-        fetchTableData();
-        setLayoutPos({ x: 0, y: 0 });
-    };
+
 
     const onDropChair = (chair, fromId, toId) => {
         setTableData((prev) =>
@@ -125,7 +152,11 @@ const TableBook = () => {
         );
     };
 
-
+    const resetLayout = () => {
+        localStorage.removeItem("tableLayout");
+        fetchTableData();
+        setLayoutPos({ x: 0, y: 0 });
+    };
 
 
     const handleMouseDown = (e) => {
@@ -222,34 +253,6 @@ const TableBook = () => {
 
     const [isAddChairMode, setIsAddChairMode] = useState(false);
 
-    // const handleAddChairs = (tableId, count) => {
-    //     setTableData(prev =>
-    //         prev.map(table =>
-    //             table.tableId === tableId
-    //                 ? {
-    //                     ...table,
-    //                     chairs: [
-    //                         ...table.chairs,
-    //                         ...Array.from({ length: count }, (_, i) => ({
-    //                             id: `chair-${Date.now()}-${i}`,
-    //                         })),
-    //                     ],
-    //                 }
-    //                 : table
-    //         )
-    //     );
-    // };
-
-
-    const chairBgColor = () => {
-        switch (tableData?.tableStatus) {
-            case "Available": return "#2bd65ec4";
-            case "Reserved": return "#ff000082";
-            case "Hold": return "#ffd209b1";
-            case "Occupied": return "#0073ff";
-            default: return "#ccc";
-        }
-    };
 
 
     const handleAddChairs = (tableId, count) => {
@@ -280,106 +283,173 @@ const TableBook = () => {
     return (
         <DndProvider backend={HTML5Backend}>
             {showAddTableModal && (
-                <div style={{
-                    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: "rgba(0,0,0,0.4)", display: "flex",
-                    alignItems: "center", justifyContent: "center", zIndex: 9999
-                }}>
-                    <div className="bg-white p-4 rounded shadow" style={{ width: "400px" }}>
-                        <h5 className="mb-3">Add Table Info</h5>
+                <div
+                    className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center fade-in"
+                    style={{ backgroundColor: "rgba(0, 0, 0, 0.4)", zIndex: 1050 }}
+                >
+                    <div className="bg-white rounded p-4 shadow-lg animate__animated animate__fadeIn"
+                        style={{ width: "100%", maxWidth: "400px" }}>
+                        <h5 className="mb-4 text-center">Add Table Info</h5>
 
-                        <div className="mb-2">
+                        <div className="mb-3">
                             <label className="form-label">Table Name</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={formData.tableName}
-                                onChange={(e) => setFormData({ ...formData, tableName: e.target.value })}
-                            />
+                            <div className="input-group">
+                                <span className="input-group-text"><MdOutlineTableRestaurant /></span>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    value={formData.tableName}
+                                    onChange={(e) => setFormData({ ...formData, tableName: e.target.value })}
+                                />
+                            </div>
                         </div>
 
-                        <div className="mb-2">
+                        <div className="mb-3">
                             <label className="form-label">Pax</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                value={formData.pax}
-                                onChange={(e) => setFormData({ ...formData, pax: e.target.value })}
-                            />
+                            <div className="input-group">
+                                <span className="input-group-text"><FaChair /></span>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    value={formData.pax}
+                                    onChange={(e) => setFormData({ ...formData, pax: e.target.value })}
+                                />
+                            </div>
                         </div>
 
-                        <div className="mb-2">
+                        <div className="mb-3">
                             <label className="form-label">Order Taker</label>
-                            <select
-                                className="form-select"
-                                value={formData.orderTaker}
-                                onChange={(e) => setFormData({ ...formData, orderTaker: e.target.value })}
-                            >
-                                <option value="">Select</option>
-                                <option value="John">John</option>
-                                <option value="Emily">Emily</option>
-                                <option value="Alex">Alex</option>
-                            </select>
+                            <div className="input-group">
+                                <span className="input-group-text"><FaUser /></span>
+                                <select
+                                    className="form-select"
+                                    value={formData.orderTaker}
+                                    onChange={(e) => setFormData({ ...formData, orderTaker: e.target.value })}
+                                >
+                                    <option value="">Select</option>
+                                    <option value="John">John</option>
+                                    <option value="Emily">Emily</option>
+                                    <option value="Alex">Alex</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">Remarks</label>
-                            <textarea
-                                className="form-control"
-                                rows="2"
-                                value={formData.remarks}
-                                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                            />
+                            <div className="input-group">
+                                <span className="input-group-text"><FaComments /></span>
+                                <textarea
+                                    className="form-control"
+                                    rows="2"
+                                    value={formData.remarks}
+                                    onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                                />
+                            </div>
                         </div>
 
                         <div className="d-flex justify-content-end gap-2">
-                            <button className="btn btn-secondary" onClick={() => setShowAddTableModal(false)}>Cancel</button>
-                            <button className="btn btn-primary" onClick={() => {
-                                console.log("Submitted:", formData);
+                            <button className="btn btn-outline-secondary" onClick={() => {
                                 setShowAddTableModal(false);
-                                setFormData({ tableName: "", pax: "", orderTaker: "", remarks: "" });
-                            }}>Submit</button>
+                                setIsToggled(false);
+                            }}>Cancel</button>
+                            <button
+                                className="btn btn-warning"
+                                onClick={() => {
+                                    console.log("Submitted:", formData);
+                                    setShowAddTableModal(false);
+                                    setFormData({ tableName: "", pax: "", orderTaker: "", remarks: "" });
+                                }}
+                            >
+                                Submit
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
+
             <div className='tableBook d-flex align-items-center justify-content-between'>
-                {/* <div className="tableBookleft">
-                    <div className='wrapperTable'>
-                        <div className="search d-flex align-items-center gap-3">
-                            <div className="TableSearch"><CiSearch size={20} /></div>
-                            <input type="text" placeholder='Search...' />
-                        </div>
-                        {link.map((text, index) => (
-                            <div
-                                onClick={() => setSelectionMode((prev) => !prev)}
-                                className='boxItem bg-white'
-                                key={index}
-                            >
-                                {text}
-                            </div>
-                        ))}
-                    </div>
-                    <div className='holeDiv'></div>
-                </div> */}
+
 
                 <div className="tableBookRight">
                     <div className="rightTop">
                         <div className='topHeader px-2 w-100 d-flex align-items-center justify-content-end gap-4'>
                             <div className="d-flex align-items-center justify-content-end w-100 gap-3">
-                                {["Order", "Update", "Customer", "Delete", "Table", "Bill", "Cancellation", "Unbilled"].map(label => (
-                                    <div className="position-relative" key={label}>
-                                        <div className="tableHeaderButton ">
-                                            <span>{label}</span>
-                                            {(label === "Table" || label === "Bill" || label === "Cancellation" || label === "Unbilled") &&
-                                                <div className='headerBtnArrow'><RiArrowDownSFill /></div>
-                                            }
-                                        </div>
 
+                                <div className="tableHeaderButton">
+                                    <MdOutlineSwitchAccount size={14} /> Map Customer
+                                </div>
+
+
+                                <div>
+                                    <div className="transfer-toggle-container">
+                                        <div className="transfer-toggle">
+                                            <div className={`slider ${selected}`}></div>
+
+                                            <button
+                                                className={`toggle-option ${selected === "table" ? "active" : ""}`}
+                                                onClick={() => setSelected("table")}
+                                            >
+                                                Table Transfer
+                                            </button>
+
+                                            <button
+                                                className={`toggle-option ${selected === "item" ? "active" : ""}`}
+                                                onClick={() => setSelected("item")}
+                                            >
+                                                Item Transfer
+                                            </button>
+                                        </div>
                                     </div>
-                                ))}
-                                <div
+                                </div>
+                                
+                                {/* <div>
+                                    <div className="transfer-toggle-container">
+                                        <div className="transfer-toggle">
+                                            <div className={`slider ${selected}`}></div>
+
+                                            <button
+                                                className={`toggle-option ${selected === "table" ? "active" : ""}`}
+                                                onClick={() => setSelected("table")}
+                                            >
+                                                Manage Table
+                                            </button>
+
+                                            <button
+                                                className={`toggle-option ${selected === "item" ? "active" : ""}`}
+                                                onClick={() => setSelected("item")}
+                                            >
+                                                Manage Chair
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div> */}
+
+                                <div className="d-flex align-items-center gap-3">
+                                    {!isToggled && <span style={{ cursor: "pointer" }} className={`fw-semibold cursor-pointer ${customizationMode === "chair" ? "primaryColor" : ""}`} onClick={() => {
+                                        toggleSelfMode
+                                        setCustomizationMode((prev) => prev === "chair" ? "" : "chair")
+                                    }}>Chair</span>}
+
+                                    <button
+                                        className="btn position-relative toggle-button px-4"
+                                        onClick={() => {
+                                            if (!isToggled) {
+                                                setShowAddTableModal(true);
+                                            }
+                                            setIsToggled(!isToggled);
+                                            setCustomizationMode("");
+                                        }}
+                                    >
+                                        <div className={`toggle-circle ${isToggled ? "right" : "left"}`}>
+                                            <FaPlus color="#ffc300" />
+                                        </div>
+                                    </button>
+
+                                    {isToggled && <span className="fw-semibold primaryColor">Table</span>}
+                                </div>
+
+                                {/* <div
                                     onClick={toggleSelfMode}
                                     style={{ backgroundColor: `${isSelfMode ? "#ff8000" : ""}`, color: `${isSelfMode ? "#fff" : ""}` }}
                                     className="tableHeaderButton  ">
@@ -414,77 +484,98 @@ const TableBook = () => {
                                         </div>
 
                                     </div>
-                                )}
+                                )} */}
                                 <div className="tableHeaderButton">
-                                    <VscMerge size={14} /> Merge
+                                    <VscMerge size={14} />Table Merge
                                 </div>
-                                <div
-                                    onClick={handleClick}
-                                    className="tableHeaderButton shadow-s"
-                                    style={{ cursor: "pointer" }}
-                                >
-                                    <span>
+                                <div className="tableHeaderButton">
+                                    <VscMerge size={14} />Table Split
+                                </div>
+                                <div className="tableHeaderButton">
+                                    <select className="border-0">
+                                        <option> Sequentially</option>
+                                        <option value="1">User Customised</option>
+                                        <option value="2">Status Based</option>
+                                        <option value="3">Open Table</option>
+                                        <option value="3">VIP Table</option>
+                                    </select>
+                                </div>
+                                <div className="tableHeaderButton">
+                                    <PiHandshakeThin size={14} /> Multi Table Settlement
+                                </div>
+                                <div className="tableHeaderButton">
+                                    <VscMerge size={14} /> Multi Table Bill
+                                </div>
 
-                                    </span>
-                                    <span>{labels[labelIndex]}</span>
-                                </div>
                             </div>
 
                             <div className='d-flex align-items-center gap-3'>
+
+
                                 <div
-                                    className="addTable "
-                                    onClick={() => setShowAddTableModal(true)}
+                                    className="sidebar-trigger"
+                                    onClick={() => setIsOpen(true)}
                                 >
-                                    <div className="plus">
-                                        <PiPlus size={15} style={{ color: "#ff8000" }} />
-                                    </div>
-
-                                    <GiTable size={17} />
-                                </div>
-
-                                {/* <div
-                                    className="addChair"
-                                    onClick={() => setIsAddChairMode(!isAddChairMode)}
-                                >
-                                    <div className="plus">
-                                        <PiPlus size={15} style={{ color: "#ff8000" }} />
-                                    </div>
-                                    <PiChairThin size={17} />
-                                </div> */}
-                                <div className="p-1 d-flex align-items-center justify-content-center" style={{ borderRadius: "100%", backgroundColor: "#fafafa" }}>
                                     <HiDotsVertical className="text-black" />
                                 </div>
+
+
+                                {isOpen && (
+                                    <div
+                                        className="sidebar-overlay"
+                                        onClick={() => setIsOpen(false)}
+                                    />
+                                )}
+
+                                <div className={`sidebar-panel ${isOpen ? "open" : ""}`}>
+                                    <div className="sidebar-header">
+                                        <h5>ACTIONS</h5>
+                                        <LiaWindowCloseSolid className="close-btn" onClick={() => setIsOpen(false)} />
+
+                                    </div>
+                                    <div className="sidebar-content">
+
+                                    </div>
+                                </div>
+
+
                             </div>
                         </div>
                     </div>
 
                     <div className="rightMBtm">
                         <div className="rightBtmTop shadow-sm">
-                            <div className=" d-flex justify-content-between gap-2 align-items-center">
-
-                                <div className="floorSearch">
-                                    <div className="TableSearch"><CiSearch size={20} /></div>
-                                    <input
-                                        style={{ border: "none", outline: "none", marginRight: "1vw" }}
-                                        type="text"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-                                        placeholder='Search...'
-                                    />
+                            <div className=" d-flex justify-content-between gap-3 align-items-center">
+                                <div className="d-flex align-items-center gap-1">
+                                    <div className="floorSearch">
+                                        <div className="TableSearch"><CiSearch size={20} /></div>
+                                        <input
+                                            style={{ border: "none", outline: "none", marginRight: "1vw" }}
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+                                            placeholder='Search...'
+                                        />
+                                    </div>
+                                    <div className="TableSearch"><PiMicrophoneThin size={20} color="#ffc300" /></div>
                                 </div>
-                                <div className='floorWrapper'>
-                                    {floor.map((text, index) => (
-                                        <div className="tableHeaderButton" key={index}>{text}</div>
-                                    ))}
+                                <div className="tableHeaderButton">
+                                    <select className="border-0">
+                                        <option>ALL</option>
+                                        <option value="1">First Floor</option>
+                                        <option value="1">Second Floor</option>
+                                        <option value="2">Rooftop</option>
+                                        <option value="3">Garden</option>
+                                    </select>
                                 </div>
+                                <div></div>
+                            </div>
+                            <div>
 
                             </div>
                             <div>
 
                             </div>
-                         <div>
-
-                         </div>
                         </div>
 
                         <div className="rightBtmBTm p-2">
@@ -512,21 +603,27 @@ const TableBook = () => {
                                             position: "relative",
                                         }}
                                     >
-                                        {/* <button >
-                                            {isAddChairMode ? "Exit Add Chair Mode" : "Enter Add Chair Mode"}
-                                        </button> */}
+                                        {loading ? (
+                                            <div className="d-flex justify-content-center " style={{ marginTop: '20%' }}>
+                                                <Spinner animation="grow" variant="secondary" size="sm" />
+                                                <Spinner animation="grow" variant="warning" />
+                                                <Spinner animation="grow" variant="secondary" size="sm" />
+                                                <Spinner animation="grow" variant="warning" />
+                                            </div>
+                                        ) : (
+                                            tableData.map((table) => (
+                                                <Table1
+                                                    key={table.tableId}
+                                                    table={table}
+                                                    moveTable={moveTable}
+                                                    onDropChair={onDropChair}
+                                                    dragEnabled={isSelfMode && customizationMode === "table"}
+                                                    isAddChairMode={customizationMode === "chair"}
+                                                    onAddChairs={handleAddChairs}
+                                                />
+                                            ))
+                                        )}
 
-                                        {tableData.map((table) => (
-                                            <Table1
-                                                key={table.tableId}
-                                                table={table}
-                                                moveTable={moveTable}
-                                                onDropChair={onDropChair}
-                                                dragEnabled={isSelfMode && customizationMode === "table"}
-                                                isAddChairMode={isSelfMode && customizationMode === "chair"}
-                                                onAddChairs={handleAddChairs}
-                                            />
-                                        ))}
                                     </div>
 
                                     {showOrderModal && (
@@ -541,14 +638,14 @@ const TableBook = () => {
                                 </div>
                             </div>
 
-                            <div className="btmBtm">
+                            {/* <div className="btmBtm">
                                 <div
                                     className="resetBtn"
                                     onClick={resetLayout}
                                 >
                                     Reset Layout
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>

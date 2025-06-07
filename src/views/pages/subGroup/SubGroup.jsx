@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
 import DataTableSettings from "../../../helpers/DataTableSettings";
-import { Form, Button, InputGroup } from "react-bootstrap";
+import { Form, Button, InputGroup, Container } from "react-bootstrap";
 import { MdDeleteForever } from "react-icons/md";
 import {
     FaRegEdit,
@@ -21,26 +21,17 @@ import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
 import { TbHandClick } from "react-icons/tb";
 import { Spinner } from 'react-bootstrap';
+import { LiaSitemapSolid } from "react-icons/lia";
+import Select from "react-select";
+import { PiBuildingLight } from "react-icons/pi";
+import { HiOutlineDocumentCurrencyRupee } from "react-icons/hi2";
 
 const SubGroup = () => {
 
     const location = useLocation();
+    const [mappingShow, setMappingShow] = useState(false);
     const [permissions, setPermissions] = useState({});
-
-    useEffect(() => {
-        if (location.state?.permissions) {
-            setPermissions(location.state.permissions);
-        }
-    }, [location.state?.permissions]);
-
     const fetchCalled = useRef(false);
-
-    useEffect(() => {
-        if (fetchCalled.current) return;
-        fetchCalled.current = true;
-        fetchSubGroupData();
-    }, []);
-
     const initialValues = {
         itemSubGroupId: "",
         itemSubGroupName: "",
@@ -66,7 +57,6 @@ const SubGroup = () => {
         { label: "Vegetables", value: "10" },
         { label: "OilAndFats", value: "11" },
     ];
-
     const [formValues, setFormValues] = useState(initialValues);
     const [errors, setErrors] = useState({});
     const [formImpValues, setFormImpValues] = useState(initialImpValues);
@@ -77,6 +67,7 @@ const SubGroup = () => {
     const [loadingIndicator, setLoadingIndicator] = useState(false);
     const [groupData, setGroupData] = useState([]);
     const [subGroupData, setSubGroupData] = useState([]);
+    const [subGroupMappingData, setSubGroupMappingData] = useState([]);
     const searchParam = [
         "itemSubGroupName",
         "itemGroupName",
@@ -89,6 +80,28 @@ const SubGroup = () => {
     const [loading, setLoading] = useState(false);
     const handleExpoClose = () => setExpoShow(false);
     const handleExpoShow = () => setExpoShow(true);
+    const [outletData, setOutletData] = useState([]);
+    const [taxData, setTaxData] = useState([]);
+    const [selectedTaxes, setSelectedTaxes] = useState([]);
+    const [selectedOptions, setSelectedOptions] = useState([]);
+    const [selectedRows, setSelectedRows] = useState([]);
+
+
+    useEffect(() => {
+        if (location.state?.permissions) {
+            setPermissions(location.state.permissions);
+        }
+    }, [location.state?.permissions]);
+
+    useEffect(() => {
+        if (fetchCalled.current) return;
+        fetchCalled.current = true;
+        fetchSubGroupData();
+    }, []);
+
+    const handleChangeForm = (selected) => {
+        setSelectedOptions(selected);
+    };
 
     const handleClose = () => {
         setShow(false);
@@ -124,15 +137,37 @@ const SubGroup = () => {
     const fetchGroupData = async () => {
         setLoading(true);
         try {
-            const res = await api.get(`/itemgroups`, {
-
-            });
+            const res = await api.get(`/itemgroups`);
             setGroupData(res.data.list);
         } catch (error) {
             console.error("Error fetching table data", error);
             setLoadingIndicator(false);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const downloadExcel = async () => {
+        try {
+            const response = await api.get("/itemsubgroups/exportexcel", {
+                responseType: "blob"
+            });
+
+            const blob = new Blob([response.data], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "itemSubGroup.xlsx");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error downloading the file:", error);
+            alert("Failed to export file.");
         }
     };
 
@@ -200,7 +235,171 @@ const SubGroup = () => {
         setToDelete(null);
     };
 
+    const fetchOutletData = async () => {
+        try {
+            const res = await api.get("/outlets");
+            const sortedData = res?.data?.list;
+            setOutletData(sortedData);
+        } catch (error) {
+            console.error("Error fetching table data", error);
+
+        }
+    };
+
+    const options = outletData.map((outlet) => ({
+        value: outlet.outletId,
+        label: outlet.outletName
+    }));
+
+    const taxOptions = taxData.map((tax) => ({
+        value: tax.taxId,
+        label: tax.taxName,
+    }));
+
+    const handleTaxChange = (selected) => {
+        setSelectedTaxes(selected);
+    };
+
+    const fetchTaxData = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get(`/tax`);
+            const sortedData = res?.data?.list;
+            setTaxData(sortedData);
+        } catch (error) {
+            console.error("Error fetching table data", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+    const handleMappingClick = async (subGroupIds) => {
+        setSelectedRows(subGroupIds);
+        setMappingShow(true);
+
+        try {
+            const response = await api.get(`/outletsubgrouptax/${subGroupIds}`);
+            const mappingList = response?.data?.list || [];
+
+            const uniqueOutletIDs = [...new Set(mappingList.map(item => item.outletID))];
+            const uniqueTaxIDs = [...new Set(mappingList.map(item => item.taxID))];
+
+            const matchedOutlets = options.filter(outlet => uniqueOutletIDs.includes(outlet.value));
+            const matchedTaxes = taxOptions.filter(tax => uniqueTaxIDs.includes(tax.value));
+
+            setSelectedOptions(matchedOutlets);
+            setSelectedTaxes(matchedTaxes);
+
+            fetchOutletData();
+            fetchTaxData();
+
+        } catch (error) {
+            console.error("Error fetching subgroup mapping:", error);
+        }
+    };
+
+
+
+    const handleMultiMappingClick = () => {
+        setMappingShow(true);
+        fetchOutletData();
+        fetchTaxData();
+    };
+
+
+
+    const handleMappingSubmit = async () => {
+        if (!selectedRows.length) {
+            toast.error("Please select at least one sub group.");
+            return;
+        }
+
+        if (!selectedOptions.length || !selectedTaxes.length) {
+            toast.error("Please select at least one outlet and tax.");
+            return;
+        }
+
+        const taxIDs = selectedTaxes.map(t => t.value);
+
+        const outletMappings = selectedOptions.map(outlet => ({
+            outletID: outlet.value,
+            taxID: taxIDs
+        }));
+
+        const payload = {
+            subgroupIDs: selectedRows,
+            outletInfos: outletMappings,
+            isActive: formValues.isActive
+        };
+
+        try {
+            const res = await api.post("/outletsubgrouptax", payload);
+            toast.success("Mapping submitted successfully!");
+
+            setMappingShow(false);
+            setSelectedRows([]);
+            setSelectedOptions([]);
+            setSelectedTaxes([]);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to submit mapping. Please try again.");
+        }
+    };
+
+
+    const handleMappingClose = () => {
+        setMappingShow(false);
+    };
+
+    const handleRowCheckboxChange = (id) => {
+        setSelectedRows((prevSelected) =>
+            prevSelected.includes(id)
+                ? prevSelected.filter((itemId) => itemId !== id)
+                : [...prevSelected, id]
+        );
+    };
+
+    const handleSelectAllRows = (e) => {
+        if (e.target.checked) {
+            const allIds = subGroupData.map((row) => row.itemSubGroupId);
+            setSelectedRows(allIds);
+        } else {
+            setSelectedRows([]);
+        }
+    };
+
+    const areAllRowsSelected =
+        subGroupData.length > 0 &&
+        selectedRows.length === subGroupData.length &&
+        subGroupData.every((row) => selectedRows.includes(row.itemSubGroupId));
+
+
     const columns = [
+        {
+            name: (
+                <input
+                    type="checkbox"
+                    className="custom-yellow-checkbox"
+                    onChange={handleSelectAllRows}
+                    checked={areAllRowsSelected}
+                />
+            ),
+            cell: (row) => (
+                <input
+                    type="checkbox"
+                    className="custom-yellow-checkbox"
+                    checked={selectedRows.includes(row.itemSubGroupId)}
+                    onChange={() => handleRowCheckboxChange(row.itemSubGroupId)}
+                />
+            ),
+            width: '60px',
+            ignoreRowClick: true,
+            allowOverflow: true,
+            button: true,
+        },
+
         {
             name: <h5>Sub group name</h5>,
             selector: (row) => row.itemSubGroupName,
@@ -216,6 +415,7 @@ const SubGroup = () => {
             selector: (row) => row.itemSubGroupCode,
             sortable: true,
         },
+
         {
             name: <h5>Status</h5>,
             cell: (row) => (
@@ -245,6 +445,17 @@ const SubGroup = () => {
                             <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
                         </Link>
                     )}
+                    {
+                        <Link
+                            onClick={() =>
+                                handleMappingClick(row.itemSubGroupId)
+                            }
+                            style={{ cursor: "pointer" }}
+                        >
+                            <LiaSitemapSolid size={30} style={{ margin: "0.2vh" }} color="green" />
+                        </Link>
+
+                    }
                 </>
             ),
         },
@@ -261,13 +472,20 @@ const SubGroup = () => {
                     onChange={(e) => setFilterText(e.target.value)}
                 />
             </Form>
+            <Button
+                variant="secondary"
+                onClick={handleMultiMappingClick}
+            >
+                <CiExport size={20} /> Mapping
+            </Button>
+
             {permissions?.import && (
                 <Button variant="info" onClick={handleExpoShow}>
                     <CiExport size={20} /> Import
                 </Button>
             )}
             {permissions?.export && (
-                <Button variant="success">
+                <Button variant="success" onClick={downloadExcel}>
                     <CiImport size={20} /> Export
                 </Button>
             )}
@@ -636,7 +854,191 @@ const SubGroup = () => {
                 </Offcanvas.Body>
             </Offcanvas>
 
-            <Offcanvas show={expoShow} onHide={handleExpoClose} backdrop="static" placement="end">
+            <Offcanvas
+                show={mappingShow}
+                onHide={handleMappingClose}
+                placement="end"
+                backdrop="static"
+                style={{ "--bs-offcanvas-width": "1000px" }}
+            >
+                <Offcanvas.Header closeButton>
+                    <div className="w-100 text-center">
+                        <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
+                            Sub Group Mapping
+                        </Offcanvas.Title>
+                    </div>
+                </Offcanvas.Header>
+                {loading ? (
+                    <div className="d-flex justify-content-center" style={{ marginTop: '20%' }}>
+                        <Spinner animation="grow" variant="secondary" size="sm" />
+                        <Spinner animation="grow" variant="warning" />
+                        <Spinner animation="grow" variant="secondary" size="sm" />
+                        <Spinner animation="grow" variant="warning" />
+                    </div>
+                ) : (
+                    <Offcanvas.Body className='mt-2 d-flex flex-column gap-3'>
+
+                        <InputGroup className="mb-4">
+                            <InputGroup.Text>
+                                <PiBuildingLight size={25} color="#ffc800" />
+                            </InputGroup.Text>
+                            <Select
+                                classNames="custom-select"
+                                isMulti
+                                options={options}
+                                value={selectedOptions}
+                                onChange={handleChangeForm}
+                                placeholder="Select Outlets..."
+                                className="basic-multi-select"
+                                classNamePrefix="select"
+                                styles={{
+                                    control: (provided, state) => ({
+                                        ...provided,
+                                        width: "19.5rem",
+                                        borderColor: state.isFocused ? '#ffc800' : provided.borderColor,
+                                        boxShadow: state.isFocused
+                                            ? '0 0 0 0.2rem rgba(255, 200, 0, 0.25)'
+                                            : provided.boxShadow,
+                                        '&:hover': {
+                                            borderColor: '#ffc800',
+                                        },
+                                    }),
+                                    option: (provided, state) => ({
+                                        ...provided,
+                                        backgroundColor: state.isSelected
+                                            ? '#ffc800'
+                                            : state.isFocused
+                                                ? '#ffe066'
+                                                : 'white',
+                                        color: state.isSelected || state.isFocused ? 'black' : 'inherit',
+                                        cursor: 'pointer',
+                                    }),
+                                    multiValue: (provided) => ({
+                                        ...provided,
+                                        backgroundColor: '#fff3cd',
+                                    }),
+                                    multiValueLabel: (provided) => ({
+                                        ...provided,
+                                        color: '#856404',
+                                    }),
+                                    multiValueRemove: (provided) => ({
+                                        ...provided,
+                                        color: '#856404',
+                                        ':hover': {
+                                            backgroundColor: '#ffc800',
+                                            color: 'black',
+                                        },
+                                    }),
+                                }}
+                            />
+                        </InputGroup>
+
+                        <InputGroup className="mb-4">
+                            <InputGroup.Text>
+                                <HiOutlineDocumentCurrencyRupee size={25} color="#ffc800" />
+                            </InputGroup.Text>
+                            <Select
+                                isMulti
+                                options={taxOptions}
+                                value={selectedTaxes}
+                                onChange={handleTaxChange}
+                                placeholder="Select Taxes..."
+                                className="basic-multi-select"
+                                classNamePrefix="select"
+                                styles={{
+                                    control: (provided, state) => ({
+                                        ...provided,
+                                        width: "19.5rem",
+                                        borderColor: state.isFocused ? '#ffc800' : provided.borderColor,
+                                        boxShadow: state.isFocused
+                                            ? '0 0 0 0.2rem rgba(255, 200, 0, 0.25)'
+                                            : provided.boxShadow,
+                                        '&:hover': {
+                                            borderColor: '#ffc800',
+                                        },
+                                    }),
+                                    option: (provided, state) => ({
+                                        ...provided,
+                                        backgroundColor: state.isSelected
+                                            ? '#ffc800'
+                                            : state.isFocused
+                                                ? '#ffe066'
+                                                : 'white',
+                                        color: state.isSelected || state.isFocused ? 'black' : 'inherit',
+                                        cursor: 'pointer',
+                                    }),
+                                    multiValue: (provided) => ({
+                                        ...provided,
+                                        backgroundColor: '#fff3cd',
+                                    }),
+                                    multiValueLabel: (provided) => ({
+                                        ...provided,
+                                        color: '#856404',
+                                    }),
+                                    multiValueRemove: (provided) => ({
+                                        ...provided,
+                                        color: '#856404',
+                                        ':hover': {
+                                            backgroundColor: '#ffc800',
+                                            color: 'black',
+                                        },
+                                    }),
+                                }}
+                            />
+
+                        </InputGroup>
+
+                        <Form.Check
+                            type="checkbox"
+                            id="custom-checkbox"
+                            label="IsActive"
+                            name="IsActive"
+
+                            className="ms-3"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                fontSize: '1rem',
+                            }}
+                            custom="true"
+                        >
+                            <Form.Check.Input
+                                type="checkbox"
+                                className='custom-yellow-checkbox'
+                                checked={formValues.isActive}
+                                onChange={(e) => handleChange("isActive", e.target.checked)}
+                                style={{
+                                    width: "20px",
+                                    height: "20px",
+                                    cursor: "pointer",
+                                    marginRight: "8px",
+                                }}
+                            />
+                            <Form.Check.Label htmlFor="custom-checkbox">
+                                IsActive
+                            </Form.Check.Label>
+                        </Form.Check>
+
+                        <div className="d-flex justify-content-center mt-5">
+                            <Button
+                                onClick={handleMappingSubmit}
+                                type="submit" variant="warning"
+                            >
+                                Save
+                            </Button>
+                        </div>
+
+                    </Offcanvas.Body>
+                )}
+
+            </Offcanvas>
+
+            <Offcanvas
+                show={expoShow}
+                onHide={handleExpoClose}
+                backdrop="static"
+                placement="end"
+            >
                 <Offcanvas.Header closeButton>
                     <div className="w-100 text-center">
                         <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>

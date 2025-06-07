@@ -35,16 +35,21 @@ const Registration = () => {
     const currentStepIndex = steps.indexOf(activeTab);
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        let timeout;
+        const cycleImages = () => {
             setFade(false);
-            setTimeout(() => {
+            timeout = setTimeout(() => {
                 setCurrentIndex((prev) => (prev + 1) % banner.length);
                 setFade(true);
+                timeout = setTimeout(cycleImages, 4500);
             }, 500);
-        }, 5000);
+        };
 
-        return () => clearInterval(interval);
+        cycleImages();
+
+        return () => clearTimeout(timeout);
     }, []);
+
 
     const validate = () => {
         const newErrors = {};
@@ -111,7 +116,7 @@ const Registration = () => {
 
         try {
             const res = await api.post("/admin", payload);
-            console.log(res);
+            localStorage.setItem("userId",res.data.data);
 
             if (res.data.isValid) {
                 navigate('/subscription');
@@ -155,10 +160,15 @@ const Registration = () => {
             <div className='row main-img-div'>
                 <div className="col-md-9 rounded h-100" >
                     <img
-                        style={{ height: "100%", width: "100%" }}
+                        style={{
+                            height: "100%",
+                            width: "100%",
+                            transition: "opacity 0.5s ease",
+                            opacity: fade ? 1 : 0
+                        }}
                         src={banner[currentIndex]}
                         alt=""
-                        className={` rounded ${fade ? 'fade-in' : 'fade-out'}`}
+                        className="rounded"
                     />
                 </div>
                 <div className="col-md-3 d-flex align-items-end justify-content-center"
@@ -179,6 +189,7 @@ const Registration = () => {
                                 <Form.Control
                                     type="text"
                                     value={formData.fullname}
+                                                          className={`custom-input `}
                                     required
                                     placeholder="Full Name"
                                     isInvalid={!!errors.fullname}
@@ -207,6 +218,7 @@ const Registration = () => {
                                     <BsTelephone size={24} color='#ffc800' />
                                 </InputGroup.Text>
                                 <Form.Control
+                                         className={`custom-input `}
                                     type="text"
                                     value={formData.phone}
                                     required
@@ -225,6 +237,7 @@ const Registration = () => {
                                     <MdOutlineMailOutline size={25} color='#ffc800' />
                                 </InputGroup.Text>
                                 <Form.Control
+                                         className={`custom-input `}
                                     type="text"
                                     value={formData.email}
                                     required
@@ -254,6 +267,7 @@ const Registration = () => {
                                     <RiLockPasswordLine size={25} color='#ffc800' />
                                 </InputGroup.Text>
                                 <Form.Control
+                                         className={`custom-input `}
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder="Enter password"
                                     name="password"
@@ -272,6 +286,7 @@ const Registration = () => {
                                     <MdOutlineLockPerson size={25} color='#ffc800' />
                                 </InputGroup.Text>
                                 <Form.Control
+                                         className={`custom-input `}
                                     required
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     placeholder="Confirm password"
@@ -280,7 +295,7 @@ const Registration = () => {
                                     name="confirm"
                                     value={formData.confirm}
                                     onChange={handleChange}
-                                    className={errors.confirm ? 'input-error' : ''}
+                                    // className={errors.confirm ? 'input-error' : ''}
                                 />
                                 {/* <Form.Control.Feedback type="valid">
                                 Enter Your Email
@@ -325,8 +340,8 @@ const Registration = () => {
                                             marginRight: "8px",
                                         }}
                                     />
-                                    <Form.Check.Label htmlFor="custom-checkbox" style={{fontSize:"0.825vw"}}>
-                                        I accept the <a href="/terms" style={{color:"#ffc300"}} target="_blank" rel="noopener noreferrer">Terms & Conditions</a> and <a style={{color:"#ffc300"}} href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                                    <Form.Check.Label htmlFor="custom-checkbox" style={{ fontSize: "0.825vw" }}>
+                                        I accept the <a href="/terms" style={{ color: "#ffc300" }} target="_blank" rel="noopener noreferrer">Terms & Conditions</a> and <a style={{ color: "#ffc300" }} href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
                                     </Form.Check.Label>
                                 </Form.Check>
                             </InputGroup>
@@ -349,8 +364,8 @@ const Registration = () => {
 
 
                             <div className='logInRedirect'>
-                                Already have an account? <Link style={{textDecoration:"none"}} to="/login">
-                                <u>Log in</u>
+                                Already have an account? <Link style={{ textDecoration: "none" }} to="/login">
+                                    <u>Log in</u>
                                 </Link>
                             </div>
                             <div className='google mb-3'>

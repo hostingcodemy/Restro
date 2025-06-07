@@ -112,6 +112,30 @@ const ItemType = () => {
         }
     };
 
+    const downloadExcel = async () => {
+        try {
+            const response = await api.get("/itemcategory/exportexcel", {
+                responseType: "blob"
+            });
+
+            const blob = new Blob([response.data], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "itemCategory.xlsx");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error downloading the file:", error);
+            alert("Failed to export file.");
+        }
+    };
+
     const handleChange = (name, value) => {
         setFormValues((prevValues) => ({
             ...prevValues,
@@ -243,7 +267,7 @@ const ItemType = () => {
                 </Button>
             )}
             {permissions?.export && (
-                <Button variant="success">
+                <Button variant="success" onClick={downloadExcel}>
                     <CiImport size={20} /> Export
                 </Button>
             )}

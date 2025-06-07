@@ -27,15 +27,19 @@ const Login = () => {
     const [activeTab, setActiveTab] = useState('login');
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        let timeout;
+        const cycleImages = () => {
             setFade(false);
-            setTimeout(() => {
+            timeout = setTimeout(() => {
                 setCurrentIndex((prev) => (prev + 1) % banner.length);
                 setFade(true);
-            }, 500);
-        }, 5000);
+                timeout = setTimeout(cycleImages, 2000);
+            }, 300);
+        };
 
-        return () => clearInterval(interval);
+        cycleImages();
+
+        return () => clearTimeout(timeout);
     }, []);
 
     const handleChange = (name, value) => {
@@ -139,10 +143,15 @@ const Login = () => {
             <div className='row main-img-div' >
                 <div className="col-md-9 rounded h-100">
                     <img
-                        style={{ height: "100%", width: "100%" }}
+                        style={{
+                            height: "100%",
+                            width: "100%",
+                            transition: "opacity 0.5s ease",
+                            opacity: fade ? 1 : 0
+                        }}
                         src={banner[currentIndex]}
                         alt=""
-                        className={` w-100 rounded ${fade ? 'fade-in' : 'fade-out'}`}
+                        className="rounded"
                     />
 
                 </div>
@@ -166,7 +175,7 @@ const Login = () => {
                                 name="Email"
                                 value={formValues.Email || ""}
                                 onChange={(e) => handleChange("Email", e.target.value)}
-                                className={errors.Email ? 'input-error' : ''}
+                                 className={`custom-input ${errors.Email ? 'input-error' : ''}`}
                                 autoComplete="off"
                                 placeholder="Email Address"
                                 isInvalid={!!errors.Email}
@@ -183,7 +192,7 @@ const Login = () => {
                                 name="Password"
                                 value={formValues.Password || ""}
                                 onChange={(e) => handleChange("Password", e.target.value)}
-                                className={errors.Password ? 'input-error' : ''}
+                                className={`custom-input ${errors.Password ? 'input-error' : ''}`}
                                 autoComplete="off"
                                 required
                                 placeholder="Password"

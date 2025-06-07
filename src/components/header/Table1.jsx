@@ -138,10 +138,10 @@ if (showChairModal && popupRef.current) {
 
     const chairBgColor = () => {
     switch (table?.tableStatus) {
-      case "Available": return "#2bd65ec4";
-      case "Reserved": return "#ff000082";
-      case "Hold": return "#ffd209b1";
-      case "Occupied": return "#0073ff";
+      case "Available": return "#90C67C";
+      case "Reserved": return "#FF3F33";
+      case "Hold": return "#FFAF00";
+      case "Occupied": return "#344CB7";
       default: return "#ccc";
     }
   };
@@ -231,7 +231,8 @@ if (showChairModal && popupRef.current) {
           opacity: 1,
           display: "flex",
           alignItems: "center",
-          justifyContent: "center"
+          justifyContent: "center",
+          color:"white"
         }}
         onMouseDown={handleMouseDown}
         onClick={handleTableClick}

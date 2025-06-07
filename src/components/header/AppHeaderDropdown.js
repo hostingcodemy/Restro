@@ -18,14 +18,14 @@ const AppHeaderDropdown = () => {
 
   const navigate = useNavigate();
 
- const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('channelId');
     localStorage.removeItem('outletId');
     localStorage.removeItem('coreui-free-react-admin-template-theme');
 
-    navigate('/login'); 
+    navigate('/login');
   };
 
   return (
@@ -35,11 +35,11 @@ const AppHeaderDropdown = () => {
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
         <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">Account</CDropdownHeader>
-        <CDropdownItem href="#">
+        <CDropdownItem style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
           <CIcon icon={cilUser} className="me-2" />
           Profile
         </CDropdownItem>
-        <CDropdownItem onClick={handleLogout}>
+        <CDropdownItem onClick={handleLogout} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
           <CIcon icon={cilAccountLogout} className="me-2" />
           Logout
         </CDropdownItem>

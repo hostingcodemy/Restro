@@ -35,8 +35,14 @@ const Department = () => {
         isActive: false,
     };
 
+    const initialImpValues = {
+        File: "",
+    };
+
     const [formValues, setFormValues] = useState(initialValues);
     const [errors, setErrors] = useState({});
+    const [formImpValues, setFormImpValues] = useState(initialImpValues);
+    const [impErrors, setImpErrors] = useState({});
     const [loadingIndicator, setLoadingIndicator] = useState(false);
     const [filterText, setFilterText] = useState("");
     const [departmentData, setDepartmentData] = useState([]);
@@ -85,12 +91,47 @@ const Department = () => {
         }
     };
 
+    const downloadExcel = async () => {
+        try {
+            const response = await api.get("/department/exportexcel", {
+                responseType: "blob"
+            });
+
+            const blob = new Blob([response.data], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "department.xlsx");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error downloading the file:", error);
+            alert("Failed to export file.");
+        }
+    };
+
     const handleChange = (name, value) => {
         setFormValues((prevValues) => ({
             ...prevValues,
             [name]: value,
         }));
         setErrors((prevErrors) => ({
+            ...prevErrors,
+            [name]: "",
+        }));
+    };
+
+    const handleImpChange = (name, value) => {
+        setFormImpValues((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+        setImpErrors((prevErrors) => ({
             ...prevErrors,
             [name]: "",
         }));
@@ -114,6 +155,26 @@ const Department = () => {
         }
 
         setErrors(errors);
+        return isValid;
+    };
+
+    const validateImpForm = () => {
+        const { File } = formImpValues;
+        const errors = {};
+        let isValid = true;
+
+        if (!File) {
+            isValid = false;
+            errors.File = "Import file is required.";
+        } else if (
+            File.type !==
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ) {
+            isValid = false;
+            errors.File = "Only .xlsx files are allowed.";
+        }
+
+        setImpErrors(errors);
         return isValid;
     };
 
@@ -220,7 +281,7 @@ const Department = () => {
                 </Button>
             )}
             {permissions?.export && (
-                <Button variant="success">
+                <Button variant="success" onClick={downloadExcel}>
                     <CiImport size={20} /> Export
                 </Button>
             )}
@@ -272,6 +333,27 @@ const Department = () => {
                 draggable: true,
                 progress: undefined,
             });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleImpSubmit = async (e) => {
+        e.preventDefault();
+        if (!validateImpForm()) return;
+
+        const formData = new FormData();
+        formData.append("File", formImpValues.File);
+
+        setLoading(true);
+        try {
+            const res = await api.post("/itemgroups/importexcel", formData);
+
+            toast.success(res.data.successMessage || "File uploaded successfully!");
+            handleExpoClose();
+            setFormImpValues(initialImpValues);
+        } catch (error) {
+            toast.error("Something went wrong! Please try again.");
         } finally {
             setLoading(false);
         }
@@ -461,12 +543,7 @@ const Department = () => {
                 </Offcanvas.Body>
             </Offcanvas>
 
-            <Offcanvas
-                show={expoShow}
-                onHide={handleExpoClose}
-                backdrop="static"
-                placement="end"
-            >
+            <Offcanvas show={expoShow} onHide={handleExpoClose} backdrop="static" placement="end">
                 <Offcanvas.Header closeButton>
                     <div className="w-100 text-center">
                         <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
@@ -475,20 +552,24 @@ const Department = () => {
                     </div>
                 </Offcanvas.Header>
                 <Offcanvas.Body style={{ marginTop: "-2vh" }}>
-                    <Form className='h-90' onSubmit={handleSubmit}>
+                    <Form className='h-90'>
                         <InputGroup className="mb-3">
-                            <InputGroup.Text id="itemGroupName">
+                            <InputGroup.Text>
                                 <FaRegFile size={25} color='#ffc800' />
                             </InputGroup.Text>
                             <Form.Control
                                 type="file"
-
+                                accept=".xlsx"
+                                name='File'
+                                onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    handleImpChange("File", file);
+                                }}
                             />
+                            {impErrors.File && <span className="error-msg">{impErrors.File}</span>}
                         </InputGroup>
                         <div className="d-flex justify-content-center mt-5">
-                            <Button type="submit" variant="warning">
-                                Save
-                            </Button>
+                            <Button type="submit" variant="warning" onClick={handleImpSubmit}>Save</Button>
                         </div>
                     </Form>
                 </Offcanvas.Body>

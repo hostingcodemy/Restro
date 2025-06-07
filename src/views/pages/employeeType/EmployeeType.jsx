@@ -14,11 +14,10 @@ import { toast, ToastContainer } from 'react-toastify';
 import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
 import { TbHandClick } from "react-icons/tb";
-import { FcDepartment } from "react-icons/fc";
 import { Spinner } from 'react-bootstrap';
 
 const EmployeeType = () => {
-
+    
     const location = useLocation();
     const [permissions, setPermissions] = useState({});
 
@@ -89,6 +88,30 @@ const EmployeeType = () => {
             console.error("Error fetching table data", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const downloadExcel = async () => {
+        try {
+            const response = await api.get("/employeetype/exportexcel", {
+                responseType: "blob"
+            });
+
+            const blob = new Blob([response.data], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "employeeType.xlsx");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error downloading the file:", error);
+            alert("Failed to export file.");
         }
     };
 
@@ -177,12 +200,12 @@ const EmployeeType = () => {
         setLoading(true);
         api.delete(`/employeetype/${toDelete.id}`)
             .then((res) => {
-                toast.success(res.data.successMessage || "Group deleted successfully!");
-                fetchGroupData();
+                toast.success(res.data.successMessage || "Employee type deleted successfully!");
+                fetchEmpTypeData();
             })
             .catch((error) => {
-                console.error("Error deleting group:", error);
-                toast.error("Failed to delete group.");
+                console.error("Error deleting employee type:", error);
+                toast.error("Failed to delete employee type.");
             })
             .finally(() => {
                 setLoading(false);
@@ -258,7 +281,7 @@ const EmployeeType = () => {
                 </Button>
             )}
             {permissions?.export && (
-                <Button variant="success">
+                <Button variant="success" onClick={downloadExcel}>
                     <CiImport size={20} /> Export
                 </Button>
             )}

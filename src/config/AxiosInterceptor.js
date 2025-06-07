@@ -16,7 +16,7 @@ const getRefreshToken = () => localStorage.getItem('refreshToken');
 const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    window.location.href = '/login';
+    window.location.href = '/';
 };
 
 let isRefreshing = false;
@@ -38,7 +38,6 @@ const noAuthRoutes = ['/Auth/login'];
 
 api.interceptors.request.use(
     (config) => {
-        //Skip adding token for specific routes
         if (!noAuthRoutes.includes(config.url)) {
             const token = getAccessToken();
             if (token) {
@@ -52,18 +51,26 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
     (response) => {
-        if (!response.data.isValid) {
-            alert(response.errorMessage || 'Something went wrong');
-            return Promise.reject(new Error(response.errorMessage || 'Invalid response'));
+        const contentType = response.headers['content-type'];
+
+        if (!contentType?.includes('application/json')) {
+            return response;
         }
-        return response; 
+
+        if (!response.data?.isValid) {
+            alert(response.data?.errorMessage || 'Something went wrong');
+            return Promise.reject(new Error(response.data?.errorMessage || 'Invalid response'));
+        }
+
+        return response;
     },
     async (error) => {
         const originalRequest = error.config;
 
-        console.log('Response Interceptor', error);
+        if (error.response?.status === 401 &&
+            error.response?.data === 'Token Expired' &&
+            !originalRequest._retry) {
 
-        if (error.response?.status === 401 && error.response?.data === 'Token Expired' && !originalRequest._retry) {
             originalRequest._retry = true;
 
             if (!isRefreshing) {
@@ -83,10 +90,9 @@ api.interceptors.response.use(
                             Authorization: `Bearer ${accessToken}`, 
                         },
                     });
+
                     const newAccessToken = refreshResponse.data.data;
                     localStorage.setItem('accessToken', newAccessToken);
-
-                    //notify all quueued request with the new token
                     onRefreshed(newAccessToken);
                 }
                 catch (refreshError) {
@@ -99,6 +105,7 @@ api.interceptors.response.use(
                     isRefreshing = false;
                 }
             }
+
             return new Promise((resolve) => {
                 subscribeTokenRefresh((newToken) => {
                     originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -106,6 +113,7 @@ api.interceptors.response.use(
                 });
             });
         }
+
         return Promise.reject(error);
     }
 );

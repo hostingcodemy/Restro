@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
 import DataTableSettings from "../../../helpers/DataTableSettings";
-import { Form, Button, Offcanvas, InputGroup, Row, Col, Spinner } from "react-bootstrap";
+import { Form, Button, Offcanvas, InputGroup, Row, Col, Spinner, Table } from "react-bootstrap";
 import { MdDeleteForever, MdOutlineFastfood, MdProductionQuantityLimits } from "react-icons/md";
 import { FaRegEdit, FaRegFile } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
@@ -111,6 +111,7 @@ const Item = () => {
     if (fetchCalled.current) return;
     fetchCalled.current = true;
     fetchItemData();
+    fetchOutletTaxData();
   }, []);
 
   const itemTypeOptions = [
@@ -119,9 +120,9 @@ const Item = () => {
   ];
 
   const productTypeOptions = [
-    { label: "Saleable Item", value: "Saleable Item" },
-    { label: "Stockable Item", value: "Stockable Item" },
-    { label: "Purchase Item", value: "Purchase Item" },
+    { label: "S - Saleable Item", value: "Saleable Item" },
+    { label: "O - Stockable Item", value: "Stockable Item" },
+    { label: "P - Purchase Item", value: "Purchase Item" },
   ];
 
   const fetchItemData = async () => {
@@ -153,43 +154,33 @@ const Item = () => {
   };
 
   const fetchSubGroupData = async (groupId) => {
-    setLoading(true);
     try {
       const res = await api.get(`/itemsubgroups/group/${groupId}`);
       setSubGroupData(res?.data?.list);
     } catch (error) {
       console.error("Error fetching subgroup data", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchItemTypeData = async (subgroupid) => {
-    setLoading(true);
     try {
       const res = await api.get(`/itemcategory/subgroup/${subgroupid}`);
       setItemTypeData(res.data.list);
     } catch (error) {
       console.error("Error fetching subgroup data", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchItemSubTypeData = async (categoryid) => {
-    setLoading(true);
     try {
       const res = await api.get(`/itemsubcategory/category/${categoryid}`);
       setItemSubTypeData(res.data.list);
     } catch (error) {
       console.error("Error fetching subgroup data", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchUomData = async () => {
-    setLoading(true);
     try {
       const res = await api.get(`/uom`);
       const sortedData = res?.data?.list?.sort(
@@ -198,47 +189,50 @@ const Item = () => {
       setUomData(sortedData);
     } catch (error) {
       console.error("Error fetching table data", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchOutletData = async () => {
-    setLoading(true);
     try {
       const res = await api.get("/outlets");
       const sortedData = res?.data?.list?.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
       setOutletData(sortedData);
     } catch (error) {
       console.error("Error fetching outlet data", error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchOutletTaxData = async (itemSubGroupId) => {
+    try {
+      const outletId = "8451cb46-2d5c-4aa7-a794-5965f6c5c6bd";
+      const subgroupId = "4f76b1f3-4188-4eda-aa4c-97c3a2ffbec8";
+
+      const res = await api.get(`/outletsubgrouptax/${outletId}/${subgroupId}`);
+
+      const sortedData = res?.data?.list?.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+      setOutletData(sortedData);
+    } catch (error) {
+      console.error("Error fetching outlet data", error);
     }
   };
 
   const fetchTaxData = async () => {
-    setLoading(true);
     try {
       const res = await api.get("/tax");
       const sortedData = res?.data?.list?.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
       setTaxData(sortedData);
     } catch (error) {
       console.error("Error fetching tax data", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchItemSizeData = async () => {
-    setLoading(true);
     try {
       const res = await api.get("/itemsize");
       const sortedData = res?.data?.list?.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
       setItemSizeData(sortedData);
     } catch (error) {
       console.error("Error fetching item size data", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -447,9 +441,9 @@ const Item = () => {
   const handleNext = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    // if (!validateForm()) {
+    //   return;
+    // }
 
     setMappingShow(true);
     setShow(false);
@@ -582,7 +576,6 @@ const Item = () => {
         </Offcanvas.Header>
         <Offcanvas.Body style={{ marginTop: "-2vh" }}>
           <Form className='h-90'>
-            <h5>Item</h5>
             <Row className='mb-2'>
               <Col md={4}>
                 <InputGroup className="mb-4">
@@ -830,6 +823,7 @@ const Item = () => {
                     <Form.Check.Input
                       type="checkbox"
                       checked={formValues.isActive}
+                      onChange={(e) => handleChange("isActive", e.target.checked)}
                       style={{
                         width: "20px",
                         height: "20px",
@@ -894,7 +888,7 @@ const Item = () => {
         onHide={handleMappingClose}
         backdrop="static"
         placement="end"
-        className="custom-offcanvas"
+        className="custom-offcanvass"
       >
         <Offcanvas.Header closeButton>
           <div className="w-100 text-center">
@@ -905,305 +899,35 @@ const Item = () => {
         </Offcanvas.Header>
         <Offcanvas.Body style={{ marginTop: "-2vh" }}>
           <Form className='h-90'>
-            <Row className='mt-2'>
-              <Col md={4}>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text id="outletId">
-                    <LiaWeightSolid size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Select
-                    name="outletId"
-                    value={formValues.outletId || ""}
-                    onChange={(e) => handleChange("outletId", e.target.value)}
-                  >
-                    <option>Select outlet</option>
-                    {outletData?.map((item) => (
-                      <option key={item.outletId} value={item.outletId}>
-                        {item.outletName}
-                      </option>
-                    ))}
-                  </Form.Select>
-                  {errors.outletId && <span className="error-msg">{errors.outletId}</span>}
-                </InputGroup>
-              </Col>
-              <Col md={4}>
-                <InputGroup className="mb-4">
-                  <InputGroup.Text id="itemQuantity">
-                    <MdProductionQuantityLimits size={25} color='#ffc800' />
-                  </InputGroup.Text>
-                  <Form.Control
-                    name="itemQuantity"
-                    value={formValues.itemQuantity || ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (/^\d*\.?\d*$/.test(value)) {
-                        handleChange("itemQuantity", value);
-                      }
-                    }}
-                    placeholder="Item quantity"
-                    aria-label="itemQuantity"
-                    isInvalid={!!errors.itemQuantity}
-                    isValid={formValues.itemQuantity && !errors.itemQuantity}
-                  />
-                  {errors.itemQuantity && <span className="error-msg">{errors.itemQuantity}</span>}
-                </InputGroup>
-              </Col>
-              <Col md={4}>
-                <InputGroup className="mb-4">
-                  <InputGroup.Text id="itemPrice">
-                    <IoPricetagOutline size={25} color='#ffc800' />
-                  </InputGroup.Text>
-                  <Form.Control
-                    name="itemPrice"
-                    value={formValues.itemPrice || ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (/^\d*\.?\d*$/.test(value)) {
-                        handleChange("itemPrice", value);
-                      }
-                    }}
-                    placeholder="Item price"
-                    aria-label="itemPrice"
-                    isInvalid={!!errors.itemPrice}
-                    isValid={formValues.itemPrice && !errors.itemPrice}
-                    autoComplete='off'
-                  />
-                  {errors.itemPrice && <span className="error-msg">{errors.itemPrice}</span>}
-                </InputGroup>
-              </Col>
-            </Row>
-            <Row className='mb-3'>
-              <Col md={3}>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text id="isSoldMRP">
-                    <TbHandClick size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Check
-                    type="checkbox"
-                    id="custom-checkbox"
-                    label="isSoldMRP"
-                    name="isSoldMRP"
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>Outlet Name</th>
+                  <th>Item Name</th>
+                  <th>Item Size</th>
+                  <th>Item Price</th>
+                  <th>IsSoldMRP</th>
+                  <th>IsDiscount</th>
+                  <th>IsVisible</th>
+                  <th>Taxes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {outletData?.map((outlet) => (
+                  <tr key={outlet.outletId}>
+                    <td>{outlet.outletName}</td>
+                    <td>Item Name</td>
+                    <td>Size</td>
+                    <td>₹0.00</td>
+                    <td> <input type="checkbox" /></td>
+                    <td> <input type="checkbox" /></td>
+                    <td> <input type="checkbox" /></td>
+                    <td>0%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
 
-                    className="ms-3"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '1rem',
-                    }}
-                    custom="true"
-                  >
-                    <Form.Check.Input
-                      type="checkbox"
-                      checked={formValues.isSoldMRP}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    />
-                    <Form.Check.Label htmlFor="custom-checkbox">
-                      Sold MRP
-                    </Form.Check.Label>
-                  </Form.Check>
-                </InputGroup>
-              </Col>
-              <Col md={3}>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text id="isDiscountable">
-                    <TbHandClick size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Check
-                    type="checkbox"
-                    id="custom-checkbox"
-                    label="isDiscountable"
-                    name="isDiscountable"
-                    className="ms-3"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '1rem',
-                    }}
-                    custom="true"
-                  >
-                    <Form.Check.Input
-                      type="checkbox"
-                      checked={formValues.isDiscountable}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    />
-                    <Form.Check.Label htmlFor="custom-checkbox">
-                      Discount
-                    </Form.Check.Label>
-                  </Form.Check>
-                </InputGroup>
-              </Col>
-              <Col md={3}>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text id="isVisible">
-                    <TbHandClick size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Check
-                    type="checkbox"
-                    id="custom-checkbox"
-                    label="isVisible"
-                    name="isVisible"
-                    className="ms-3"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '1rem',
-                    }}
-                    custom="true"
-                  >
-                    <Form.Check.Input
-                      type="checkbox"
-                      checked={formValues.isVisible}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    />
-                    <Form.Check.Label htmlFor="custom-checkbox">
-                      Visible
-                    </Form.Check.Label>
-                  </Form.Check>
-                </InputGroup>
-              </Col>
-              <Col md={3}>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text id="isActive">
-                    <TbHandClick size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Check
-                    type="checkbox"
-                    id="custom-checkbox"
-                    label="IsActive"
-                    name="isActive"
-
-                    className="ms-3"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '1rem',
-                    }}
-                    custom="true"
-                  >
-                    <Form.Check.Input
-                      type="checkbox"
-                      checked={formValues.isActive}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    />
-                    <Form.Check.Label htmlFor="custom-checkbox">
-                      IsActive
-                    </Form.Check.Label>
-                  </Form.Check>
-                </InputGroup>
-              </Col>
-            </Row>
-            <Row className='mb-3 mt-2'>
-              <Col md={4}>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text id="taxId">
-                    <LiaWeightSolid size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Select
-                    name="taxId"
-                    value={formValues.taxId || ""}
-                    onChange={(e) => handleChange("taxId", e.target.value)}
-                  >
-                    <option>Select tax</option>
-                    {taxData?.map((item) => (
-                      <option key={item.taxId} value={item.taxId}>
-                        {item.taxName}
-                      </option>
-                    ))}
-                  </Form.Select>
-                  {errors.taxId && <span className="error-msg">{errors.taxId}</span>}
-                </InputGroup>
-              </Col>
-              <Col md={4}>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text id="taxWithDiscount">
-                    <TbHandClick size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Check
-                    type="checkbox"
-                    id="custom-checkbox"
-                    label="taxWithDiscount"
-                    name="taxWithDiscount"
-
-                    className="ms-3"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '1rem',
-                    }}
-                    custom="true"
-                  >
-                    <Form.Check.Input
-                      type="checkbox"
-                      checked={formValues.taxWithDiscount}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    />
-                    <Form.Check.Label htmlFor="custom-checkbox">
-                      Tax with Discount
-                    </Form.Check.Label>
-                  </Form.Check>
-                </InputGroup>
-              </Col>
-              <Col md={4}>
-                <InputGroup className="mb-3">
-                  <InputGroup.Text id="isActive">
-                    <TbHandClick size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Check
-                    type="checkbox"
-                    id="custom-checkbox"
-                    label="IsActive"
-                    name="isActive"
-
-                    className="ms-3"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '1rem',
-                    }}
-                    custom="true"
-                  >
-                    <Form.Check.Input
-                      type="checkbox"
-                      checked={formValues.isActive}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    />
-                    <Form.Check.Label htmlFor="custom-checkbox">
-                      IsActive
-                    </Form.Check.Label>
-                  </Form.Check>
-                </InputGroup>
-              </Col>
-            </Row>
             <div className="d-flex justify-content-center mt-5">
               <Button type="submit" variant="warning">
                 Save

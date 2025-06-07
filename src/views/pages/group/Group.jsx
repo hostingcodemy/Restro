@@ -19,7 +19,6 @@ import { TbHandClick } from "react-icons/tb";
 import { toast, ToastContainer } from 'react-toastify';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../../../config/AxiosInterceptor';
-import axios from "axios";
 
 const Group = () => {
 
@@ -110,8 +109,8 @@ const Group = () => {
 
   const downloadExcel = async () => {
     try {
-      const response = await axios.get("/itemgroups/exportexcel", {
-        responseType: "blob",
+      const response = await api.get("/itemgroups/exportexcel", {
+        responseType: "blob"
       });
 
       const blob = new Blob([response.data], {
@@ -131,38 +130,6 @@ const Group = () => {
       alert("Failed to export file.");
     }
   };
-
-  // const downloadExcel = async () => {
-  //   try {
-  //     const response = await axios.get("/itemgroups/exportexcel", {
-  //       responseType: "blob", // Important: ensures binary data is received correctly
-  //     });
-
-  //     // Create a blob from the response
-  //     const blob = new Blob([response.data], {
-  //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //     });
-
-  //     // Create a URL for the blob
-  //     const url = window.URL.createObjectURL(blob);
-
-  //     // Create a temporary link element
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.setAttribute("download", "itemGroup.xlsx");
-
-  //     // Trigger download
-  //     document.body.appendChild(link);
-  //     link.click();
-
-  //     // Cleanup
-  //     link.remove();
-  //     window.URL.revokeObjectURL(url);
-  //   } catch (error) {
-  //     console.error("Error downloading the Excel file:", error);
-  //     alert("Failed to download Excel file.");
-  //   }
-  // };
 
   const handleChange = (name, value) => {
     setFormValues((prev) => ({
