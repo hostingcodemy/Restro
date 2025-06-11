@@ -8,7 +8,6 @@ import { Spinner } from 'react-bootstrap';
 const App = () => {
   
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
