@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   CContainer,
@@ -33,9 +33,12 @@ import { CiDeliveryTruck } from "react-icons/ci";
 import { PiHandshakeThin } from "react-icons/pi";
 import { PiSealPercentThin } from "react-icons/pi";
 import { LuMessagesSquare } from "react-icons/lu";
+import { MdOutlineMerge } from "react-icons/md";
+import { MdOutlineCallSplit } from "react-icons/md";
+
 
 const AppHeader = ({ sidebarShow, setSidebarShow }) => {
-
+  const [isMerged, setIsMerged] = useState(false);
   const location = useLocation();
   const headerRef = useRef();
   // const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
@@ -71,7 +74,6 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
     '/employees': 'Employee',
     '/table-reservations': 'Table Layout',
     '/facility-status': 'Facility Status',
-    '/table-reservations': 'Table Layout'
   };
 
   const currentPath = location.pathname
@@ -137,7 +139,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                 </div>
 
                 <div className="d-flex gap-2 align-items-center">
-                  <div
+                  {/* <div
                     className=' tableHeaderButton d-flex align-items-center gap-1'
 
                   >
@@ -149,6 +151,28 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                   >
                     <PiBowlFoodThin />
                     Bill
+                  </div> */}
+                  {/* <div className="d-flex align-items-center gap-3">
+                    <div
+                      className={`custom-toggle-btn ${isMerged ? 'merged' : ''}`}
+                      onClick={() => setIsMerged(prev => !prev)}
+                    >
+                      <div className="toggle-switch">
+                        <div className="switch-text">
+                          <div className={`merge-label ${!isMerged ? 'active' : ''}`}>Merge</div>
+                          <div className={`split-label ${isMerged ? 'active' : ''}`}>Split</div>
+                        </div>
+                        <div className="switch-circle" />
+                      </div>
+                    </div>
+                  </div> */}
+                  <div className="tableHeaderButton">
+                    <MdOutlineMerge/>
+                     Merge
+                  </div>
+                  <div className="tableHeaderButton">
+                    <MdOutlineCallSplit/>
+                     Split
                   </div>
 
                 </div>

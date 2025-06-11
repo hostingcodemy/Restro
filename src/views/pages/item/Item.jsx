@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
 import DataTableSettings from "../../../helpers/DataTableSettings";
-import { Form, Button, Offcanvas, InputGroup, Row, Col, Spinner, Table } from "react-bootstrap";
-import { MdDeleteForever, MdOutlineFastfood, MdProductionQuantityLimits } from "react-icons/md";
-import { FaRegEdit, FaRegFile } from "react-icons/fa";
+import { Form, Button, Offcanvas, InputGroup, Row, Col, Spinner, Table, Modal } from "react-bootstrap";
+import { MdDeleteForever, MdOutlineFastfood, MdCurrencyRupee } from "react-icons/md";
+import { FaRegEdit, FaRegFile, FaRegStar, FaExclamationTriangle, FaTimesCircle, FaTrash } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
@@ -18,15 +18,8 @@ import { IoBarcodeOutline, IoPricetagOutline } from "react-icons/io5";
 
 const Item = () => {
 
-  const location = useLocation();
-  const [permissions, setPermissions] = useState({});
-
-  useEffect(() => {
-    if (location.state?.permissions) {
-      setPermissions(location.state.permissions);
-    }
-  }, [location.state?.permissions]);
-  const outletId = localStorage.getItem("outletId");
+  const channelId = localStorage.getItem('channelId');
+  const outletId = localStorage.getItem("currentOutletId");
 
   const initialValues = {
     itemId: "",
@@ -39,13 +32,13 @@ const Item = () => {
     itemType: "",
     uom: "",
     itemCode: "",
-    itemImage: "",
+    itemImage: null,
     hsnCode: "",
     qrCode: "",
     itemQuantity: "",
     itemPrice: "",
     outletId: "",
-    taxId: "",
+    taxId: [],
     itemSize: "",
     isSoldMRP: false,
     isDiscountable: false,
@@ -62,12 +55,10 @@ const Item = () => {
   const [itemSubTypeData, setItemSubTypeData] = useState([]);
   const [uomData, setUomData] = useState([]);
   const [outletData, setOutletData] = useState([]);
-  const [taxData, setTaxData] = useState([]);
   const [itemSizeData, setItemSizeData] = useState([]);
   const [filterText, setFilterText] = useState("");
   const [loadingIndicator, setLoadingIndicator] = useState(false);
   const fetchCalled = useRef(false);
-  const navigate = useNavigate();
   const [itemsData, setItemsData] = useState([]);
   const searchParam = ["itemName", "isActive"];
   const [isEditMode, setIsEditMode] = useState(false);
@@ -78,21 +69,29 @@ const Item = () => {
   const handleExpoClose = () => setExpoShow(false);
   const handleExpoShow = () => setExpoShow(true);
   const handleMappingClose = () => setMappingShow(false);
-  const handleMappingShow = () => {
-    setMappingShow(true);
-    setShow(false);
+  const [formRows, setFormRows] = useState([]);
+  const [taxData, setTaxData] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTaxes, setSelectedTaxes] = useState([]);
+  const [currentRowIndex, setCurrentRowIndex] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [toDelete, setToDelete] = useState(null);
+  const handleModalClose = () => setShowModal(false);
+  const handleModalShow = (index) => {
+    fetchTaxData();
+    setCurrentRowIndex(index);
+    const selected = formRows[index]?.taxes?.map(t => t.taxId) || [];
+    setSelectedTaxes(selected);
+    setShowModal(true);
   };
 
+  const hasFetchedTaxes = useRef(false);
 
   const handleClose = () => {
     setShow(false);
     setFormValues(initialValues);
     setErrors({});
     setIsEditMode(false);
-    fetchGroupData();
-    fetchOutletData();
-    fetchTaxData();
-    fetchUomData();
   };
 
   const handleShow = () => {
@@ -102,17 +101,71 @@ const Item = () => {
     setShow(true);
     fetchGroupData();
     fetchOutletData();
-    fetchTaxData();
     fetchUomData();
-    fetchItemSizeData();
+  };
+
+  const handleCheckboxChange = (taxId) => {
+    setSelectedTaxes((prev) =>
+      prev.includes(taxId)
+        ? prev.filter((id) => id !== taxId)
+        : [...prev, taxId]
+    );
+  };
+
+  const handleModalSave = () => {
+    const selectedTaxObjects = taxData.filter(tax => selectedTaxes.includes(tax.taxId));
+
+    setFormRows(prevRows => {
+      const updatedRows = [...prevRows];
+      if (currentRowIndex !== null) {
+        updatedRows[currentRowIndex].taxes = selectedTaxObjects;
+      }
+      return updatedRows;
+    });
+
+    setShowModal(false);
+    setSelectedTaxes([]);
+    setCurrentRowIndex(null);
   };
 
   useEffect(() => {
     if (fetchCalled.current) return;
     fetchCalled.current = true;
     fetchItemData();
-    fetchOutletTaxData();
   }, []);
+
+  const [primaryState, setPrimaryState] = useState({
+    itemPrice: false,
+    isSoldMRP: false,
+    isDiscountable: false,
+    isVisible: false,
+  });
+
+  const handleColumnStarClick = (columnKey) => {
+    const primaryValue = formRows[0][columnKey];
+
+    const isActive = primaryState[columnKey];
+
+    setPrimaryState((prev) => ({
+      ...prev,
+      [columnKey]: !isActive,
+    }));
+
+    setFormRows((prev) =>
+      prev.map((row, i) =>
+        i === 0
+          ? row
+          : {
+            ...row,
+            [columnKey]: !isActive ? primaryValue : getDefaultValue(columnKey),
+          }
+      )
+    );
+  };
+  const getDefaultValue = (key) => {
+    if (key === "itemPrice") return "";
+    return false;
+  };
 
   const itemTypeOptions = [
     { label: "Veg", value: "Veg" },
@@ -128,8 +181,7 @@ const Item = () => {
   const fetchItemData = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/items/outlet/849065aa-9146-42e9-9acc-59ee060e007f`);
-      //const res = await api.get(`/items/outlet/${outletId}`);
+      const res = await api.get(`/items/outlet/${outletId}`);
       const sortedData = res?.data?.list?.sort(
         (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
       );
@@ -194,21 +246,7 @@ const Item = () => {
 
   const fetchOutletData = async () => {
     try {
-      const res = await api.get("/outlets");
-      const sortedData = res?.data?.list?.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
-      setOutletData(sortedData);
-    } catch (error) {
-      console.error("Error fetching outlet data", error);
-    }
-  };
-
-  const fetchOutletTaxData = async (itemSubGroupId) => {
-    try {
-      const outletId = "8451cb46-2d5c-4aa7-a794-5965f6c5c6bd";
-      const subgroupId = "4f76b1f3-4188-4eda-aa4c-97c3a2ffbec8";
-
-      const res = await api.get(`/outletsubgrouptax/${outletId}/${subgroupId}`);
-
+      const res = await api.get(`/outlets/channel/${channelId}`);
       const sortedData = res?.data?.list?.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
       setOutletData(sortedData);
     } catch (error) {
@@ -217,14 +255,34 @@ const Item = () => {
   };
 
   const fetchTaxData = async () => {
+    setLoading(true);
     try {
-      const res = await api.get("/tax");
-      const sortedData = res?.data?.list?.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+      const res = await api.get(`/tax`);
+      const sortedData = res?.data?.list?.sort(
+        (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+      );
       setTaxData(sortedData);
     } catch (error) {
-      console.error("Error fetching tax data", error);
+      console.error("Error fetching table data", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (outletData.length > 0) {
+      const rows = outletData.map((outlet) => ({
+        outletId: outlet.outletId,
+        itemSize: "",
+        itemPrice: "",
+        isSoldMRP: false,
+        isDiscountable: false,
+        isVisible: false,
+        taxes: []
+      }));
+      setFormRows(rows);
+    }
+  }, [outletData]);
 
   const fetchItemSizeData = async () => {
     try {
@@ -265,6 +323,84 @@ const Item = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchTaxesForInitialRows = async () => {
+      const subGroupId = formValues.itemSubGroupId;
+      if (!mappingShow || !subGroupId || formRows.length === 0 || hasFetchedTaxes.current) return;
+
+      hasFetchedTaxes.current = true;
+
+      const updatedRows = await Promise.all(
+        formRows.map(async (row) => {
+          if (row.outletId && (!row.taxes || row.taxes.length === 0)) {
+            try {
+              const res = await api.get(`/outletsubgrouptax/${row.outletId}/${subGroupId}`);
+              const taxes = res?.data?.list?.[0]?.taxes || [];
+              return { ...row, taxes };
+            } catch (err) {
+              console.error("Error auto-fetching taxes:", err);
+              return row;
+            }
+          }
+          return row;
+        })
+      );
+
+      setFormRows(updatedRows);
+    };
+
+    fetchTaxesForInitialRows();
+  }, [mappingShow, formValues.itemSubGroupId, formRows.length]);
+  useEffect(() => {
+    if (!mappingShow) {
+      hasFetchedTaxes.current = false;
+    }
+  }, [mappingShow]);
+
+  const handleRowChange = async (index, name, value) => {
+    const updatedRows = [...formRows];
+    const currentRow = { ...updatedRows[index], [name]: value };
+
+    const targetOutlet = name === "outletId" ? value : currentRow.outletId;
+    const targetItemSize = name === "itemSize" ? value : currentRow.itemSize;
+
+    if (targetOutlet && targetItemSize) {
+      const isDuplicate = formRows.some((row, i) =>
+        i !== index &&
+        row.outletId === targetOutlet &&
+        row.itemSize === targetItemSize
+      );
+
+      if (isDuplicate) {
+        toast.error("This Outlet and Item Size combination already exists.");
+        return;
+      }
+    }
+
+    if (name === "outletId") {
+      const subGroupId = formValues.itemSubGroupId;
+      let taxes = [];
+
+      if (subGroupId && value) {
+        try {
+          const res = await api.get(`/outletsubgrouptax/${value}/${subGroupId}`);
+          taxes = res?.data?.list?.[0]?.taxes || [];
+        } catch (error) {
+          console.error("Error fetching taxes for outlet:", error);
+        }
+      }
+
+      updatedRows[index] = {
+        ...currentRow,
+        taxes,
+      };
+    } else {
+      updatedRows[index] = currentRow;
+    }
+
+    setFormRows(updatedRows);
+  };
+
   const validateForm = () => {
     const {
       itemName,
@@ -278,7 +414,6 @@ const Item = () => {
       hsnCode,
       qrCode,
       productType,
-      itemSize,
     } = formValues;
     const errors = {};
     let isValid = true;
@@ -323,10 +458,6 @@ const Item = () => {
       isValid = false;
       errors.productType = "Product type is required";
     }
-    if (!itemSize) {
-      isValid = false;
-      errors.itemSize = "Size is required";
-    }
     if (!qrCode) {
       isValid = false;
       errors.qrCode = "QR code is required";
@@ -342,28 +473,33 @@ const Item = () => {
   };
 
   const handleDeleteClick = (itemId, itemName) => {
-    if (window.confirm(`Are you sure you want to delete the item "${itemName}"?`)) {
-      api.delete(`/items/${itemId}`)
-        .then((res) => {
-          toast.success(res.data.successMessage || "Item deleted successfully!", {
-            position: "top-right",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-          fetchItemData();
-        })
-        .catch((error) => {
-          console.error("Error deleting item :", error);
-          toast.error("Failed to delete item.", {
-            position: "top-right",
-            autoClose: 3000,
-          });
-        });
-    }
+    setToDelete({ id: itemId, name: itemName });
+    setConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!toDelete) return;
+
+    setLoading(true);
+    api.delete(`/items/${toDelete.id}`)
+      .then((res) => {
+        toast.success(res.data.successMessage || "Item deleted successfully!");
+        fetchItemData();
+      })
+      .catch((error) => {
+        console.error("Error deleting item:", error);
+        toast.error("Failed to delete item.");
+      })
+      .finally(() => {
+        setLoading(false);
+        setConfirmOpen(false);
+        setToDelete(null);
+      });
+  };
+
+  const cancelDelete = () => {
+    setConfirmOpen(false);
+    setToDelete(null);
   };
 
   const columns = [
@@ -394,16 +530,12 @@ const Item = () => {
       center: true,
       cell: (row) => (
         <>
-          {permissions?.write && (
-            <Link className="action-icon" onClick={() => handleEditClick(row)}>
-              <FaRegEdit size={24} color="#87CEEB" />
-            </Link>
-          )}
-          {permissions?.delete && (
-            <Link className="action-icon" onClick={() => handleDeleteClick(row.itemId, row.itemName)}>
-              <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-            </Link>
-          )}
+          <Link className="action-icon" onClick={() => handleEditClick(row)}>
+            <FaRegEdit size={24} color="#87CEEB" />
+          </Link>
+          <Link className="action-icon" onClick={() => handleDeleteClick(row.itemId, row.itemName)}>
+            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
+          </Link>
         </>
       ),
     },
@@ -420,36 +552,63 @@ const Item = () => {
           onChange={(e) => setFilterText(e.target.value)}
         />
       </Form>
-      {permissions?.import && (
-        <Button variant="info" onClick={handleExpoShow}>
-          <CiExport size={20} /> Import
-        </Button>
-      )}
-      {permissions?.export && (
-        <Button variant="success">
-          <CiImport size={20} /> Export
-        </Button>
-      )}
-      {permissions?.write && (
-        <Button variant="warning" onClick={handleShow}>
-          <GoPlus size={20} /> Add
-        </Button>
-      )}
+      <Button variant="info" onClick={handleExpoShow}>
+        <CiExport size={20} /> Import
+      </Button>
+      <Button variant="success">
+        <CiImport size={20} /> Export
+      </Button>
+      <Button variant="warning" onClick={handleShow}>
+        <GoPlus size={20} /> Add
+      </Button>
     </div>
-  ), [permissions, filterText]);
+  ), [filterText]);
 
   const handleNext = async (e) => {
     e.preventDefault();
 
-    // if (!validateForm()) {
-    //   return;
-    // }
-
+    if (!validateForm()) return;
     setMappingShow(true);
     setShow(false);
+
+    fetchOutletData();
+    fetchItemSizeData();
   };
 
-  const handleSubmit = async () => {
+  const handleAddNewRow = () => {
+    setFormRows(prevRows => [
+      ...prevRows,
+      {
+        outletId: "",
+        itemSize: "",
+        itemPrice: "",
+        isSoldMRP: false,
+        isDiscountable: false,
+        isVisible: false,
+        taxes: []
+      }
+    ]);
+  };
+
+  const handleDelete = (indexToRemove) => {
+    setFormRows((prevRows) => prevRows.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const validMappings = formRows.filter(row =>
+      row.outletId &&
+      row.itemSize &&
+      row.itemPrice &&
+      parseFloat(row.itemPrice) > 0
+    );
+
+    if (validMappings.length === 0) {
+      toast.error("Please add at least one valid outlet mapping with outlet, item size, and price.");
+      return;
+    }
+
     const payload = {
       item: {
         itemName: formValues.itemName,
@@ -459,65 +618,54 @@ const Item = () => {
         itemSubCategoryId: formValues.itemSubCategoryId,
         productType: formValues.productType,
         itemType: formValues.itemType,
-        channelId: formValues.outletId,
         itemCode: formValues.itemCode,
-        uom: formValues.uom,
-        isActive: formValues.isActive,
-        itemImage: formValues.itemImage,
+        uomID: formValues.uom,
         hsnCode: formValues.hsnCode,
         qrCode: formValues.qrCode,
-        mappings: [
-          {
-            outletId: formValues.outletId,
-            prices: [
-              {
-                itemPriceId: formValues.itemId,
-                itemId: values.itemId,
-                outletId: values.outletId,
-                itemQuantity: parseFloat(values.itemQuantity) || 0,
-                itemPrice: parseFloat(values.itemPrice) || 0,
-                isSoldMRP: values.isSoldMRP,
-                isDiscountable: values.isDiscountable,
-                isActive: values.isActive,
-                isVisible: values.isVisible
-              }
-            ],
-            taxes: [
-              {
-                itemTaxOutletMappingId: values.itemId,
-                itemId: values.itemId,
-                outletId: values.outletId,
-                taxId: values.taxId,
-                taxWithDiscount: values.taxWithDiscount,
-                isActive: values.isActive
-              }
-            ]
-          }
-        ]
+        isActive: formValues.isActive,
+        itemImage: typeof formValues.itemImage === 'string' && formValues.itemImage !== "" ? formValues.itemImage : null,
+        mappings: validMappings.map(row => ({
+          outletId: row.outletId,
+          prices: [
+            {
+              itemQuantity: parseFloat(formValues.itemQuantity) || 1,
+              itemSizeId: row.itemSize,
+              itemPrice: parseFloat(row.itemPrice),
+              isSoldMRP: row.isSoldMRP,
+              isDiscountable: row.isDiscountable,
+              isVisible: row.isVisible,
+              isActive: formValues.isActive
+            }
+          ],
+          taxes: (row.taxes || []).map(tax => ({
+            taxId: tax.taxId,
+            taxAfterDiscount: formValues.taxWithDiscount || false,
+            onPercentage: 0,
+            isActive: formValues.isActive
+          }))
+        }))
       }
     };
-    setLoading(true);
+
     try {
-      const res = await api.post("/items", payload);
-      toast.success(res.data.successMessage || "Success!", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      setLoading(true);
+      const response = await api.post("/items", payload);
+
+      toast.success(response.data.successMessage || "Item created successfully!");
+
+      setFormValues(initialValues);
+      setFormRows([]);
+      setMappingShow(false);
+      setShow(false);
+      fetchItemData();
+
     } catch (error) {
-      toast.error(res.data.ErrorMessage || "Something went wrong! Please try again.", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      console.error("Error creating item:", error);
+      toast.error(
+        error?.response?.data?.errorMessage ||
+        error?.response?.data?.message ||
+        "Something went wrong while creating the item!"
+      );
     } finally {
       setLoading(false);
     }
@@ -526,6 +674,60 @@ const Item = () => {
   return (
     <>
       <ToastContainer />
+
+      {confirmOpen && (
+        <div
+          className="modal fade show"
+          style={{
+            display: "block",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            transition: "opacity 0.3s ease-in-out",
+          }}
+          tabIndex="-1"
+          role="dialog"
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg rounded-4 animate__animated animate__fadeInDown">
+              <div className="modal-header bg-danger text-white rounded-top-4">
+                <h5 className="modal-title d-flex align-items-center gap-2">
+                  <FaExclamationTriangle />
+                  Confirm Deletion
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={cancelDelete}
+                ></button>
+              </div>
+              <div className="modal-body text-center">
+                <p className="fs-5 mb-0">
+                  Are you sure you want to delete{" "}
+                  <strong>{toDelete?.name}</strong>?
+                </p>
+              </div>
+              <div className="modal-footer justify-content-center border-0 pb-4">
+                <button
+                  type="button"
+                  className="btn btn-secondary rounded text-white px-4 d-flex align-items-center gap-2"
+                  onClick={cancelDelete}
+                >
+                  <FaTimesCircle />
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger text-white rounded px-4 shadow d-flex align-items-center gap-2"
+                  onClick={confirmDelete}
+                >
+                  <FaTrash />
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="d-flex justify-content-center" style={{ marginTop: '20%' }}>
           <Spinner animation="grow" variant="secondary" size="sm" />
@@ -592,6 +794,7 @@ const Item = () => {
                     aria-label="itemName"
                     isInvalid={!!errors.itemName}
                     isValid={formValues.itemName && !errors.itemName}
+                    autoComplete='off'
                   />
                   {errors.itemName && <span className="error-msg">{errors.itemName}</span>}
                 </InputGroup>
@@ -761,6 +964,7 @@ const Item = () => {
                     aria-label="itemCode"
                     isInvalid={!!errors.itemCode}
                     isValid={formValues.itemCode && !errors.itemCode}
+                    autoComplete='off'
                   />
                   {errors.itemCode && <span className="error-msg">{errors.itemCode}</span>}
                 </InputGroup>
@@ -780,6 +984,7 @@ const Item = () => {
                     aria-label="hsnCode"
                     isInvalid={!!errors.hsnCode}
                     isValid={formValues.hsnCode && !errors.hsnCode}
+                    autoComplete='off'
                   />
                   {errors.hsnCode && <span className="error-msg">{errors.hsnCode}</span>}
                 </InputGroup>
@@ -797,6 +1002,7 @@ const Item = () => {
                     aria-label="qrCode"
                     isInvalid={!!errors.qrCode}
                     isValid={formValues.qrCode && !errors.qrCode}
+                    autoComplete='off'
                   />
                   {errors.qrCode && <span className="error-msg">{errors.qrCode}</span>}
                 </InputGroup>
@@ -841,31 +1047,18 @@ const Item = () => {
             <Row>
               <Col md={4}>
                 <InputGroup className="mb-3">
-                  <InputGroup.Text id="itemSize">
-                    <LiaWeightSolid size={25} color="#ffc800" />
-                  </InputGroup.Text>
-                  <Form.Select
-                    name="itemSize"
-                    value={formValues.itemSize || ""}
-                    onChange={(e) => handleChange("itemSize", e.target.value)}
-                  >
-                    <option value="">Select item size</option>
-                    {itemSizeData?.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.sizeName}
-                      </option>
-                    ))}
-                  </Form.Select>
-                  {errors.itemSize && <span className="error-msg">{errors.itemSize}</span>}
-                </InputGroup>
-              </Col>
-              <Col md={4}>
-                <InputGroup className="mb-3">
                   <InputGroup.Text id="itemImage">
                     <FaRegFile size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
                     type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        handleChange("itemImage", file);
+                      }
+                    }}
                   />
                 </InputGroup>
               </Col>
@@ -873,11 +1066,7 @@ const Item = () => {
             <div className="d-flex justify-content-center mt-4">
               <Button type="submit" variant="warning" className="me-2" onClick={handleNext}>
                 Next
-                {/* {isEditMode ? "Update" : "Save"} */}
               </Button>
-              {/* <Button type="submit" variant="secondary" onClick={handleMappingShow}>
-                Outlet Mapping
-              </Button> */}
             </div>
           </Form>
         </Offcanvas.Body>
@@ -893,7 +1082,7 @@ const Item = () => {
         <Offcanvas.Header closeButton>
           <div className="w-100 text-center">
             <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
-              {isEditMode ? "Edit Outlet & Tax" : "Add Outlet & Tax"}
+              {`Outlet & Tax Mapping - ${formValues.itemName || ""}`}
             </Offcanvas.Title>
           </div>
         </Offcanvas.Header>
@@ -903,33 +1092,178 @@ const Item = () => {
               <thead>
                 <tr>
                   <th>Outlet Name</th>
-                  <th>Item Name</th>
-                  <th>Item Size</th>
-                  <th>Item Price</th>
-                  <th>IsSoldMRP</th>
-                  <th>IsDiscount</th>
-                  <th>IsVisible</th>
+                  <th style={{ width: "150px" }}>Item Size</th>
+                  <th>
+                    <span
+                      style={{ display: "inline-flex", alignItems: "center", gap: "20px", cursor: "pointer", width: "120px" }}
+                      onClick={() => handleColumnStarClick("itemPrice")}
+                    >
+                      Item Price
+                      <FaRegStar size={20} color={primaryState.itemPrice ? "gold" : "gray"} />
+                    </span>
+                  </th>
+                  <th>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px" }}
+                      onClick={() => handleColumnStarClick("isSoldMRP")}
+                    >
+                      Sold MRP
+                      <FaRegStar size={20} color={primaryState.isSoldMRP ? "gold" : "gray"} />
+                    </span>
+                  </th>
+                  <th>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px" }}
+                      onClick={() => handleColumnStarClick("isDiscountable")}
+                    >
+                      Discount
+                      <FaRegStar size={20} color={primaryState.isDiscountable ? "gold" : "gray"} />
+                    </span>
+                  </th>
+                  <th>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px" }}
+                      onClick={() => handleColumnStarClick("isVisible")}
+                    >
+                      Visible
+                      <FaRegStar size={20} color={primaryState.isVisible ? "gold" : "gray"} />
+                    </span>
+                  </th>
                   <th>Taxes</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {outletData?.map((outlet) => (
-                  <tr key={outlet.outletId}>
-                    <td>{outlet.outletName}</td>
-                    <td>Item Name</td>
-                    <td>Size</td>
-                    <td>₹0.00</td>
-                    <td> <input type="checkbox" /></td>
-                    <td> <input type="checkbox" /></td>
-                    <td> <input type="checkbox" /></td>
-                    <td>0%</td>
+                {formRows.map((row, index) => (
+                  <tr key={index}>
+                    <td>
+                      <Form.Select
+                        value={row.outletId}
+                        onChange={(e) => handleRowChange(index, "outletId", e.target.value)}
+                      >
+                        <option value="">Select Outlet</option>
+                        {outletData.map(outlet => (
+                          <option key={outlet.outletId} value={outlet.outletId}>
+                            {outlet.outletName}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </td>
+                    <td>
+                      <Form.Select
+                        value={row.itemSize}
+                        onChange={(e) =>
+                          handleRowChange(index, "itemSize", e.target.value)
+                        }
+                      >
+                        <option value="">Select Item Size</option>
+                        {itemSizeData.map((size) => (
+                          <option key={size.id} value={size.id}>
+                            {size.sizeName}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </td>
+                    <td style={{ width: "100px", padding: "4px" }}>
+                      <Form.Control
+                        value={row.itemPrice}
+                        onChange={(e) =>
+                          handleRowChange(
+                            index,
+                            "itemPrice",
+                            e.target.value
+                              .replace(/[^0-9.]/g, "")
+                              .replace(/(\..*?)\..*/g, "$1")
+                          )
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "2px 4px",
+                          fontSize: "20px",
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <Form.Check
+                        type="checkbox"
+                        checked={row.isSoldMRP}
+                        onChange={(e) =>
+                          handleRowChange(index, "isSoldMRP", e.target.checked)
+                        }
+                        style={{
+                          transform: "scale(1.5)",
+                          cursor: "pointer",
+                          marginRight: "8px",
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <Form.Check
+                        type="checkbox"
+                        checked={row.isDiscountable}
+                        onChange={(e) =>
+                          handleRowChange(index, "isDiscountable", e.target.checked)
+                        }
+                        style={{
+                          transform: "scale(1.5)",
+                          cursor: "pointer",
+                          marginRight: "8px",
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <Form.Check
+                        type="checkbox"
+                        checked={row.isVisible}
+                        onChange={(e) =>
+                          handleRowChange(index, "isVisible", e.target.checked)
+                        }
+                        style={{
+                          transform: "scale(1.5)",
+                          cursor: "pointer",
+                          marginRight: "8px",
+                        }}
+                      />
+                    </td>
+                    <td>
+                      {row.taxes && row.taxes.length > 0 ? (
+                        row.taxes.length === 1 ? (
+                          <div>
+                            {row.taxes[0].taxName} - {row.taxes[0].taxRate}%
+                          </div>
+                        ) : (
+                          row.taxes.map((tax, i) => (
+                            <div key={i}>
+                              {tax.taxName} - {tax.taxRate}%
+                            </div>
+                          ))
+                        )
+                      ) : (
+                        <span style={{ color: "gray", fontStyle: "italic" }}>No Tax</span>
+                      )}
+                    </td>
+                    <td>
+                      <MdCurrencyRupee
+                        size={20}
+                        color="#87CEEB"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => handleModalShow(index)}
+                      />
+                      <MdDeleteForever
+                        size={20}
+                        style={{ margin: "1vh", cursor: "pointer" }}
+                        color="#FF474C"
+                        onClick={() => handleDelete(index)}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </Table>
-
+            <div className="d-flex justify-content-end mt-2">
+              <Button variant="warning" onClick={handleAddNewRow}>
+                Add New
+              </Button>
+            </div>
             <div className="d-flex justify-content-center mt-5">
-              <Button type="submit" variant="warning">
+              <Button type="submit" variant="warning" onClick={handleSubmit}>
                 Save
               </Button>
             </div>
@@ -969,6 +1303,60 @@ const Item = () => {
           </Form>
         </Offcanvas.Body>
       </Offcanvas>
+
+      <Modal
+        show={showModal}
+        onHide={handleModalClose}
+        backdrop="static"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            Add Tax
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tax Name</th>
+                <th>Tax Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              {taxData?.map((tax, index) => (
+                <tr key={index}>
+                  <td>
+                    <Form.Check
+                      type="checkbox"
+                      checked={selectedTaxes.includes(tax.taxId)}
+                      onChange={() => handleCheckboxChange(tax.taxId)}
+                      style={{
+                        transform: "scale(1.5)",
+                        cursor: "pointer",
+                        marginRight: "8px",
+                      }}
+                    />
+                  </td>
+                  <td>{tax.taxName}</td>
+                  <td>{tax.taxRate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary"
+            onClick={() => {
+              handleModalSave();
+              handleModalClose();
+            }}
+          >
+            Save
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   )
 }

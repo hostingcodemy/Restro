@@ -302,16 +302,12 @@ const Employee = () => {
             center: true,
             cell: (row) => (
                 <>
-                    {permissions?.write && (
                         <Link className="action-icon" onClick={() => handleEditClick(row)}>
                             <FaRegEdit size={24} color="#87CEEB" />
                         </Link>
-                    )}
-                    {permissions?.delete && (
                         <Link className="action-icon" onClick={() => handleDeleteClick(row.employeeID, row.name)}>
                             <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
                         </Link>
-                    )}
                 </>
             ),
         },
@@ -329,27 +325,21 @@ const Employee = () => {
                         onChange={(e) => setFilterText(e.target.value)}
                     />
                 </Form>
-                {permissions?.import && (
                     <Button variant="info"
                         onClick={handleExpoShow}
                     >
                         <CiExport size={20} style={{ marginTop: "-0.5vh" }} /> Import
                     </Button>
-                )}
-                {permissions?.export && (
                     <Button variant="success"
                     >
                         <CiImport size={20} style={{ marginTop: "-0.5vh" }} /> Export
                     </Button>
-                )}
-                {permissions?.write && (
                     <Button variant="warning" onClick={handleShow}>
                         <GoPlus size={20} style={{ marginTop: "-0.5vh" }} /> Add
                     </Button>
-                )}
             </div>
         );
-    }, [permissions, filterText]);
+    }, [filterText]);
 
 
     const handleSubmit = async (e) => {
@@ -502,7 +492,7 @@ const Employee = () => {
                     </div>
                 </Offcanvas.Header>
                 <Offcanvas.Body className='row' style={{ marginTop: "-2vh" }}>
-                    <Form className='h-90 ' onSubmit={(e) => handleSubmit(e)}>
+                    <Form className='h-90 ' onSubmit={(e) => handleSubmit(e)} autoComplete='off'>
                         <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
@@ -531,11 +521,11 @@ const Employee = () => {
                                     </InputGroup.Text>
                                     <Form.Control
                                         type="password"
-                                        name="Password"
+                                        name="real-password"
                                         value={formValues.password || ""}
                                         onChange={(e) => handleChange("password", e.target.value)}
                                         className={errors.password ? 'input-error' : ''}
-                                        autoComplete="off"
+                                        autoComplete="new-password"
                                         required
                                         placeholder="Password"
                                         isInvalid={!!errors.password}
@@ -553,8 +543,10 @@ const Employee = () => {
                                         <MdOutlineMailOutline size={25} color='#ffc800' />
                                     </InputGroup.Text>
                                     <Form.Control
-                                        type="text"
+                                        type="email"
+                                        name='real-email'
                                         value={formValues.email}
+                                        autoComplete='off'
                                         required
                                         placeholder="Email Address"
                                         isInvalid={!!errors.email}

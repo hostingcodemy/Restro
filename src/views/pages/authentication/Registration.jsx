@@ -175,11 +175,13 @@ const Registration = () => {
                 >
 
                     {activeTab === "registration" && (
-                        <form
+                        <Form
 
                             className=' bg-white w-100 h-100  rounded p-3 d-flex flex-column align-items-center gap-4'
                             // className="fancy-form" 
-                            noValidate>
+                            noValidate
+                            autoComplete='off'
+                            >
                             <h2 className="mb-2 fw-bold fs-3">Create a Yelo account</h2>
 
                             <InputGroup hasValidation className="">
@@ -238,7 +240,9 @@ const Registration = () => {
                                 </InputGroup.Text>
                                 <Form.Control
                                          className={`custom-input `}
-                                    type="text"
+                                    type="email"
+                                    name='real-email'
+                                    autoComplete='off'
                                     value={formData.email}
                                     required
                                     placeholder="Email Address"
@@ -269,8 +273,9 @@ const Registration = () => {
                                 <Form.Control
                                          className={`custom-input `}
                                     type={showPassword ? 'text' : 'password'}
+                                    autoComplete='new-password'
                                     placeholder="Enter password"
-                                    name="password"
+                                    name="real-password"
                                     isInvalid={!!errors.password}
                                     isValid={formData.password && !errors.password}
                                     value={formData.password}
@@ -389,7 +394,7 @@ const Registration = () => {
                                 />
 
                             </div>
-                        </form>
+                        </Form>
                     )}
                 </div>
 

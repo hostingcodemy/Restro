@@ -28,9 +28,7 @@ import { HiOutlineDocumentCurrencyRupee } from "react-icons/hi2";
 
 const SubGroup = () => {
 
-    const location = useLocation();
     const [mappingShow, setMappingShow] = useState(false);
-    const [permissions, setPermissions] = useState({});
     const fetchCalled = useRef(false);
     const initialValues = {
         itemSubGroupId: "",
@@ -85,13 +83,6 @@ const SubGroup = () => {
     const [selectedTaxes, setSelectedTaxes] = useState([]);
     const [selectedOptions, setSelectedOptions] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
-
-
-    useEffect(() => {
-        if (location.state?.permissions) {
-            setPermissions(location.state.permissions);
-        }
-    }, [location.state?.permissions]);
 
     useEffect(() => {
         if (fetchCalled.current) return;
@@ -435,16 +426,12 @@ const SubGroup = () => {
             center: true,
             cell: (row) => (
                 <>
-                    {permissions?.write && (
-                        <Link className="action-icon" onClick={() => handleEditClick(row)}>
-                            <FaRegEdit size={24} color="#87CEEB" />
-                        </Link>
-                    )}
-                    {permissions?.delete && (
-                        <Link className="action-icon" onClick={() => handleDeleteClick(row.itemSubGroupId, row.itemSubGroupName)}>
-                            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-                        </Link>
-                    )}
+                    <Link className="action-icon" onClick={() => handleEditClick(row)}>
+                        <FaRegEdit size={24} color="#87CEEB" />
+                    </Link>
+                    <Link className="action-icon" onClick={() => handleDeleteClick(row.itemSubGroupId, row.itemSubGroupName)}>
+                        <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
+                    </Link>
                     {
                         <Link
                             onClick={() =>
@@ -478,24 +465,17 @@ const SubGroup = () => {
             >
                 <CiExport size={20} /> Mapping
             </Button>
-
-            {permissions?.import && (
-                <Button variant="info" onClick={handleExpoShow}>
-                    <CiExport size={20} /> Import
-                </Button>
-            )}
-            {permissions?.export && (
-                <Button variant="success" onClick={downloadExcel}>
-                    <CiImport size={20} /> Export
-                </Button>
-            )}
-            {permissions?.write && (
-                <Button variant="warning" onClick={handleShow}>
-                    <GoPlus size={20} /> Add
-                </Button>
-            )}
+            <Button variant="info" onClick={handleExpoShow}>
+                <CiExport size={20} /> Import
+            </Button>
+            <Button variant="success" onClick={downloadExcel}>
+                <CiImport size={20} /> Export
+            </Button>
+            <Button variant="warning" onClick={handleShow}>
+                <GoPlus size={20} /> Add
+            </Button>
         </div>
-    ), [permissions, filterText]);
+    ), [filterText]);
 
     const validateForm = () => {
         const {
@@ -747,7 +727,7 @@ const SubGroup = () => {
                     </div>
                 </Offcanvas.Header>
                 <Offcanvas.Body style={{ marginTop: "-2vh" }}>
-                    <Form className='h-100' onSubmit={handleSubmit}>
+                    <Form className='h-100' onSubmit={handleSubmit} autoComplete='off'>
                         <InputGroup className="mb-4">
                             <InputGroup.Text id="itemSubGroupName">
                                 <VscGroupByRefType size={25} color='#ffc800' />

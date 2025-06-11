@@ -4,7 +4,6 @@ import { BsTelephone } from "react-icons/bs";
 import { FaRegAddressCard } from "react-icons/fa6";
 import { TbTax } from "react-icons/tb";
 import { MdOutlineMailOutline } from "react-icons/md";
-import { IoIosAperture } from "react-icons/io";
 import 'src/index.css';
 import { IoLocationOutline } from "react-icons/io5";
 import api from '../../../config/AxiosInterceptor';

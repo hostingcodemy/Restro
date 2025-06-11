@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'
@@ -11,71 +11,45 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSpeedometer } from '@coreui/icons'
-import api from '../config/AxiosInterceptor'
 
 export const AppSidebarNav = () => {
   const [items, setItems] = useState([])
-  const [channelName, setChannelName] = useState('')
-  const fetchCalled = useRef(false)
 
   useEffect(() => {
-    if (fetchCalled.current) return
-    fetchCalled.current = true
-    fetchUserAccess()
+    const authChannels = JSON.parse(localStorage.getItem('authChannels'))
+
+    if (!authChannels || !Array.isArray(authChannels) || authChannels.length === 0) return
+
+    const selectedChannel = authChannels[0]
+    localStorage.setItem('channelId', selectedChannel.channelId)
+
+    const outletIds = selectedChannel.channelOutlets.map(o => o.outletID)
+    localStorage.setItem('outletIds', JSON.stringify(outletIds))
+
+    if (outletIds.length > 0) {
+      localStorage.setItem('currentOutletId', outletIds[0])
+    }
+
+    const sidebarItems = generateSidebarItems(selectedChannel.subscriptionModules)
+    setItems(sidebarItems)
   }, [])
 
-  const fetchUserAccess = async () => {
-    try {
-      const res = await api.get('/admin-access')
-      const userAccess = res?.data?.data
+  const generateSidebarItems = (modules) => {
+    return modules.map((module) => {
+      const menus = module.menus || []
 
-      localStorage.setItem('channelId', userAccess.channelId)
-      setChannelName(userAccess.channelName)
-
-      const outlets = userAccess?.outletDetail || []
-
-      // Store all outletIds and default currentOutletId
-      const outletIds = outlets.map(o => o.outletId)
-      localStorage.setItem('outletIds', JSON.stringify(outletIds))
-      if (outletIds.length > 0) {
-        localStorage.setItem('currentOutletId', outletIds[0])
-      }
-
-      const sidebarItems = generateSidebarItems(outlets)
-      setItems(sidebarItems)
-    } catch (err) {
-      console.error('Error fetching user access', err)
-    }
-  }
-
-  const generateSidebarItems = (outlets) => {
-    return outlets.map((outlet) => {
-      const modules = outlet.modules || []
-
-      const moduleGroups = modules.map((module) => {
-        const menus = module.permissions || []
-
-        const menuItems = menus.map((menu) => ({
-          component: CNavItem,
-          name: menu.menu,
-          to: menu.routePath,
-          icon: <span className="nav-icon-bullet" />,
-          state: { permissions: menu },
-        }))
-
-        return {
-          component: CNavGroup,
-          name: module.moduleName,
-          icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-          items: menuItems,
-        }
-      })
+      const menuItems = menus.map((menu) => ({
+        component: CNavItem,
+        name: menu.menuName,
+        to: menu.menuPath,
+        icon: <span className="nav-icon-bullet" />,
+      }))
 
       return {
         component: CNavGroup,
-        name: outlet.outletName,
+        name: module.moduleName,
         icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-        items: moduleGroups,
+        items: menuItems,
       }
     })
   }
@@ -126,12 +100,6 @@ export const AppSidebarNav = () => {
 
   return (
     <CSidebarNav as={SimpleBar}>
-      {channelName && (
-        <div className="px-3 py-2 fw-bold text-uppercase" style={{ fontSize: '0.9rem' }}>
-          {channelName}
-        </div>
-      )}
-
       {items.map((item, index) =>
         item.items ? navGroup(item, index) : navItem(item, index)
       )}

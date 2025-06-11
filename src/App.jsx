@@ -6,6 +6,7 @@ import AppRoutes from './routes';
 import { Spinner } from 'react-bootstrap';
 
 const App = () => {
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

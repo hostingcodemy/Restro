@@ -94,9 +94,11 @@ const Login = () => {
 
         try {
             const res = await api.post("/adminauth/login", payload);
+
             if (res.data.isValid) {
                 localStorage.setItem("accessToken", res.data.data.accessToken);
                 localStorage.setItem("refreshToken", res.data.data.refreshToken);
+               localStorage.setItem("authChannels", JSON.stringify(res.data.data.authChannels));
 
                 if (res.data.data.authChannels.length === 0) {
                     navigate("/channel-outlet");
@@ -172,10 +174,10 @@ const Login = () => {
                             </InputGroup.Text>
                             <Form.Control
                                 type="email"
-                                name="Email"
+                                name='real-email'
                                 value={formValues.Email || ""}
                                 onChange={(e) => handleChange("Email", e.target.value)}
-                                 className={`custom-input ${errors.Email ? 'input-error' : ''}`}
+                                className={`custom-input ${errors.Email ? 'input-error' : ''}`}
                                 autoComplete="off"
                                 placeholder="Email Address"
                                 isInvalid={!!errors.Email}
@@ -189,11 +191,11 @@ const Login = () => {
                             </InputGroup.Text>
                             <Form.Control
                                 type="password"
-                                name="Password"
+                                autoComplete='new-password'
                                 value={formValues.Password || ""}
                                 onChange={(e) => handleChange("Password", e.target.value)}
                                 className={`custom-input ${errors.Password ? 'input-error' : ''}`}
-                                autoComplete="off"
+                                name="real-password"
                                 required
                                 placeholder="Password"
                                 isInvalid={!!errors.Password}

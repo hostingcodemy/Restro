@@ -5,7 +5,6 @@ import { Form, Button, Offcanvas, InputGroup, Spinner } from "react-bootstrap";
 import { MdDeleteForever } from "react-icons/md";
 import {
     FaRegEdit,
-    FaCodeBranch,
     FaRegFile,
     FaTrash,
     FaTimesCircle,
@@ -17,42 +16,25 @@ import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
 import { TbHandClick } from "react-icons/tb";
 import { toast, ToastContainer } from 'react-toastify';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../../../config/AxiosInterceptor';
 
 const FacilityStatus = () => {
 
-    const location = useLocation();
     const fetchCalled = useRef(false);
-    const [permissions, setPermissions] = useState({});
-
-    useEffect(() => {
-        if (location.state?.permissions) {
-            setPermissions(location.state.permissions);
-        }
-    }, [location.state?.permissions]);
 
     const initialValues = {
-        itemGroupId: "",
-        itemGroupName: "",
-        itemGroupCode: "",
+        facilityStatusId: "",
+        facilityStatus: "",
+        colour: "",
+        sequence: "",
+        prefix: "",
         isActive: false,
     };
 
     const initialImpValues = {
         File: "",
     };
-
-    const groupCodeOptions = [
-        { label: "FinishedGoods", value: "1" },
-        { label: "SemiFinishedGoods", value: "2" },
-        { label: "RawMaterial", value: "3" },
-        { label: "Consumables", value: "4" },
-        { label: "SpareParts", value: "5" },
-        { label: "PackagingMaterial", value: "6" },
-        { label: "Service", value: "7" },
-        { label: "Other", value: "8" },
-    ];
 
     const [formValues, setFormValues] = useState(initialValues);
     const [errors, setErrors] = useState({});
@@ -109,7 +91,7 @@ const FacilityStatus = () => {
 
     const downloadExcel = async () => {
         try {
-            const response = await api.get("/itemgroups/exportexcel", {
+            const response = await api.get("/facilitystatus/exportexcel", {
                 responseType: "blob"
             });
 
@@ -120,7 +102,7 @@ const FacilityStatus = () => {
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", "itemGroup.xlsx");
+            link.setAttribute("download", "Facilitystatus.xlsx");
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -154,20 +136,27 @@ const FacilityStatus = () => {
     };
 
     const validateForm = () => {
-        const { itemGroupName, itemGroupCode } = formValues;
+        const { facilityStatus, colour, sequence } = formValues;
         const errors = {};
         let isValid = true;
 
-        if (!itemGroupName) {
+        if (!facilityStatus) {
             isValid = false;
-            errors.itemGroupName = "Group name is required.";
-        } else if (!/^[a-zA-Z ]+$/.test(itemGroupName)) {
-            errors.itemGroupName = 'Name must contain only letters';
+            errors.facilityStatus = "Facility status is required.";
+        } else if (!/^[a-zA-Z ]+$/.test(facilityStatus)) {
+            errors.facilityStatus = 'Name must contain only letters';
             isValid = false;
         }
-        if (!itemGroupCode) {
+        if (!colour) {
             isValid = false;
-            errors.itemGroupCode = "Group code is required.";
+            errors.colour = "Colour is required.";
+        }
+        if (!sequence) {
+            isValid = false;
+            errors.sequence = "Sequence is required.";
+        } else if (!/^\d+$/.test(sequence)) {
+            isValid = false;
+            errors.sequence = "Sequence must be a number.";
         }
 
         setErrors(errors);
@@ -197,16 +186,18 @@ const FacilityStatus = () => {
     const handleEditClick = (row) => {
         setIsEditMode(true);
         setFormValues({
-            itemGroupId: row.itemGroupId,
-            itemGroupName: row.itemGroupName,
-            itemGroupCode: row.itemGroupCode,
+            facilityStatusId: row.facilityStatusId,
+            facilityStatus: row.facilityStatus,
+            colour: row.colour,
+            sequence: row.sequence,
+            prefix: row.prefix,
             isActive: row.isActive
         });
         setShow(true);
     };
 
-    const handleDeleteClick = (itemGroupId, itemGroupName) => {
-        setToDelete({ id: itemGroupId, name: itemGroupName });
+    const handleDeleteClick = (facilityStatusId, facilityStatus) => {
+        setToDelete({ id: facilityStatusId, name: facilityStatus });
         setConfirmOpen(true);
     };
 
@@ -214,14 +205,14 @@ const FacilityStatus = () => {
         if (!toDelete) return;
 
         setLoading(true);
-        api.delete(`/itemgroups/${toDelete.id}`)
+        api.delete(`/facilitystatus/${toDelete.id}`)
             .then((res) => {
-                toast.success(res.data.successMessage || "Group deleted successfully!");
-                fetchGroupData();
+                toast.success(res.data.successMessage || "Facility status deleted successfully!");
+                fetchFacilityData();
             })
             .catch((error) => {
-                console.error("Error deleting group:", error);
-                toast.error("Failed to delete group.");
+                console.error("Error deleting facility status:", error);
+                toast.error("Failed to delete facility status.");
             })
             .finally(() => {
                 setLoading(false);
@@ -251,7 +242,7 @@ const FacilityStatus = () => {
             selector: (row) => row.colour,
             sortable: true,
         },
-         {
+        {
             name: <h5>Sequence</h5>,
             selector: (row) => row.sequence,
             sortable: true,
@@ -273,16 +264,12 @@ const FacilityStatus = () => {
             center: true,
             cell: (row) => (
                 <>
-                    {permissions?.write && (
-                        <Link className="action-icon" onClick={() => handleEditClick(row)}>
-                            <FaRegEdit size={24} color="#87CEEB" />
-                        </Link>
-                    )}
-                    {permissions?.delete && (
-                        <Link className="action-icon" onClick={() => handleDeleteClick(row.itemGroupId, row.itemGroupName)}>
-                            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-                        </Link>
-                    )}
+                    <Link className="action-icon" onClick={() => handleEditClick(row)}>
+                        <FaRegEdit size={24} color="#87CEEB" />
+                    </Link>
+                    <Link className="action-icon" onClick={() => handleDeleteClick(row.facilityStatusId, row.facilityStatus)}>
+                        <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
+                    </Link>
                 </>
             ),
         },
@@ -299,44 +286,41 @@ const FacilityStatus = () => {
                     onChange={(e) => setFilterText(e.target.value)}
                 />
             </Form>
-            {permissions?.import && (
-                <Button variant="info" onClick={handleExpoShow}>
-                    <CiExport size={20} /> Import
-                </Button>
-            )}
-            {permissions?.export && (
-                <Button variant="success" onClick={downloadExcel}>
-                    <CiImport size={20} /> Export
-                </Button>
-            )}
-            {permissions?.write && (
-                <Button variant="warning" onClick={handleShow}>
+            <Button variant="info" onClick={handleExpoShow}>
+                <CiExport size={20} /> Import
+            </Button>
+            <Button variant="success" onClick={downloadExcel}>
+                <CiImport size={20} /> Export
+            </Button>
+            {/* <Button variant="warning" onClick={handleShow}>
                     <GoPlus size={20} /> Add
-                </Button>
-            )}
+                </Button> */}
         </div>
-    ), [permissions, filterText]);
+    ), [filterText]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
         const payload = {
-            itemGroupName: formValues.itemGroupName,
-            itemGroupCode: formValues.itemGroupCode,
-            isActive: formValues.isActive
+            facilityStatus: formValues.facilityStatus,
+            prefix: formValues.prefix,
+            facilityType: 'table',
+            colour: formValues.colour,
+            sequence: parseInt(formValues.sequence, 10),
+            isActive: formValues.isActive,
         };
 
         setLoading(true);
         try {
             let res;
             if (isEditMode) {
-                res = await api.put(`/itemgroups/${formValues.itemGroupId}`, payload);
+                res = await api.put(`/facilitystatus/${formValues.facilityStatusId}`, payload);
             } else {
-                res = await api.post("/itemgroups", payload);
+                res = await api.post("/facilitystatus", payload);
             }
             handleClose();
-            fetchGroupData();
+            fetchFacilityData();
             toast.success(res.data.successMessage || "Success!");
         } catch (error) {
             toast.error("Something went wrong! Please try again.");
@@ -354,7 +338,7 @@ const FacilityStatus = () => {
 
         setLoading(true);
         try {
-            const res = await api.post("/itemgroups/importexcel", formData);
+            const res = await api.post("/facilitystatus/importexcel", formData);
 
             toast.success(res.data.successMessage || "File uploaded successfully!");
             handleExpoClose();
@@ -454,7 +438,7 @@ const FacilityStatus = () => {
                 <Offcanvas.Header closeButton>
                     <div className="w-100 text-center">
                         <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
-                            {isEditMode ? "Edit Group" : "Add Group"}
+                            {isEditMode ? "Edit Facility status" : "Add Facility status"}
                         </Offcanvas.Title>
                     </div>
                 </Offcanvas.Header>
@@ -465,42 +449,45 @@ const FacilityStatus = () => {
                                 <MdOutlinePersonOutline size={25} color='#ffc800' />
                             </InputGroup.Text>
                             <Form.Control
-                                name="itemGroupName"
-                                value={formValues.itemGroupName}
-                                onChange={(e) => handleChange("itemGroupName", e.target.value.replace(/[^a-zA-Z ]/g, ""))}
-                                placeholder="Group name"
-                                isInvalid={!!errors.itemGroupName}
-                                isValid={formValues.itemGroupName && !errors.itemGroupName}
+                                name="facilityStatus"
+                                value={formValues.facilityStatus}
+                                onChange={(e) => handleChange("facilityStatus", e.target.value.replace(/[^a-zA-Z ]/g, ""))}
+                                placeholder="Facility status"
+                                isInvalid={!!errors.facilityStatus}
+                                isValid={formValues.facilityStatus && !errors.facilityStatus}
                             />
-                            {errors.itemGroupName && <span className="error-msg">{errors.itemGroupName}</span>}
+                            {errors.facilityStatus && <span className="error-msg">{errors.facilityStatus}</span>}
                         </InputGroup>
-
                         <InputGroup className="mb-3">
                             <InputGroup.Text>
-                                <FaCodeBranch size={25} color="#ffc800" />
+                                <MdOutlinePersonOutline size={25} color='#ffc800' />
                             </InputGroup.Text>
-                            <Form.Select
-                                name="itemGroupCode"
-                                value={formValues.itemGroupCode || ""}
-                                onChange={(e) => handleChange("itemGroupCode", e.target.value)}
-                            >
-                                <option value="">Select group code</option>
-                                {formValues.itemGroupCode &&
-                                    !groupCodeOptions?.some(
-                                        (opt) => opt.value === formValues.itemGroupCode
-                                    ) && (
-                                        <option value={formValues.itemGroupCode}>
-                                            {formValues.itemGroupCode}
-                                        </option>
-                                    )}
-                                {groupCodeOptions?.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </Form.Select>
-                            {errors.itemGroupCode && <span className="error-msg">{errors.itemGroupCode}</span>}
+                            <Form.Control
+                                type="color"
+                                name="colour"
+                                value={formValues.colour}
+                                onChange={(e) => handleChange("colour", e.target.value)}
+                                placeholder="Colour"
+                                isInvalid={!!errors.colour}
+                                isValid={formValues.colour && !errors.colour}
+                            />
+                            {errors.colour && <span className="error-msg">{errors.colour}</span>}
                         </InputGroup>
+                        <InputGroup className="mb-3">
+                            <InputGroup.Text>
+                                <MdOutlinePersonOutline size={25} color='#ffc800' />
+                            </InputGroup.Text>
+                            <Form.Control
+                                name="sequence"
+                                value={formValues.sequence}
+                                onChange={(e) => handleChange("sequence", e.target.value.replace(/\D/g, ""))}
+                                placeholder="Sequence"
+                                isInvalid={!!errors.sequence}
+                                isValid={formValues.sequence && !errors.sequence}
+                            />
+                            {errors.sequence && <span className="error-msg">{errors.sequence}</span>}
+                        </InputGroup>
+
 
                         <InputGroup className="mb-3">
                             <InputGroup.Text>

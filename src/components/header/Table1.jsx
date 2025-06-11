@@ -1,22 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
+import { PiPrinterThin } from "react-icons/pi";
 import { useDrag, useDrop } from "react-dnd";
 import Chair from "./Chair";
-// import 'src/index.css';
+import { PiUserCirclePlusLight } from "react-icons/pi";
 
 const ItemTypes = { TABLE: "table", CHAIR: "chair" };
 
-const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onAddChairs }) => {
+const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onAddChairs, facility }) => {
 
   const [showChairModal, setShowChairModal] = useState(false);
   const [chairCount, setChairCount] = useState('');
   const popupRef = useRef(null);
 
-useEffect(() => {
-if (showChairModal && popupRef.current) {
-  popupRef.current.focus();
-}
+  useEffect(() => {
+    if (showChairModal && popupRef.current) {
+      popupRef.current.focus();
+    }
 
-}, [showChairModal])
+  }, [showChairModal])
 
 
 
@@ -45,73 +46,37 @@ if (showChairModal && popupRef.current) {
   const renderChairs = () => {
     const chairs = table.chairs;
     const elements = [];
+    const half = Math.ceil(chairs.length / 2);
 
-    if (chairs.length <= 4) {
-      const positions = ["top", "bottom", "left", "right"];
-      chairs.forEach((chair, i) => {
-        elements.push(
-          <div
-            key={chair.id}
-            className={`chair-wrapper ${positions[i]}`}
-            style={getChairStyle(positions[i])}
-          >
-            <Chair
-              table={table}
-              chair={chair}
-              fromTableId={table.tableId}
-              dragEnabled={dragEnabled}
-            />
-          </div>
-        );
-      });
-    } else {
-      const half = Math.ceil(chairs.length / 2);
-      chairs.forEach((chair, i) => {
-        const isTop = i < half;
-        const rowIndex = isTop ? i : i - half;
-        const totalInRow = isTop ? half : chairs.length - half;
-        const gapPercent = 100 / (totalInRow + 1);
-        const leftPercent = (rowIndex + 1) * gapPercent;
+    chairs.forEach((chair, i) => {
+      const isTop = i < half;
+      const rowIndex = isTop ? i : i - half;
+      const totalInRow = isTop ? half : chairs.length - half;
+      const gapPercent = 100 / (totalInRow + 1);
+      const leftPercent = (rowIndex + 1) * gapPercent;
 
-        elements.push(
-          <div
-            key={chair.id}
-            className={`chair-wrapper ${isTop ? "top" : "bottom"}`}
-            style={{
-              position: "absolute",
-              left: `${leftPercent}%`,
-              transform: "translateX(-50%)",
+      elements.push(
+        <div
+          key={chair.id}
+          className={`chair-wrapper ${isTop ? "top" : "bottom"}`}
+          style={{
+            position: "absolute",
+            left: `${leftPercent}%`,
+            transform: "translateX(-50%)",
             top: isTop ? "-10px" : "calc(100% - 10px)"
-            }}
-          >
-            <Chair
-              table={table}
-              chair={chair}
-              fromTableId={table.tableId}
-              dragEnabled={dragEnabled}
-            />
-          </div>
-        );
-      });
-    }
+          }}
+        >
+          <Chair
+            table={table}
+            chair={chair}
+            fromTableId={table.tableId}
+            dragEnabled={dragEnabled}
+          />
+        </div>
+      );
+    });
 
     return elements;
-  };
-
-  const getChairStyle = (position) => {
-    const styles = { position: "absolute" };
-    switch (position) {
-      case "top":
-        return { ...styles, top: "-10px", left: "50%", transform: "translateX(-50%)" };
-      case "bottom":
-        return { ...styles, bottom: "-10px", left: "50%", transform: "translateX(-50%)" };
-      case "left":
-        return { ...styles, left: "-10px", top: "50%", transform: "translateY(-50%)" };
-      case "right":
-        return { ...styles, right: "-10px", top: "50%", transform: "translateY(-50%)" };
-      default:
-        return styles;
-    }
   };
 
   const handleMouseDown = (e) => {
@@ -136,20 +101,20 @@ if (showChairModal && popupRef.current) {
     document.addEventListener("mouseup", onMouseUp);
   };
 
-    const chairBgColor = () => {
-    switch (table?.tableStatus) {
-      case "Available": return "#90C67C";
-      case "Reserved": return "#FF3F33";
-      case "Hold": return "#FFAF00";
-      case "Occupied": return "#344CB7";
-      default: return "#ccc";
-    }
+
+  const getBgColor = (status) => {
+    return facilityColorMap[status] || "gray";
   };
+
+  const facilityColorMap = {};
+  facility.forEach(facility => {
+    facilityColorMap[facility.prefix] = facility.colour;
+  });
 
   return (
     <>
       {showChairModal && (
-        <div  className="chair-modal-overlay">
+        <div className="chair-modal-overlay">
           <div className="chair-modal-content animate-scale-in">
 
             <div className="modal-input-group">
@@ -163,12 +128,12 @@ if (showChairModal && popupRef.current) {
               </div>
 
               <input
-              ref={popupRef}
+                ref={popupRef}
                 type="number"
                 value={chairCount}
                 onChange={(e) => setChairCount(e.target.value)}
                 className="modal-input"
-                placeholder="Enter number (e.g., 3 or -2)"
+                placeholder="Add Chair"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const count = parseInt(chairCount);
@@ -205,41 +170,87 @@ if (showChairModal && popupRef.current) {
                   if (!isNaN(count) && count !== 0) {
                     onAddChairs(table.tableId, count);
                     setChairCount('');
-                    setShowChairModal(false); 
+                    setShowChairModal(false);
                   }
                 }}
               >
-                Confirm
+                Add
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div
-        ref={drop}
-        className="table-wrapper"
-        style={{
-          left: table.position.x,
-          top: table.position.y,
-          width: `${width}px`,
-          height: `100px`,
-          position: "absolute",
-          backgroundColor: chairBgColor(),
-          border: "2px solid #ccc",
-          borderRadius: "8px",
-          opacity: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color:"white"
-        }}
-        onMouseDown={handleMouseDown}
-        onClick={handleTableClick}
-      >
-        {renderChairs()}
-        <div style={{ zIndex: 1 }}>{table.tableName}</div>
-      </div>
+
+
+
+
+
+<div
+  style={{
+    position: "relative",
+    display: "inline-block",
+    border: `0.01rem solid ${getBgColor(table.tableStatus)}`,
+    borderRadius: "10px",
+    padding: "1rem"
+  }}
+>
+  {/* Left Icon - absolutely positioned */}
+  <div
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "-12px", 
+      transform: "translateY(-50%)",
+    
+      borderRadius: "50%",
+
+    }}
+  >
+    <PiUserCirclePlusLight size={30} />
+  </div>
+
+  {/* Right Icon - absolutely positioned */}
+  <div
+    style={{
+      position: "absolute",
+      top: "50%",
+      right: "-8px", // half the icon width to attach
+      transform: "translateY(-50%)",
+      borderRadius: "50%",
+      padding: "2px",
+      zIndex:"999"
+    }}
+  >
+    <PiPrinterThin size={30}  />
+  </div>
+
+  {/* Table Box */}
+  <div
+    ref={drop}
+    className="table-wrapper"
+    style={{
+      width: `${width}px`,
+      height: "100px",
+      position: "relative",
+      backgroundColor: getBgColor(table.tableStatus),
+      borderRadius: "8px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "white"
+    }}
+    onMouseDown={handleMouseDown}
+    onClick={handleTableClick}
+  >
+    {renderChairs()}
+    <div style={{ zIndex: 1 }}>{table.tableName}</div>
+  </div>
+</div>
+
+
+
+
 
     </>
 

@@ -18,7 +18,7 @@ body {
 
 .primaryColor {
   color: #ffc300;
-  
+
 }
 
 .custom-yellow-checkbox {
@@ -2774,7 +2774,7 @@ h5 {
 // }
 
 .tableBook {
-  height: 93vh;
+  height: 94.5vh;
   width: 100%;
   // background-color: #fafafa;
 }
@@ -2894,25 +2894,25 @@ h5 {
 }
 
 .rightBtmBTm {
-  height: 93%;
+  height: 100%;
   width: 100%;
 }
 
-.btmTop {
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-}
+// .btmTop {
+//   height: 100%;
+//   overflow: hidden;
+//   position: relative;
+// }
 
-.movableArea {
+// .movableArea {
 
-  width: 300%;
-  height: 500px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  cursor: grab;
-}
+//   width: 300%;
+//   height: 500px;
+//   position: absolute;
+//   top: 0;
+//   left: 0;
+//   cursor: grab;
+// }
 
 // /* .table {
 //   background: #4caf50;
@@ -3774,22 +3774,21 @@ h5 {
 //   overflow: hidden;
 // }
 
-.table-wrapper {
-  position: absolute;
-  border-radius: 12px;
-  background-color: #deb887;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: box-shadow 0.2s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+// .table-wrapper {
+//   position: absolute;
+//   border-radius: 12px;
+//   background-color: #deb887;
+//   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+//   transition: box-shadow 0.2s ease;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+// }
 
 .table {
   font-size: 14px;
   color: #333;
-  text-align: center;
-  pointer-events: none;
+  text-align: center; 
 }
 
 .chair {
@@ -3986,7 +3985,7 @@ h5 {
 
 .modal-input {
   flex: 1;
-  width: 2.5rem;
+  width: 10rem;
   padding: 0.25rem;
   font-size: 1.2rem;
   text-align: center;
@@ -3995,7 +3994,7 @@ h5 {
 
 }
 
-.modal-input:focus{
+.modal-input:focus {
   outline: none;
 }
 
@@ -4756,7 +4755,7 @@ h5 {
   width: 100vw;
   height: 100vh;
   // background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(3px);
   z-index: 1040;
   opacity: 1;
   transition: opacity 0.3s ease;
@@ -4768,8 +4767,7 @@ h5 {
   top: 0;
   right: 0;
   height: 100vh;
-  width: 50%;
-  max-width: 100%;
+  width: fit-content;
   background-color: #ffffff;
   z-index: 1050;
   transform: translateX(100%);
@@ -4793,7 +4791,7 @@ h5 {
 
 @media (min-width: 1200px) {
   .sidebar-panel {
-    width: 200px;
+    width: 20vw;
   }
 }
 
@@ -4810,7 +4808,6 @@ h5 {
 .sidebar-content {
   padding: 1rem;
   overflow-y: auto;
-  flex-grow: 1;
 }
 
 /* Close Button */
@@ -4841,3 +4838,68 @@ h5 {
 
 
 // configuration all table styles end
+
+.custom-toggle-btn {
+    cursor: pointer;
+    user-select: none;
+    padding: 3px;
+    border-radius: 20px;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    width: 120px;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    position: relative;
+    height: 30px;
+}
+
+.switch-text {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 500;
+    position: relative;
+    z-index: 2;
+}
+
+.merge-label, .split-label {
+    flex: 1;
+    text-align: center;
+    z-index: 2;
+    color: #6c757d;
+    font-weight: normal;
+    transition: color 0.3s ease, font-weight 0.3s ease;
+}
+
+/* Active label inside circle */
+.merge-label.active, .split-label.active {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Orange background circle that moves */
+.switch-circle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 55px;
+    height: 26px;
+    background-color: #ffc107;
+    border-radius: 20px;
+    transition: left 0.3s ease;
+    z-index: 1;
+}
+
+.custom-toggle-btn.merged .switch-circle {
+    left: 57px;
+}
+
+
+

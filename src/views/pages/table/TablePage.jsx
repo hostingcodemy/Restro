@@ -4,12 +4,12 @@ import { Form, Button, Offcanvas, InputGroup, Row, Col, Table } from "react-boot
 import { MdDeleteForever } from "react-icons/md";
 import { FaRegEdit, FaRegFile } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link} from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
 import DataTableSettings from '../../../helpers/DataTableSettings';
-import { MdOutlinePersonOutline, MdOutlineLockPerson, MdSecurity, } from "react-icons/md";
+import { MdOutlinePersonOutline } from "react-icons/md";
 import { MdFormatListNumberedRtl } from "react-icons/md";
 import { TbHandClick } from "react-icons/tb";
 import "react-datepicker/dist/react-datepicker.css";
@@ -25,27 +25,18 @@ import { IoLayersOutline } from "react-icons/io5";
 
 const TablePage = () => {
 
-    const location = useLocation();
     const fetchCalled = useRef(false);
-    const navigate = useNavigate();
     const channelId = localStorage.getItem("channelId");
-    const [permissions, setPermissions] = useState({});
     const [loading, setLoading] = useState(true);
+    const [section, setSection] = useState([]);
 
     useEffect(() => {
 
         const timer = setTimeout(() => {
             setLoading(false);
         }, 2000);
-
         return () => clearTimeout(timer);
     }, []);
-
-    useEffect(() => {
-        if (location.state?.permissions) {
-            setPermissions(location.state.permissions);
-        }
-    }, [location.state]);
 
     const [filterText, setFilterText] = useState("");
     const [loadingIndicator, setLoadingIndicator] = useState(false);
@@ -107,6 +98,11 @@ const TablePage = () => {
         fetchTableData();
     }, []);
 
+    useEffect(() => {
+        fetchSectionData();
+    }, [])
+
+
     const fetchOutletData = async () => {
         try {
             const res = await api.get("/outlets", {
@@ -128,6 +124,20 @@ const TablePage = () => {
         } catch (error) {
             console.error("Error fetching table data", error);
         }
+    };
+
+    const fetchSectionData = async () => {
+
+        try {
+
+            const response = await api.get("/section");
+
+            setSection(response.data.list);
+
+        } catch (error) {
+            console.log(error);
+        }
+
     };
 
     const handleChange = (name, value) => {
@@ -301,27 +311,21 @@ const TablePage = () => {
                         onChange={(e) => setFilterText(e.target.value)}
                     />
                 </Form>
-                {permissions?.import && (
                     <Button variant="info"
                         onClick={handleExpoShow}
                     >
                         <CiExport size={20} style={{ marginTop: "-0.5vh" }} /> Import
                     </Button>
-                )}
-                {permissions?.export && (
                     <Button variant="success"
                     >
                         <CiImport size={20} style={{ marginTop: "-0.5vh" }} /> Export
                     </Button>
-                )}
-                {permissions?.write && (
                     <Button variant="warning" onClick={handleShow}>
                         <GoPlus size={20} style={{ marginTop: "-0.5vh" }} /> Add
                     </Button>
-                )}
             </div>
         );
-    }, [permissions?.write, permissions?.export, permissions?.import]);
+    }, [filterText]);
 
 
     const handleSubmit = async (e) => {
@@ -350,13 +354,13 @@ const TablePage = () => {
             let res;
             if (isEditMode) {
                 res = await api.put(`/tables/${formValues.tableId}`, payload);
-   fetchTableData();
+                fetchTableData();
             } else {
                 res = await api.post("/tables", payload);
             }
 
             handleClose();
-         
+
 
             toast.success(res.data.successMessage || "Success!", {
                 position: "top-right",
@@ -633,22 +637,27 @@ const TablePage = () => {
 
                             </Col>
                             <Col md={6}>
-                                <InputGroup hasValidation className="mb-4">
-                                    <InputGroup.Text>
+                                <InputGroup className="mb-4">
+                                    <InputGroup.Text id="employeeTypeId">
                                         <IoLayersOutline size={24} color='#ffc800' />
                                     </InputGroup.Text>
-                                    <Form.Control
-                                        name="Direction"
-                                        value={formValues.section || ""}
+                                    <Form.Select
+                                        value={formValues.section}
                                         onChange={(e) =>
                                             setFormValues({ ...formValues, section: e.target.value })
                                         }
-                                        placeholder="Enter Section"
-                                        aria-label="capacity"
+                                        required
                                         isInvalid={!!errors.section}
-                                        isValid={formValues.section && !errors.section}
-                                    />
+                                    >
+                                        {section?.map(section => (
+                                            <option key={section.sectionId} value={section.floorName}>
+                                                {section.floorName}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+
                                 </InputGroup>
+
                             </Col>
                         </Row>
 

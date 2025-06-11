@@ -9,7 +9,7 @@ import {
     FaExclamationTriangle
 } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
-import { Link, useLocation } from 'react-router-dom';;
+import { Link } from 'react-router-dom';;
 import { toast, ToastContainer } from 'react-toastify';
 import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
@@ -32,14 +32,6 @@ const Uom = () => {
     const [errors, setErrors] = useState({});
     const [formImpValues, setFormImpValues] = useState(initialImpValues);
     const [impErrors, setImpErrors] = useState({});
-    const location = useLocation();
-    const [permissions, setPermissions] = useState({});
-
-    useEffect(() => {
-        if (location.state?.permissions) {
-            setPermissions(location.state.permissions);
-        }
-    }, [location.state?.permissions]);
     const fetchCalled = useRef(false);
     const [loadingIndicator, setLoadingIndicator] = useState(false);
     const [filterText, setFilterText] = useState("");
@@ -237,16 +229,12 @@ const Uom = () => {
             center: true,
             cell: (row) => (
                 <>
-                    {permissions?.write && (
                         <Link className="action-icon" onClick={() => handleEditClick(row)}>
                             <FaRegEdit size={24} color="#87CEEB" />
                         </Link>
-                    )}
-                    {permissions?.delete && (
                         <Link className="action-icon" onClick={() => handleDeleteClick(row.uomId, row.uomName)}>
                             <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
                         </Link>
-                    )}
                 </>
             ),
         },
@@ -263,23 +251,17 @@ const Uom = () => {
                     onChange={(e) => setFilterText(e.target.value)}
                 />
             </Form>
-            {permissions?.import && (
                 <Button variant="info" onClick={handleExpoShow}>
                     <CiExport size={20} /> Import
                 </Button>
-            )}
-            {permissions?.export && (
                 <Button variant="success" onClick={downloadExcel}>
                     <CiImport size={20} /> Export
                 </Button>
-            )}
-            {permissions?.write && (
                 <Button variant="warning" onClick={handleShow}>
                     <GoPlus size={20} /> Add
                 </Button>
-            )}
         </div>
-    ), [permissions, filterText]);
+    ), [filterText]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

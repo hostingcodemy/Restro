@@ -34,10 +34,6 @@ const SuccessPage = React.lazy(() => import('src/views/pages/TransactionPages/Su
 const EmployeePage = React.lazy(() => import('src/views/pages/employee/Employee.jsx'));
 const FacilityStatus = React.lazy(() => import('./views/pages/facilityStatus/FacilityStatus.jsx'));
 
-const ItemForm = React.lazy(() => import('src/views/pages/item/ItemForm.jsx'));
-const ItemOutlet = React.lazy(() => import('src/views/pages/item/ItemOutlet.jsx'));
-const ItemTax = React.lazy(() => import('src/views/pages/item/ItemTax.jsx'));
-
 const AppRoutes = () => {
 
   return (
@@ -78,12 +74,8 @@ const AppRoutes = () => {
           <Route path="/discount-setup" element={<DiscountSetup />} />
           <Route path="/departments" element={<Department />} />
           <Route path="/employee-types" element={<EmployeeType />} />
-          <Route path="/item-form" element={<ItemForm />} />
-          <Route path="/item-outlet" element={<ItemOutlet />} />
-          <Route path="/item-tax" element={<ItemTax />} />
           <Route path="/facility-status" element={<FacilityStatus />} />
           <Route path="/table-reservations" element={<TableReservation />} />
-
         </Route>
 
         <Route path="*" element={<Navigate to="/404" replace />} />

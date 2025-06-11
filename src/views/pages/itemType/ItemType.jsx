@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
 import DataTableSettings from "../../../helpers/DataTableSettings";
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { MdDeleteForever } from "react-icons/md";
 import {
     FaRegEdit, FaRegFile, FaTrash,
@@ -20,15 +20,6 @@ import { FaCode } from "react-icons/fa";
 import { Spinner } from 'react-bootstrap';
 
 const ItemType = () => {
-
-    const location = useLocation();
-    const [permissions, setPermissions] = useState({});
-
-    useEffect(() => {
-        if (location.state?.permissions) {
-            setPermissions(location.state.permissions);
-        }
-    }, [location.state?.permissions]);
 
     const initialValues = {
         itemCategoryId: "",
@@ -235,16 +226,12 @@ const ItemType = () => {
             center: true,
             cell: (row) => (
                 <>
-                    {permissions?.write && (
                         <Link className="action-icon" onClick={() => handleEditClick(row)} >
                             <FaRegEdit size={24} color="#87CEEB" />
                         </Link>
-                    )}
-                    {permissions?.delete && (
                         <Link className="action-icon" onClick={() => handleDeleteClick(row.itemCategoryId, row.itemCategoryName)}>
                             <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
                         </Link>
-                    )}
                 </>
             ),
         },
@@ -261,23 +248,17 @@ const ItemType = () => {
                     onChange={(e) => setFilterText(e.target.value)}
                 />
             </Form>
-            {permissions?.import && (
                 <Button variant="info" onClick={handleExpoShow}>
                     <CiExport size={20} /> Import
                 </Button>
-            )}
-            {permissions?.export && (
                 <Button variant="success" onClick={downloadExcel}>
                     <CiImport size={20} /> Export
                 </Button>
-            )}
-            {permissions?.write && (
                 <Button variant="warning" onClick={handleShow}>
                     <GoPlus size={20} /> Add
                 </Button>
-            )}
         </div>
-    ), [permissions, filterText]);
+    ), [filterText]);
 
     const validateForm = () => {
         const {

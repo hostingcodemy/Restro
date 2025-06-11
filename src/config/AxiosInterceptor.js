@@ -34,7 +34,7 @@ const onRefreshed = (newToken) => {
 }
 
 //List of endpoints where token is NOT required
-const noAuthRoutes = ['/Auth/login'];
+const noAuthRoutes = ['/adminauth/login'];
 
 api.interceptors.request.use(
     (config) => {
@@ -84,7 +84,7 @@ api.interceptors.response.use(
                         return Promise.reject(new Error('No refresh token available'));
                     }
 
-                    const refreshResponse = await api.post("Auth/refresh-token",
+                    const refreshResponse = await api.post("adminauth/refresh-token",
                         { refreshToken, accessToken }, {
                         headers: {
                             Authorization: `Bearer ${accessToken}`, 
