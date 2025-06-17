@@ -14,7 +14,8 @@ import { TbHandClick, TbCategoryPlus, TbPencilCode } from "react-icons/tb";
 import { BiCategoryAlt } from "react-icons/bi";
 import { LiaProductHunt, LiaWeightSolid } from "react-icons/lia";
 import { LuTypeOutline } from "react-icons/lu";
-import { IoBarcodeOutline, IoPricetagOutline } from "react-icons/io5";
+import { IoBarcodeOutline } from "react-icons/io5";
+import Select from 'react-select';
 
 const Item = () => {
 
@@ -32,8 +33,8 @@ const Item = () => {
     itemType: "",
     uom: "",
     itemCode: "",
-    itemImage: null,
-    hsnCode: "",
+    ItemImageFile: null,
+    HSNCode: "",
     qrCode: "",
     itemQuantity: "",
     itemPrice: "",
@@ -43,7 +44,7 @@ const Item = () => {
     isSoldMRP: false,
     isDiscountable: false,
     isVisible: false,
-    isActive: false,
+    isActive: true,
     taxWithDiscount: false,
   };
 
@@ -86,6 +87,11 @@ const Item = () => {
   };
 
   const hasFetchedTaxes = useRef(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredTaxes = taxData?.filter((tax) =>
+    tax.taxName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleClose = () => {
     setShow(false);
@@ -95,6 +101,8 @@ const Item = () => {
   };
 
   const handleShow = () => {
+    localStorage.removeItem('tableData');
+
     setFormValues(initialValues);
     setIsEditMode(false);
     setErrors({});
@@ -102,6 +110,7 @@ const Item = () => {
     fetchGroupData();
     fetchOutletData();
     fetchUomData();
+    setLoading(false);
   };
 
   const handleCheckboxChange = (taxId) => {
@@ -139,10 +148,19 @@ const Item = () => {
     isSoldMRP: false,
     isDiscountable: false,
     isVisible: false,
+    taxes: false,
   });
 
   const handleColumnStarClick = (columnKey) => {
     const primaryValue = formRows[0][columnKey];
+
+    if (
+      (columnKey === "itemSize" && !primaryValue) ||
+      (columnKey === "itemPrice" && primaryValue === "")
+    ) {
+      toast.error(`Please enter a value for "${columnKey === "itemSize" ? "Item Size" : "Item Price"}" in the first row before using this feature.`);
+      return;
+    }
 
     const isActive = primaryState[columnKey];
 
@@ -157,19 +175,32 @@ const Item = () => {
           ? row
           : {
             ...row,
-            [columnKey]: !isActive ? primaryValue : getDefaultValue(columnKey),
+            [columnKey]: !isActive
+              ? Array.isArray(primaryValue)
+                ? [...primaryValue]
+                : primaryValue
+              : getDefaultValue(columnKey),
           }
       )
     );
   };
+
   const getDefaultValue = (key) => {
-    if (key === "itemPrice") return "";
-    return false;
+    switch (key) {
+      case "itemPrice":
+      case "itemSize":
+        return "";
+      case "taxId":
+        return [];
+      default:
+        return false;
+    }
   };
 
   const itemTypeOptions = [
     { label: "Veg", value: "Veg" },
     { label: "NonVeg", value: "NonVeg" },
+    { label: "Mixed", value: "Mixed" },
   ];
 
   const productTypeOptions = [
@@ -270,9 +301,11 @@ const Item = () => {
   };
 
   useEffect(() => {
-    if (outletData.length > 0) {
+    const localData = localStorage.getItem("tableData");
+    if (!localData && outletData.length > 0) {
       const rows = outletData.map((outlet) => ({
         outletId: outlet.outletId,
+        outletName: outlet.outletName,
         itemSize: "",
         itemPrice: "",
         isSoldMRP: false,
@@ -283,6 +316,22 @@ const Item = () => {
       setFormRows(rows);
     }
   }, [outletData]);
+
+  useEffect(() => {
+    if (mappingShow) {
+      const storedData = localStorage.getItem("tableData");
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          if (Array.isArray(parsed)) {
+            setFormRows(parsed);
+          }
+        } catch (err) {
+          console.error("Error parsing localStorage tableData", err);
+        }
+      }
+    }
+  }, [mappingShow]);
 
   const fetchItemSizeData = async () => {
     try {
@@ -295,6 +344,8 @@ const Item = () => {
   };
 
   const handleChange = (name, value) => {
+    console.log(name, value, 'pp');
+
     if (formValues[name] === value) return;
 
     setFormValues((prevValues) => ({
@@ -411,8 +462,7 @@ const Item = () => {
       itemType,
       uom,
       itemCode,
-      hsnCode,
-      qrCode,
+      HSNCode,
       productType,
     } = formValues;
     const errors = {};
@@ -450,17 +500,13 @@ const Item = () => {
       isValid = false;
       errors.itemType = "Item type is required";
     }
-    if (!hsnCode) {
-      isValid = false;
-      errors.hsnCode = "HSN code is required";
-    }
+    // if (!HSNCode) {
+    //   isValid = false;
+    //   errors.HSNCode = "HSN code is required";
+    // }
     if (!productType) {
       isValid = false;
       errors.productType = "Product type is required";
-    }
-    if (!qrCode) {
-      isValid = false;
-      errors.qrCode = "QR code is required";
     }
 
     setErrors(errors);
@@ -468,8 +514,15 @@ const Item = () => {
   };
 
   const handleEditClick = (row) => {
-    console.log(row, 'kk');
-    navigate("/group", { state: { groupData: row } });
+    setIsEditMode(true);
+    setFormValues({
+      itemId: row.itemId,
+      itemName: row.itemName,
+      itemGroupId: row.itemGroupId,
+      itemSubGroupId: row.itemSubGroupId,
+      isActive: row.isActive
+    });
+    setShow(true);
   };
 
   const handleDeleteClick = (itemId, itemName) => {
@@ -504,6 +557,37 @@ const Item = () => {
 
   const columns = [
     {
+      name: <h5>Item Photo</h5>,
+      selector: (row) => (
+        row.ItemImageFile ? (
+          <img
+            src={`${import.meta.env.VITE_BASE_URL}/${row.ItemImageFile}`}
+            alt={row.itemName}
+            style={{
+              width: "60px",
+              height: "60px",
+              objectFit: "cover",
+              borderRadius: "50%",
+              border: "2px solid #ccc",
+            }}
+          />
+        ) : (
+          <img
+            src='src/assets/food.png'
+            style={{
+              width: "60px",
+              height: "60px",
+              objectFit: "cover",
+              borderRadius: "50%",
+              border: "2px solid #ccc",
+            }}
+          />
+        )
+      ),
+      sortable: false,
+      center: true
+    },
+    {
       name: <h5>Item Name</h5>,
       selector: (row) => row.itemName,
       sortable: true,
@@ -530,10 +614,10 @@ const Item = () => {
       center: true,
       cell: (row) => (
         <>
-          <Link className="action-icon" onClick={() => handleEditClick(row)}>
+          <Link className="action-icon" onClick={() => handleEditClick(row)} title='Edit'>
             <FaRegEdit size={24} color="#87CEEB" />
           </Link>
-          <Link className="action-icon" onClick={() => handleDeleteClick(row.itemId, row.itemName)}>
+          <Link className="action-icon" onClick={() => handleDeleteClick(row.itemId, row.itemName)} title='Delete'>
             <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
           </Link>
         </>
@@ -570,10 +654,38 @@ const Item = () => {
     if (!validateForm()) return;
     setMappingShow(true);
     setShow(false);
-
     fetchOutletData();
     fetchItemSizeData();
+
+    const stored = localStorage.getItem("tableData");
   };
+
+  const handleBack = () => {
+    setMappingShow(false);
+    setShow(true);
+
+    if (formRows && formRows.length > 0) {
+      localStorage.setItem("tableData", JSON.stringify(formRows));
+    } else {
+      console.warn("formRows is empty, skipping localStorage update");
+    }
+  };
+
+  useEffect(() => {
+    if (mappingShow) {
+      const storedData = localStorage.getItem("tableData");
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          if (Array.isArray(parsed)) {
+            setFormRows(parsed);
+          }
+        } catch (e) {
+          console.error("Failed to parse tableData from localStorage");
+        }
+      }
+    }
+  }, [mappingShow]);
 
   const handleAddNewRow = () => {
     setFormRows(prevRows => [
@@ -585,7 +697,8 @@ const Item = () => {
         isSoldMRP: false,
         isDiscountable: false,
         isVisible: false,
-        taxes: []
+        taxes: [],
+        isNew: true,
       }
     ]);
   };
@@ -598,10 +711,7 @@ const Item = () => {
     e.preventDefault();
 
     const validMappings = formRows.filter(row =>
-      row.outletId &&
-      row.itemSize &&
-      row.itemPrice &&
-      parseFloat(row.itemPrice) > 0
+      row.outletId && row.itemSize && row.itemPrice && parseFloat(row.itemPrice) > 0
     );
 
     if (validMappings.length === 0) {
@@ -609,50 +719,60 @@ const Item = () => {
       return;
     }
 
-    const payload = {
-      item: {
-        itemName: formValues.itemName,
-        itemGroupId: formValues.itemGroupId,
-        itemSubGroupId: formValues.itemSubGroupId,
-        itemCategoryId: formValues.itemCategoryId,
-        itemSubCategoryId: formValues.itemSubCategoryId,
-        productType: formValues.productType,
-        itemType: formValues.itemType,
-        itemCode: formValues.itemCode,
-        uomID: formValues.uom,
-        hsnCode: formValues.hsnCode,
-        qrCode: formValues.qrCode,
-        isActive: formValues.isActive,
-        itemImage: typeof formValues.itemImage === 'string' && formValues.itemImage !== "" ? formValues.itemImage : null,
-        mappings: validMappings.map(row => ({
-          outletId: row.outletId,
-          prices: [
-            {
-              itemQuantity: parseFloat(formValues.itemQuantity) || 1,
-              itemSizeId: row.itemSize,
-              itemPrice: parseFloat(row.itemPrice),
-              isSoldMRP: row.isSoldMRP,
-              isDiscountable: row.isDiscountable,
-              isVisible: row.isVisible,
-              isActive: formValues.isActive
-            }
-          ],
-          taxes: (row.taxes || []).map(tax => ({
-            taxId: tax.taxId,
-            taxAfterDiscount: formValues.taxWithDiscount || false,
-            onPercentage: 0,
-            isActive: formValues.isActive
-          }))
-        }))
-      }
-    };
+    const formData = new FormData();
+
+    formData.append("Item.ItemName", formValues.itemName);
+    formData.append("Item.ItemGroupId", formValues.itemGroupId);
+    formData.append("Item.ItemSubGroupId", formValues.itemSubGroupId);
+    formData.append("Item.ItemCategoryId", formValues.itemCategoryId);
+    formData.append("Item.ItemSubCategoryId", formValues.itemSubCategoryId);
+    formData.append("Item.ProductType", formValues.productType);
+    formData.append("Item.ItemType", formValues.itemType);
+    formData.append("Item.ItemCode", formValues.itemCode);
+    formData.append("Item.uomID", formValues.uom);
+    formData.append("Item.HSNCode", formValues.HSNCode);
+    formData.append("Item.qrCode", formValues.qrCode);
+    formData.append("Item.IsActive", formValues.isActive);
+    formData.append("Item.ItemQuantity", parseFloat(formValues.itemQuantity) || 1);
+    formData.append("Item.TaxWithDiscount", formValues.taxWithDiscount || false);
+
+    if (formValues.ItemImageFile instanceof File) {
+      formData.append("Item.ItemImageFile", formValues.ItemImageFile);
+    }
+
+    validMappings.forEach((row, i) => {
+      const base = `Item.Mappings[${i}]`;
+
+      formData.append(`${base}.OutletId`, row.outletId);
+
+      const priceBase = `${base}.Prices[0]`;
+      formData.append(`${priceBase}.ItemQuantity`, parseFloat(formValues.itemQuantity) || 1);
+      formData.append(`${priceBase}.ItemSizeId`, row.itemSize);
+      formData.append(`${priceBase}.ItemPrice`, parseFloat(row.itemPrice));
+      formData.append(`${priceBase}.IsSoldMRP`, row.isSoldMRP);
+      formData.append(`${priceBase}.IsDiscountable`, row.isDiscountable);
+      formData.append(`${priceBase}.IsVisible`, row.isVisible);
+      formData.append(`${priceBase}.IsActive`, formValues.isActive);
+
+      (row.taxes || []).forEach((tax, j) => {
+        const taxBase = `${base}.Taxes[${j}]`;
+        formData.append(`${taxBase}.TaxId`, tax.taxId);
+        formData.append(`${taxBase}.TaxAfterDiscount`, formValues.taxWithDiscount || false);
+        formData.append(`${taxBase}.OnPercentage`, 0);
+        formData.append(`${taxBase}.IsActive`, formValues.isActive);
+      });
+    });
 
     try {
       setLoading(true);
-      const response = await api.post("/items", payload);
+
+      const response = await api.post("/items", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       toast.success(response.data.successMessage || "Item created successfully!");
-
       setFormValues(initialValues);
       setFormRows([]);
       setMappingShow(false);
@@ -670,6 +790,7 @@ const Item = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <>
@@ -973,20 +1094,20 @@ const Item = () => {
             <Row className='mb-3'>
               <Col md={4}>
                 <InputGroup className="mb-3">
-                  <InputGroup.Text id="hsnCode">
+                  <InputGroup.Text id="HSNCode ">
                     <TbPencilCode size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
-                    name="hsnCode"
-                    value={formValues.hsnCode || ""}
-                    onChange={(e) => handleChange("hsnCode", e.target.value)}
+                    name="HSNCode "
+                    value={formValues.HSNCode || ""}
+                    onChange={(e) => handleChange("HSNCode ", e.target.value)}
                     placeholder="Hsn code"
-                    aria-label="hsnCode"
-                    isInvalid={!!errors.hsnCode}
-                    isValid={formValues.hsnCode && !errors.hsnCode}
+                    aria-label="HSNCode "
+                    isInvalid={!!errors.HSNCode}
+                    isValid={formValues.HSNCode && !errors.HSNCode}
                     autoComplete='off'
                   />
-                  {errors.hsnCode && <span className="error-msg">{errors.hsnCode}</span>}
+                  {errors.HSNCode && <span className="error-msg">{errors.HSNCode}</span>}
                 </InputGroup>
               </Col>
               <Col md={4}>
@@ -1047,7 +1168,7 @@ const Item = () => {
             <Row>
               <Col md={4}>
                 <InputGroup className="mb-3">
-                  <InputGroup.Text id="itemImage">
+                  <InputGroup.Text id="ItemImageFile">
                     <FaRegFile size={25} color='#ffc800' />
                   </InputGroup.Text>
                   <Form.Control
@@ -1056,7 +1177,10 @@ const Item = () => {
                     onChange={(e) => {
                       const file = e.target.files[0];
                       if (file) {
-                        handleChange("itemImage", file);
+                        setFormValues(prev => ({
+                          ...prev,
+                          ItemImageFile: file
+                        }));
                       }
                     }}
                   />
@@ -1092,7 +1216,15 @@ const Item = () => {
               <thead>
                 <tr>
                   <th>Outlet Name</th>
-                  <th style={{ width: "150px" }}>Item Size</th>
+                  <th>
+                    <span
+                      style={{ display: "inline-flex", alignItems: "center", gap: "20px", cursor: "pointer", width: "120px" }}
+                      onClick={() => handleColumnStarClick("itemSize")}
+                    >
+                      Item Size
+                      <FaRegStar size={20} color={primaryState.itemSize ? "gold" : "gray"} />
+                    </span>
+                  </th>
                   <th>
                     <span
                       style={{ display: "inline-flex", alignItems: "center", gap: "20px", cursor: "pointer", width: "120px" }}
@@ -1103,7 +1235,7 @@ const Item = () => {
                     </span>
                   </th>
                   <th>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px" }}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px", cursor: "pointer" }}
                       onClick={() => handleColumnStarClick("isSoldMRP")}
                     >
                       Sold MRP
@@ -1111,7 +1243,7 @@ const Item = () => {
                     </span>
                   </th>
                   <th>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px" }}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px", cursor: "pointer" }}
                       onClick={() => handleColumnStarClick("isDiscountable")}
                     >
                       Discount
@@ -1119,42 +1251,59 @@ const Item = () => {
                     </span>
                   </th>
                   <th>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px" }}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px", cursor: "pointer" }}
                       onClick={() => handleColumnStarClick("isVisible")}
                     >
                       Visible
                       <FaRegStar size={20} color={primaryState.isVisible ? "gold" : "gray"} />
                     </span>
                   </th>
-                  <th>Taxes</th>
+                  <th>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "20px", cursor: "pointer" }}
+                      onClick={() => handleColumnStarClick("taxes")}
+                    >
+                      Taxes
+                      <FaRegStar size={20} color={primaryState.taxes ? "gold" : "gray"} />
+                    </span>
+                  </th>
+                  <th>Add on Item</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {formRows.map((row, index) => (
+                {formRows?.map((row, index) => (
                   <tr key={index}>
                     <td>
-                      <Form.Select
-                        value={row.outletId}
-                        onChange={(e) => handleRowChange(index, "outletId", e.target.value)}
-                      >
-                        <option value="">Select Outlet</option>
-                        {outletData.map(outlet => (
-                          <option key={outlet.outletId} value={outlet.outletId}>
-                            {outlet.outletName}
-                          </option>
-                        ))}
-                      </Form.Select>
+                      {row.isNew ? (
+                        <Form.Select
+                          value={row.outletId}
+                          onChange={(e) => handleRowChange(index, "outletId", e.target.value)}
+                        >
+                          <option value="">Select Outlet</option>
+                          {outletData.map((outlet) => (
+                            <option key={outlet.outletId} value={outlet.outletId}>
+                              {outlet.outletName}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      ) : (
+                        <Form.Control
+                          type="text"
+                          placeholder="Enter Outlet Name"
+                          value={row.outletName}
+                          readOnly
+                        />
+                      )}
                     </td>
                     <td>
                       <Form.Select
-                        value={row.itemSize}
+                        value={row.itemSize || ""}
                         onChange={(e) =>
                           handleRowChange(index, "itemSize", e.target.value)
                         }
                       >
                         <option value="">Select Item Size</option>
-                        {itemSizeData.map((size) => (
+                        {itemSizeData?.map((size) => (
                           <option key={size.id} value={size.id}>
                             {size.sizeName}
                           </option>
@@ -1163,7 +1312,7 @@ const Item = () => {
                     </td>
                     <td style={{ width: "100px", padding: "4px" }}>
                       <Form.Control
-                        value={row.itemPrice}
+                        value={row.itemPrice || ""}
                         onChange={(e) =>
                           handleRowChange(
                             index,
@@ -1183,7 +1332,7 @@ const Item = () => {
                     <td>
                       <Form.Check
                         type="checkbox"
-                        checked={row.isSoldMRP}
+                        checked={row.isSoldMRP || ""}
                         onChange={(e) =>
                           handleRowChange(index, "isSoldMRP", e.target.checked)
                         }
@@ -1197,7 +1346,7 @@ const Item = () => {
                     <td>
                       <Form.Check
                         type="checkbox"
-                        checked={row.isDiscountable}
+                        checked={row.isDiscountable || ""}
                         onChange={(e) =>
                           handleRowChange(index, "isDiscountable", e.target.checked)
                         }
@@ -1211,7 +1360,7 @@ const Item = () => {
                     <td>
                       <Form.Check
                         type="checkbox"
-                        checked={row.isVisible}
+                        checked={row.isVisible || ""}
                         onChange={(e) =>
                           handleRowChange(index, "isVisible", e.target.checked)
                         }
@@ -1222,7 +1371,7 @@ const Item = () => {
                         }}
                       />
                     </td>
-                    <td>
+                    <td onClick={() => handleModalShow(index)} style={{ cursor: 'pointer' }}>
                       {row.taxes && row.taxes.length > 0 ? (
                         row.taxes.length === 1 ? (
                           <div>
@@ -1240,12 +1389,14 @@ const Item = () => {
                       )}
                     </td>
                     <td>
-                      <MdCurrencyRupee
-                        size={20}
-                        color="#87CEEB"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleModalShow(index)}
+                      <Select
+                        //options={options}
+                        //value={selectedOption}
+                        //onChange={onChange}
+                        placeholder="Select add on items"
                       />
+                    </td>
+                    <td>
                       <MdDeleteForever
                         size={20}
                         style={{ margin: "1vh", cursor: "pointer" }}
@@ -1263,7 +1414,10 @@ const Item = () => {
               </Button>
             </div>
             <div className="d-flex justify-content-center mt-5">
-              <Button type="submit" variant="warning" onClick={handleSubmit}>
+              <Button variant="warning" onClick={handleBack}>
+                Back
+              </Button>
+              <Button type="submit" variant="warning" onClick={handleSubmit} className="ms-3">
                 Save
               </Button>
             </div>
@@ -1310,52 +1464,104 @@ const Item = () => {
         backdrop="static"
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            Add Tax
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Tax Name</th>
-                <th>Tax Rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {taxData?.map((tax, index) => (
-                <tr key={index}>
-                  <td>
-                    <Form.Check
-                      type="checkbox"
-                      checked={selectedTaxes.includes(tax.taxId)}
-                      onChange={() => handleCheckboxChange(tax.taxId)}
-                      style={{
-                        transform: "scale(1.5)",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    />
-                  </td>
-                  <td>{tax.taxName}</td>
-                  <td>{tax.taxRate}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary"
-            onClick={() => {
-              handleModalSave();
-              handleModalClose();
+        <div
+          style={{
+            maxHeight: "80vh",
+            height: "80vh",
+            display: "flex",
+            flexDirection: "column"
+          }}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Add Tax</Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body
+            style={{
+              flex: "1 1 auto",
+              overflowY: "auto",
+              padding: "1rem"
             }}
           >
-            Save
-          </Button>
-        </Modal.Footer>
+            <Form.Group controlId="searchTax">
+              <div style={{ position: "relative" }}>
+                <Form.Control
+                  type="text"
+                  placeholder="Search tax name..."
+                  className="me-2 rounded-pill"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <span
+                    onClick={() => setSearchTerm("")}
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                      color: "#999"
+                    }}
+                  >
+                    &#10005;
+                  </span>
+                )}
+              </div>
+            </Form.Group>
+
+            <Table striped bordered hover className="mt-3">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Tax Name</th>
+                  <th>Tax Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTaxes && filteredTaxes.length > 0 ? (
+                  filteredTaxes.map((tax, index) => (
+                    <tr key={index}>
+                      <td>
+                        <Form.Check
+                          type="checkbox"
+                          checked={selectedTaxes.includes(tax.taxId)}
+                          onChange={() => handleCheckboxChange(tax.taxId)}
+                          style={{
+                            transform: "scale(1.5)",
+                            cursor: "pointer",
+                            marginRight: "8px"
+                          }}
+                        />
+                      </td>
+                      <td>{tax.taxName}</td>
+                      <td>{tax.taxRate}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3" className="text-center text-muted">
+                      No data found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </Table>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button
+              variant="warning"
+              onClick={() => {
+                handleModalSave();
+                handleModalClose();
+              }}
+            >
+              Save
+            </Button>
+          </Modal.Footer>
+        </div>
       </Modal>
     </>
   )

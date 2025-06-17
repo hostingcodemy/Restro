@@ -4,9 +4,10 @@ import './scss/style.scss';
 import './scss/examples.scss';
 import AppRoutes from './routes';
 import { Spinner } from 'react-bootstrap';
+import { GeneralProvider } from './Context/GeneralContext';
 
 const App = () => {
-  
+
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -26,7 +27,9 @@ const App = () => {
         </div>
       ) : (
         <BrowserRouter>
-          <AppRoutes />
+          <GeneralProvider>
+            <AppRoutes />
+          </GeneralProvider>
         </BrowserRouter>
       )}
     </>

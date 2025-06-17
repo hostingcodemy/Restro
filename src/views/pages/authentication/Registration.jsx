@@ -232,8 +232,6 @@ const Registration = () => {
                                     }
                                 />
                             </InputGroup>
-
-
                             <InputGroup hasValidation className="">
                                 <InputGroup.Text>
                                     <MdOutlineMailOutline size={25} color='#ffc800' />

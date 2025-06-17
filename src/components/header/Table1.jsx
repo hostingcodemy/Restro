@@ -3,6 +3,7 @@ import { PiPrinterThin } from "react-icons/pi";
 import { useDrag, useDrop } from "react-dnd";
 import Chair from "./Chair";
 import { PiUserCirclePlusLight } from "react-icons/pi";
+import { useNavigate } from "react-router-dom";
 
 const ItemTypes = { TABLE: "table", CHAIR: "chair" };
 
@@ -11,6 +12,7 @@ const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onA
   const [showChairModal, setShowChairModal] = useState(false);
   const [chairCount, setChairCount] = useState('');
   const popupRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (showChairModal && popupRef.current) {
@@ -23,7 +25,13 @@ const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onA
 
   const handleTableClick = () => {
     if (isAddChairMode) {
+
       setShowChairModal(true);
+
+    } else {
+
+      navigate("/order-management");
+
     }
   };
 
@@ -108,7 +116,7 @@ const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onA
 
   const facilityColorMap = {};
   facility.forEach(facility => {
-    facilityColorMap[facility.prefix] = facility.colour;
+    facilityColorMap[facility.facilityStatusId] = facility.colour;
   });
 
   return (
@@ -138,7 +146,7 @@ const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onA
                   if (e.key === 'Enter') {
                     const count = parseInt(chairCount);
                     if (!isNaN(count) && count !== 0) {
-                      onAddChairs(table.tableId, count);
+                      onAddChairs(table.tableId, count, table);
                       setChairCount('');
                       setShowChairModal(false);
                     }
@@ -181,72 +189,66 @@ const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onA
         </div>
       )}
 
+      <div
+        style={{
+          position: "relative",
+          display: "inline-block",
+          border: `0.01rem solid ${getBgColor(table.facilityStatusId)}`,
+          borderRadius: "10px",
+          padding: "1rem"
+        }}
+      >
+
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "-12px",
+            transform: "translateY(-50%)",
+
+            borderRadius: "50%",
+
+          }}
+        >
+          <PiUserCirclePlusLight size={30} />
+        </div>
 
 
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            right: "-8px",
+            transform: "translateY(-50%)",
+            borderRadius: "50%",
+            padding: "2px",
+            zIndex: "999"
+          }}
+        >
+          <PiPrinterThin size={30} />
+        </div>
 
-
-
-<div
-  style={{
-    position: "relative",
-    display: "inline-block",
-    border: `0.01rem solid ${getBgColor(table.tableStatus)}`,
-    borderRadius: "10px",
-    padding: "1rem"
-  }}
->
-  {/* Left Icon - absolutely positioned */}
-  <div
-    style={{
-      position: "absolute",
-      top: "50%",
-      left: "-12px", 
-      transform: "translateY(-50%)",
-    
-      borderRadius: "50%",
-
-    }}
-  >
-    <PiUserCirclePlusLight size={30} />
-  </div>
-
-  {/* Right Icon - absolutely positioned */}
-  <div
-    style={{
-      position: "absolute",
-      top: "50%",
-      right: "-8px", // half the icon width to attach
-      transform: "translateY(-50%)",
-      borderRadius: "50%",
-      padding: "2px",
-      zIndex:"999"
-    }}
-  >
-    <PiPrinterThin size={30}  />
-  </div>
-
-  {/* Table Box */}
-  <div
-    ref={drop}
-    className="table-wrapper"
-    style={{
-      width: `${width}px`,
-      height: "100px",
-      position: "relative",
-      backgroundColor: getBgColor(table.tableStatus),
-      borderRadius: "8px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "white"
-    }}
-    onMouseDown={handleMouseDown}
-    onClick={handleTableClick}
-  >
-    {renderChairs()}
-    <div style={{ zIndex: 1 }}>{table.tableName}</div>
-  </div>
-</div>
+        <div
+          ref={drop}
+          className="table-wrapper"
+          style={{
+            width: `${width}px`,
+            height: "100px",
+            position: "relative",
+            backgroundColor: getBgColor(table.facilityStatusId),
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white"
+          }}
+          onMouseDown={handleMouseDown}
+          onClick={handleTableClick}
+        >
+          {renderChairs()}
+          <div style={{ zIndex: 1 }}>{table.tableName}</div>
+        </div>
+      </div>
 
 
 

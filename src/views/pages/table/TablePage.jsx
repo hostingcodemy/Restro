@@ -74,8 +74,6 @@ const TablePage = () => {
     const [tableToDelete, settableToDelete] = useState(null);
     const handleExpoClose = () => setExpoShow(false);
     const handleExpoShow = () => setExpoShow(true);
-    console.log(formValues);
-
     const handleClose = () => {
         setShow(false);
         setFormValues(initialValues);
@@ -327,7 +325,6 @@ const TablePage = () => {
         );
     }, [filterText]);
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -385,9 +382,6 @@ const TablePage = () => {
             });
         }
     };
-
-
-
 
     return (
         <>
@@ -506,7 +500,6 @@ const TablePage = () => {
                                         isValid={formValues.tableName && !errors.tableName}
                                     />
                                 </InputGroup>
-
                             </Col>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
@@ -526,9 +519,7 @@ const TablePage = () => {
                                     />
                                 </InputGroup>
                             </Col>
-
                         </Row>
-
                         <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
@@ -550,9 +541,7 @@ const TablePage = () => {
                                             </option>
                                         ))}
                                     </Form.Select>
-
                                 </InputGroup>
-
                             </Col>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
@@ -572,9 +561,7 @@ const TablePage = () => {
                                     </Form.Select>
                                 </InputGroup>
                             </Col>
-
                         </Row>
-
                         <Row>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
@@ -593,7 +580,6 @@ const TablePage = () => {
                                         isValid={formValues.direction && !errors.direction}
                                     />
                                 </InputGroup>
-
                             </Col>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
@@ -613,9 +599,7 @@ const TablePage = () => {
                                     />
                                 </InputGroup>
                             </Col>
-
                         </Row>
-
                         <Row>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
@@ -634,7 +618,6 @@ const TablePage = () => {
                                         isValid={formValues.serial && !errors.serial}
                                     />
                                 </InputGroup>
-
                             </Col>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
@@ -655,15 +638,10 @@ const TablePage = () => {
                                             </option>
                                         ))}
                                     </Form.Select>
-
                                 </InputGroup>
-
                             </Col>
                         </Row>
-
                         <Row>
-
-
                             <Col md={6} className='d-flex gap-2 align-items-center'>
                                 <InputGroup className="mb-4">
                                     <InputGroup.Text>
@@ -721,9 +699,7 @@ const TablePage = () => {
                                     </Form.Check>
                                 </InputGroup>
                             </Col>
-
                         </Row>
-
                         <div className="d-flex justify-content-center mt-4" onClick={(e) => handleSubmit(e)}>
                             <Button type="submit" variant="warning">
                                 {isEditMode ? "Update" : "Save"}
@@ -732,7 +708,6 @@ const TablePage = () => {
                     </Form>
                 </Offcanvas.Body>
             </Offcanvas>
-
             <Offcanvas
                 show={expoShow}
                 onHide={handleExpoClose}

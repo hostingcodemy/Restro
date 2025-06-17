@@ -15,7 +15,7 @@ const Customer = () => {
     const [loadingIndicator, setLoadingIndicator] = useState(false);
     const [filterText, setFilterText] = useState("");
     const [customerData, setCustomerData] = useState([]);
-    const searchParam = ["firstName","lastName"];
+    const searchParam = ["firstName", "lastName"];
 
     useEffect(() => {
         if (fetchCalled.current) return;
@@ -26,7 +26,7 @@ const Customer = () => {
     const fetchCustomerData = async () => {
         try {
             const res = await api.get(`/customers`, {
-                
+
             });
             setCustomerData(res.data.list);
         } catch (error) {
@@ -41,23 +41,63 @@ const Customer = () => {
 
     const columns = [
         {
-            name: <h5>Customer Name</h5>,
+            name: <h5>Client Name</h5>,
             selector: (row) => `${row.firstName} ${row.lastName}`,
             sortable: true,
         },
         {
-            name: <h5>Mobile</h5>,
-            selector: (row) =>row.mobile,
+            name: <h5>Company</h5>,
+            selector: (row) => row.mobile,
             sortable: true,
         },
         {
-            name: <h5>Mobile</h5>,
-            selector: (row) =>row.email,
+            name: <h5>Family</h5>,
+            selector: (row) => row.mobile,
+            sortable: true,
+        },
+        {
+            name: <h5>Docs</h5>,
+            selector: (row) => row.mobile,
+            sortable: true,
+        },
+        {
+            name: <h5>Address</h5>,
+            selector: (row) => row.mobile,
+            sortable: true,
+        },
+        {
+            name: <h5>Phone</h5>,
+            selector: (row) => row.mobile,
+            sortable: true,
+        },
+        {
+            name: <h5>Email</h5>,
+            selector: (row) => row.email,
+            sortable: true,
+        },
+        {
+            name: <h5>GSTIN</h5>,
+            selector: (row) => row.email,
+            sortable: true,
+        },
+        {
+            name: <h5>IsVIP</h5>,
+            selector: (row) => row.email,
+            sortable: true,
+        },
+        {
+            name: <h5>IsMember</h5>,
+            selector: (row) => row.email,
+            sortable: true,
+        },
+        {
+            name: <h5>Ref By</h5>,
+            selector: (row) => row.email,
             sortable: true,
         },
         {
             name: <h5>Status</h5>,
-            selector: (row) =>row.status,
+            selector: (row) => row.status,
             sortable: true,
         },
         {
@@ -89,7 +129,7 @@ const Customer = () => {
                     />
                 </Form>
                 <Button variant="primary" onClick={() => navigate("/customer-form")}>
-                    New Customer
+                    New Lead
                 </Button>
             </div>
         );

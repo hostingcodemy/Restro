@@ -19,11 +19,14 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
     }
   }, [])
 
-  useEffect(() => {
-    if (location.pathname === '/table-reservations') {
-      setSidebarShow(false)
-    }
-  }, [location.pathname])
+useEffect(() => {
+  const hiddenPaths = ['/table-reservations', '/order-management'];
+
+  if (hiddenPaths.includes(location.pathname)) {
+    setSidebarShow(false);
+  }
+}, [location.pathname]);
+
 
   return (
     <CSidebar

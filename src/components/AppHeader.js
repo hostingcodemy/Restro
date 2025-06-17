@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   CContainer,
@@ -35,16 +35,17 @@ import { PiSealPercentThin } from "react-icons/pi";
 import { LuMessagesSquare } from "react-icons/lu";
 import { MdOutlineMerge } from "react-icons/md";
 import { MdOutlineCallSplit } from "react-icons/md";
+import { useGeneralContext } from '../Context/GeneralContext';
 
 
 const AppHeader = ({ sidebarShow, setSidebarShow }) => {
   const [isMerged, setIsMerged] = useState(false);
   const location = useLocation();
   const headerRef = useRef();
-  // const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
-  // const { colorMode, setColorMode } = useColorModes('light');
+  const { isMergeTable, setIsMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
 
   const isTablePage = location.pathname === "/table-reservations";
+  const isOrderPage = location.pathname === 'order-management';
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
@@ -73,7 +74,9 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
     '/employee-types': 'Employee Type',
     '/employees': 'Employee',
     '/table-reservations': 'Table Layout',
+    '/order-management': 'Point of Sale',
     '/facility-status': 'Facility Status',
+    '/outlet-type': 'Outlet Type'
   };
 
   const currentPath = location.pathname
@@ -107,7 +110,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
         <CHeaderNav className='d-flex gap-3'>
           <div className="d-flex gap-3 align-items-center"
           >
-            {isTablePage ? (
+            {(isTablePage || isOrderPage) ? (
               <>
                 <div className="d-flex gap-2 align-items-center ">
                   <div
@@ -166,13 +169,13 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                       </div>
                     </div>
                   </div> */}
-                  <div className="tableHeaderButton">
-                    <MdOutlineMerge/>
-                     Merge
+                  <div className="tableHeaderButton" onClick={() => setIsMergeTable(true)}>
+                    <MdOutlineMerge />
+                    Merge
                   </div>
-                  <div className="tableHeaderButton">
-                    <MdOutlineCallSplit/>
-                     Split
+                  <div className="tableHeaderButton" onClick={() => setisSplitTable(true)}>
+                    <MdOutlineCallSplit />
+                    Split
                   </div>
 
                 </div>
@@ -301,10 +304,16 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
           </CHeaderNav>
 
 
-          <li className="nav-item py-1">
+          <li className="nav-item py-1 d-flex">
+          
             <div className="vr h-100 text-body text-opacity-75"></div>
+           
           </li>
           <AppHeaderDropdown />
+          {/* <div className='d-flex align-items-center justify-content-center'>
+
+          hello
+          </div> */}
         </CHeaderNav>
       </CContainer>
     </CHeader>

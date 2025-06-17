@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
 import DataTableSettings from "../../../helpers/DataTableSettings";
 import { Form, Button, Offcanvas, InputGroup, Spinner } from "react-bootstrap";
-import { MdDeleteForever } from "react-icons/md";
+import { MdDeleteForever, MdFormatListNumbered, MdOutlineMergeType } from "react-icons/md";
 import {
     FaRegEdit,
     FaRegFile,
@@ -11,25 +11,37 @@ import {
     FaExclamationTriangle
 }
     from "react-icons/fa";
-import { MdOutlinePersonOutline } from "react-icons/md";
 import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
+import { HiOutlineStatusOnline } from "react-icons/hi";
+import { IoMdColorPalette } from "react-icons/io";
 import { TbHandClick } from "react-icons/tb";
 import { toast, ToastContainer } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import api from '../../../config/AxiosInterceptor';
+import { PiMicrophoneThin } from "react-icons/pi";
 
 const FacilityStatus = () => {
 
+    const nameRef = useRef(null);
+    const searchInputRef = useRef(null);
     const fetchCalled = useRef(false);
+
+    const handleFocus = (e) => {
+        setFocusedField(e.target.name);
+    };
+
+    const handleBlur = (e) => {
+        setFocusedField(null);
+    };
 
     const initialValues = {
         facilityStatusId: "",
         facilityStatus: "",
+        facilityType: "",
         colour: "",
         sequence: "",
-        prefix: "",
-        isActive: false,
+        isActive: true,
     };
 
     const initialImpValues = {
@@ -43,19 +55,21 @@ const FacilityStatus = () => {
     const [loadingIndicator, setLoadingIndicator] = useState(false);
     const [filterText, setFilterText] = useState("");
     const [facilityData, setFacilityData] = useState([]);
-    const searchParam = ["itemGroupName", "itemGroupCode", "isActive"];
+    const searchParam = ["facilityStatus", "facilityType", "sequence", "colour", "isActive"];
     const [isEditMode, setIsEditMode] = useState(false);
     const [show, setShow] = useState(false);
     const [expoShow, setExpoShow] = useState(false);
     const [loading, setLoading] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [toDelete, setToDelete] = useState(null);
+    const [focusedField, setFocusedField] = useState(null);
 
     const handleClose = () => {
         setShow(false);
         setFormValues(initialValues);
         setErrors({});
         setIsEditMode(false);
+        setFocusedField(null);
     };
 
     const handleShow = () => {
@@ -63,6 +77,11 @@ const FacilityStatus = () => {
         setIsEditMode(false);
         setErrors({});
         setShow(true);
+        setTimeout(() => {
+            if (nameRef.current) {
+                nameRef.current.focus();
+            }
+        }, 1000);
     };
 
     const handleExpoClose = () => setExpoShow(false);
@@ -72,6 +91,12 @@ const FacilityStatus = () => {
         if (fetchCalled.current) return;
         fetchCalled.current = true;
         fetchFacilityData();
+    }, []);
+
+    useEffect(() => {
+        if (searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
     }, []);
 
     const fetchFacilityData = async () => {
@@ -136,10 +161,17 @@ const FacilityStatus = () => {
     };
 
     const validateForm = () => {
-        const { facilityStatus, colour, sequence } = formValues;
+        const { facilityType, facilityStatus, colour, sequence } = formValues;
         const errors = {};
         let isValid = true;
 
+        if (!facilityType) {
+            isValid = false;
+            errors.facilityType = "Facility type is required.";
+        } else if (!/^[a-zA-Z ]+$/.test(facilityType)) {
+            errors.facilityType = 'Name must contain only letters';
+            isValid = false;
+        }
         if (!facilityStatus) {
             isValid = false;
             errors.facilityStatus = "Facility status is required.";
@@ -188,9 +220,10 @@ const FacilityStatus = () => {
         setFormValues({
             facilityStatusId: row.facilityStatusId,
             facilityStatus: row.facilityStatus,
+            prefix: row.prefix,
             colour: row.colour,
             sequence: row.sequence,
-            prefix: row.prefix,
+            facilityType: row.facilityType,
             isActive: row.isActive
         });
         setShow(true);
@@ -239,8 +272,23 @@ const FacilityStatus = () => {
         },
         {
             name: <h5>Colour</h5>,
-            selector: (row) => row.colour,
+            selector: row => row.colour,
             sortable: true,
+            cell: row => (
+                <div
+                    style={{
+                        backgroundColor: row.colour,
+                        color: "#fff",
+                        padding: "10px 8px",
+                        borderRadius: "4px",
+                        textTransform: "capitalize",
+                        display: "inline-block",
+                        minWidth: "60px",
+                        textAlign: "center"
+                    }}
+                >
+                </div>
+            ),
         },
         {
             name: <h5>Sequence</h5>,
@@ -249,6 +297,7 @@ const FacilityStatus = () => {
         },
         {
             name: <h5>Status</h5>,
+            selector: row => row.isActive,
             cell: (row) => (
                 <span style={{
                     color: row.isActive ? "#88E788" : "#FF474C",
@@ -258,16 +307,23 @@ const FacilityStatus = () => {
                 </span>
             ),
             sortable: true,
+            sortFunction: (a, b) => {
+                return a.isActive === b.isActive ? 0 : a.isActive ? -1 : 1;
+            }
         },
         {
             name: <h5>Action</h5>,
             center: true,
             cell: (row) => (
                 <>
-                    <Link className="action-icon" onClick={() => handleEditClick(row)}>
+                    <Link className="action-icon" onClick={() => handleEditClick(row)} title="Edit">
                         <FaRegEdit size={24} color="#87CEEB" />
                     </Link>
-                    <Link className="action-icon" onClick={() => handleDeleteClick(row.facilityStatusId, row.facilityStatus)}>
+                    <Link
+                        className="action-icon"
+                        onClick={() => handleDeleteClick(row.facilityStatusId, row.facilityStatus)}
+                        title="Delete"
+                    >
                         <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
                     </Link>
                 </>
@@ -284,17 +340,19 @@ const FacilityStatus = () => {
                     className="me-2 rounded-pill"
                     aria-label="Search"
                     onChange={(e) => setFilterText(e.target.value)}
+                    ref={searchInputRef}
                 />
             </Form>
+            <PiMicrophoneThin size={30} color="yellow" />
             <Button variant="info" onClick={handleExpoShow}>
                 <CiExport size={20} /> Import
             </Button>
             <Button variant="success" onClick={downloadExcel}>
                 <CiImport size={20} /> Export
             </Button>
-            {/* <Button variant="warning" onClick={handleShow}>
-                    <GoPlus size={20} /> Add
-                </Button> */}
+            <Button variant="warning" onClick={handleShow}>
+                <GoPlus size={20} /> Add
+            </Button>
         </div>
     ), [filterText]);
 
@@ -305,7 +363,7 @@ const FacilityStatus = () => {
         const payload = {
             facilityStatus: formValues.facilityStatus,
             prefix: formValues.prefix,
-            facilityType: 'table',
+            facilityType: formValues.facilityType,
             colour: formValues.colour,
             sequence: parseInt(formValues.sequence, 10),
             isActive: formValues.isActive,
@@ -446,21 +504,41 @@ const FacilityStatus = () => {
                     <Form className='h-90' onSubmit={handleSubmit}>
                         <InputGroup className="mb-4">
                             <InputGroup.Text>
-                                <MdOutlinePersonOutline size={25} color='#ffc800' />
+                                <HiOutlineStatusOnline size={25} color='#ffc800' />
                             </InputGroup.Text>
                             <Form.Control
                                 name="facilityStatus"
+                                ref={nameRef}
                                 value={formValues.facilityStatus}
                                 onChange={(e) => handleChange("facilityStatus", e.target.value.replace(/[^a-zA-Z ]/g, ""))}
                                 placeholder="Facility status"
                                 isInvalid={!!errors.facilityStatus}
                                 isValid={formValues.facilityStatus && !errors.facilityStatus}
+                                autoComplete='off'
+                                onFocus={handleFocus}
+                                onBlur={handleBlur}
                             />
                             {errors.facilityStatus && <span className="error-msg">{errors.facilityStatus}</span>}
                         </InputGroup>
-                        <InputGroup className="mb-3">
+                        <InputGroup className="mb-4">
                             <InputGroup.Text>
-                                <MdOutlinePersonOutline size={25} color='#ffc800' />
+                                <MdOutlineMergeType size={25} color='#ffc800' />
+                            </InputGroup.Text>
+                            <Form.Control
+                                name="facilityType"
+                                value={formValues.facilityType}
+                                onChange={(e) => handleChange("facilityType", e.target.value.replace(/[^a-zA-Z ]/g, ""))}
+                                placeholder="Facility type"
+                                isInvalid={!!errors.facilityType}
+                                isValid={formValues.facilityType && !errors.facilityType}
+                                autoComplete='off'
+                                readOnly={isEditMode}
+                            />
+                            {errors.facilityType && <span className="error-msg">{errors.facilityType}</span>}
+                        </InputGroup>
+                        <InputGroup className="mb-4">
+                            <InputGroup.Text>
+                                <IoMdColorPalette size={25} color='#ffc800' />
                             </InputGroup.Text>
                             <Form.Control
                                 type="color"
@@ -473,9 +551,9 @@ const FacilityStatus = () => {
                             />
                             {errors.colour && <span className="error-msg">{errors.colour}</span>}
                         </InputGroup>
-                        <InputGroup className="mb-3">
+                        <InputGroup className="mb-4">
                             <InputGroup.Text>
-                                <MdOutlinePersonOutline size={25} color='#ffc800' />
+                                <MdFormatListNumbered size={25} color='#ffc800' />
                             </InputGroup.Text>
                             <Form.Control
                                 name="sequence"
@@ -484,12 +562,11 @@ const FacilityStatus = () => {
                                 placeholder="Sequence"
                                 isInvalid={!!errors.sequence}
                                 isValid={formValues.sequence && !errors.sequence}
+                                autoComplete='off'
                             />
                             {errors.sequence && <span className="error-msg">{errors.sequence}</span>}
                         </InputGroup>
-
-
-                        <InputGroup className="mb-3">
+                        <InputGroup className="mb-4">
                             <InputGroup.Text>
                                 <TbHandClick size={25} color="#ffc800" />
                             </InputGroup.Text>
@@ -499,9 +576,13 @@ const FacilityStatus = () => {
                                 checked={formValues.isActive}
                                 onChange={(e) => handleChange("isActive", e.target.checked)}
                                 className="ms-3"
+                                style={{
+                                    transform: "scale(1.5)",
+                                    transformOrigin: "left center",
+                                    marginTop: "5px"
+                                }}
                             />
                         </InputGroup>
-
                         <div className="d-flex justify-content-center mt-4">
                             <Button type="submit" variant="warning">
                                 {isEditMode ? "Update" : "Save"}

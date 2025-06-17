@@ -107,6 +107,7 @@ const SubGroup = () => {
         setErrors({});
         setShow(true);
         fetchGroupData();
+        setLoading(false);
     };
 
     const fetchSubGroupData = async () => {
@@ -119,7 +120,6 @@ const SubGroup = () => {
             setSubGroupData(sortedData);
         } catch (error) {
             console.error("Error fetching table data", error);
-            setLoadingIndicator(false);
         } finally {
             setLoading(false);
         }
@@ -132,7 +132,6 @@ const SubGroup = () => {
             setGroupData(res.data.list);
         } catch (error) {
             console.error("Error fetching table data", error);
-            setLoadingIndicator(false);
         } finally {
             setLoading(false);
         }
@@ -264,8 +263,6 @@ const SubGroup = () => {
         }
     };
 
-
-
     const handleMappingClick = async (subGroupIds) => {
         setSelectedRows(subGroupIds);
         setMappingShow(true);
@@ -291,15 +288,11 @@ const SubGroup = () => {
         }
     };
 
-
-
     const handleMultiMappingClick = () => {
         setMappingShow(true);
         fetchOutletData();
         fetchTaxData();
     };
-
-
 
     const handleMappingSubmit = async () => {
         if (!selectedRows.length) {
@@ -338,7 +331,6 @@ const SubGroup = () => {
             toast.error("Failed to submit mapping. Please try again.");
         }
     };
-
 
     const handleMappingClose = () => {
         setMappingShow(false);
@@ -547,54 +539,11 @@ const SubGroup = () => {
             } else {
                 res = await api.post("/itemsubgroups", payload,);
             }
-
-            if (res.data && typeof res.data === "object" && "IsValid" in res.data) {
-                if (res.data.IsValid) {
-                    toast.success(res.data.SuccessMessage || "Success!", {
-                        position: "top-right",
-                        autoClose: 3000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                    setIsEditMode(false);
-                    handleClose();
-                } else {
-                    toast.error(res.data.ErrorMessage || "Something went wrong!", {
-                        position: "top-right",
-                        autoClose: 3000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                }
-            } else {
-                console.error("Unexpected API response structure:", res);
-                toast.error("Invalid response from the server!", {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
-            }
+            handleClose();
+            fetchSubGroupData();
+            toast.success(res.data.successMessage || "Success!");
         } catch (error) {
-            console.error("API Error:", error);
-            toast.error("Something went wrong! Please try again.", {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            toast.error("Something went wrong! Please try again.");
         } finally {
             setLoading(false);
         }

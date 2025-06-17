@@ -70,6 +70,7 @@ const ItemType = () => {
         setErrors({});
         setShow(true);
         fetchSubGroupData();
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -226,12 +227,12 @@ const ItemType = () => {
             center: true,
             cell: (row) => (
                 <>
-                        <Link className="action-icon" onClick={() => handleEditClick(row)} >
-                            <FaRegEdit size={24} color="#87CEEB" />
-                        </Link>
-                        <Link className="action-icon" onClick={() => handleDeleteClick(row.itemCategoryId, row.itemCategoryName)}>
-                            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-                        </Link>
+                    <Link className="action-icon" onClick={() => handleEditClick(row)} >
+                        <FaRegEdit size={24} color="#87CEEB" />
+                    </Link>
+                    <Link className="action-icon" onClick={() => handleDeleteClick(row.itemCategoryId, row.itemCategoryName)}>
+                        <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
+                    </Link>
                 </>
             ),
         },
@@ -248,15 +249,15 @@ const ItemType = () => {
                     onChange={(e) => setFilterText(e.target.value)}
                 />
             </Form>
-                <Button variant="info" onClick={handleExpoShow}>
-                    <CiExport size={20} /> Import
-                </Button>
-                <Button variant="success" onClick={downloadExcel}>
-                    <CiImport size={20} /> Export
-                </Button>
-                <Button variant="warning" onClick={handleShow}>
-                    <GoPlus size={20} /> Add
-                </Button>
+            <Button variant="info" onClick={handleExpoShow}>
+                <CiExport size={20} /> Import
+            </Button>
+            <Button variant="success" onClick={downloadExcel}>
+                <CiImport size={20} /> Export
+            </Button>
+            <Button variant="warning" onClick={handleShow}>
+                <GoPlus size={20} /> Add
+            </Button>
         </div>
     ), [filterText]);
 

@@ -251,6 +251,11 @@ const Employee = () => {
     };
 
     const columns = [
+         {
+            name: <h5>Name</h5>,
+            selector: (row) => row.name,
+            sortable: true,
+        },
         {
             name: <h5>Joining Date</h5>,
             selector: (row) => {
@@ -260,11 +265,6 @@ const Employee = () => {
                 const year = date.getFullYear();
                 return `${day}-${month}-${year}`;
             },
-            sortable: true,
-        },
-        {
-            name: <h5>Name</h5>,
-            selector: (row) => row.name,
             sortable: true,
         },
         {
@@ -535,7 +535,6 @@ const Employee = () => {
                             </Col>
 
                         </Row>
-
                         <Row>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
@@ -585,9 +584,7 @@ const Employee = () => {
                                     />
                                 </InputGroup>
                             </Col>
-
                         </Row>
-
                         <Row>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
@@ -601,9 +598,7 @@ const Employee = () => {
                                         placeholderText="Joining Date"
 
                                     />
-
                                 </InputGroup>
-
                             </Col>
                             <Col md={6}>
                                 <InputGroup className="mb-4">

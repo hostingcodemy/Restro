@@ -98,8 +98,9 @@ const Login = () => {
             if (res.data.isValid) {
                 localStorage.setItem("accessToken", res.data.data.accessToken);
                 localStorage.setItem("refreshToken", res.data.data.refreshToken);
-               localStorage.setItem("authChannels", JSON.stringify(res.data.data.authChannels));
+                localStorage.setItem("authChannels", JSON.stringify(res.data.data.authChannels));
 
+                
                 if (res.data.data.authChannels.length === 0) {
                     navigate("/channel-outlet");
                 } else {

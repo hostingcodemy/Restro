@@ -69,7 +69,7 @@ h1 {
   gap: 0.5rem;
 }
 
-button {
+/* button {
   border: none;
   background-color: var(--primary-color);
   color: #fff;
@@ -77,7 +77,7 @@ button {
   padding: 10px 16px;
   border: none;
   cursor: pointer;
-}
+} */
 
 .position-fixed {
   z-index: 99999;
@@ -2289,7 +2289,7 @@ input.configurationInput:focus {
   height: 0;
 }
 
-.slider {
+/* .slider {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -2310,8 +2310,8 @@ input.configurationInput:focus {
   bottom: 3px;
   background-color: white;
   transition: 0.4s;
-  border-radius: 50%;
-}
+  border-radius: 50%; */
+/* } */
 
 input:checked+.slider {
   background-color: #ffd209;
@@ -2648,13 +2648,13 @@ tbody.custom-bg-color {
   font-size: 0.8rem;
 }
 
-.tableBook {
+/* /* .tableBook {
   height: 93vh;
   width: 100%;
   background-color: #fafafa;
-}
+} */
 
-.tableBookleft {
+/* .tableBookleft {
   width: 15%;
   height: 100%;
   display: flex;
@@ -2701,15 +2701,15 @@ tbody.custom-bg-color {
   background-color: white;
   padding: 5rem;
   border-radius: 0.5rem;
-}
+} */
 
-.tableBookRight {
+/* .tableBookRight {
   width: 84%;
   height: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
+} */
 
 .rightTop {
   height: 6%;
@@ -2798,7 +2798,7 @@ tbody.custom-bg-color {
   color: white;
   border-radius: 8px;
   font-weight: bold;
-} */
+} 
 
 
 
@@ -2869,7 +2869,7 @@ tbody.custom-bg-color {
   background-color: #ffc107a8;
 }
 
-/* hidden menu start */
+
 
 .hiddenMenuOpen {
   position: absolute;
@@ -2909,7 +2909,7 @@ tbody.custom-bg-color {
 .menuText {
   font-size: 0.8rem;
   font-weight: 400;
-}
+} */
 
 .channel {
   display: flex;
@@ -3778,7 +3778,7 @@ tbody.custom-bg-color {
   font-size: 14px;
 }
 
-.toggle-option {
+/* .toggle-option {
   z-index: 2;
   width: 50%;
   text-align: center;
@@ -3788,9 +3788,9 @@ tbody.custom-bg-color {
   gap: 5px;
   color: #adadad;
   transition: color 0.5s ease;
-}
+} */
 
-.toggle-option.active {
+/* .toggle-option.active {
   color: #434343;
   font-weight: 600;
 }
@@ -3804,14 +3804,14 @@ tbody.custom-bg-color {
   border-radius: 2rem;
   transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   /* bounce */
-  z-index: 1;
-}
+  /* z-index: 1; */
+/* } */
 
-.toggleContainer {
+/* .toggleContainer {
   position: absolute;
   top: 13%;
   left: 71%;
-}
+}  */
 
 .chair-modal-overlay {
   position: fixed;
@@ -3906,10 +3906,10 @@ tbody.custom-bg-color {
   box-shadow: 1px 1px 10px rgb(203, 203, 203);
   color: black;
 }
-
+/* 
 .modal-btn.confirm:hover {
   background-color: #2563eb;
-}
+} */
 
 
 

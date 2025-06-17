@@ -36,7 +36,7 @@ const ItemSubType = () => {
     const initialImpValues = {
         File: "",
     };
-
+    const outletId = localStorage.getItem('currentOutletId');
     const [formValues, setFormValues] = useState(initialValues);
     const [errors, setErrors] = useState({});
     const [formImpValues, setFormImpValues] = useState(initialImpValues);
@@ -80,6 +80,7 @@ const ItemSubType = () => {
         setErrors({});
         setShow(true);
         fetchItemTypeData();
+        setLoading(false);
     };
 
     const fetchItemSubTypeData = async () => {
@@ -241,12 +242,12 @@ const ItemSubType = () => {
             center: true,
             cell: (row) => (
                 <>
-                        <Link className="action-icon" onClick={() => handleEditClick(row)} >
-                            <FaRegEdit size={24} color="#87CEEB" />
-                        </Link>
-                        <Link className="action-icon" onClick={() => handleDeleteClick(row.itemSubCategoryID, row.itemSubCategoryName)}>
-                            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-                        </Link>
+                    <Link className="action-icon" onClick={() => handleEditClick(row)} >
+                        <FaRegEdit size={24} color="#87CEEB" />
+                    </Link>
+                    <Link className="action-icon" onClick={() => handleDeleteClick(row.itemSubCategoryID, row.itemSubCategoryName)}>
+                        <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
+                    </Link>
                 </>
             ),
         },
@@ -263,15 +264,15 @@ const ItemSubType = () => {
                     onChange={(e) => setFilterText(e.target.value)}
                 />
             </Form>
-                <Button variant="info" onClick={handleExpoShow}>
-                    <CiExport size={20} /> Import
-                </Button>
-                <Button variant="success" onClick={downloadExcel}>
-                    <CiImport size={20} /> Export
-                </Button>
-                <Button variant="warning" onClick={handleShow}>
-                    <GoPlus size={20} /> Add
-                </Button>
+            <Button variant="info" onClick={handleExpoShow}>
+                <CiExport size={20} /> Import
+            </Button>
+            <Button variant="success" onClick={downloadExcel}>
+                <CiImport size={20} /> Export
+            </Button>
+            <Button variant="warning" onClick={handleShow}>
+                <GoPlus size={20} /> Add
+            </Button>
         </div>
     ), [filterText]);
 
@@ -585,7 +586,7 @@ const ItemSubType = () => {
                             >
                                 <option>Select category name</option>
                                 {itemTypesData?.map((item) => (
-                                    <option key={item.itemGroupId} value={item.itemGroupId}>
+                                    <option key={item.itemCategoryId} value={item.itemCategoryId}>
                                         {item.itemCategoryName}
                                     </option>
                                 ))}
