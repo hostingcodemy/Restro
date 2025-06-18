@@ -10,7 +10,7 @@ const SubscriptionPage = React.lazy(() => import('./views/pages/subscription/Sub
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'));
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'));
 const TableReservation = React.lazy(() => import('./components/header/TableBook'));
-const posScreen = React.lazy(() => import('src/views/pages/pos/Pos.jsx'));
+const PosScreen = React.lazy(() => import('src/views/pages/pos/Pos.jsx'));
 
 //Content page
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'));
@@ -82,7 +82,7 @@ const AppRoutes = () => {
           <Route path="/facility-status" element={<FacilityStatus />} />
           <Route path="/table-reservations" element={<TableReservation />} />
           <Route path="/customer-form" element={<CustomerForm />} />
-          <Route path="/order-management" element={<posScreen />} />
+          <Route path="/order-management" element={<PosScreen />} />
 
         </Route>
 

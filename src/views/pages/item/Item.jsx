@@ -558,10 +558,10 @@ const Item = () => {
   const columns = [
     {
       name: <h5>Item Photo</h5>,
-      selector: (row) => (
-        row.ItemImageFile ? (
+      selector: (row) =>
+        row.ItemImageFile && imageMap[row.itemId] ? (
           <img
-            src={`${import.meta.env.VITE_BASE_URL}/${row.ItemImageFile}`}
+            src={imageMap[row.itemId]}
             alt={row.itemName}
             style={{
               width: "60px",
@@ -573,7 +573,8 @@ const Item = () => {
           />
         ) : (
           <img
-            src='src/assets/food.png'
+            src="src/assets/food.png"
+            alt="default"
             style={{
               width: "60px",
               height: "60px",
@@ -582,10 +583,9 @@ const Item = () => {
               border: "2px solid #ccc",
             }}
           />
-        )
-      ),
+        ),
       sortable: false,
-      center: true
+      center: true,
     },
     {
       name: <h5>Item Name</h5>,
@@ -656,7 +656,6 @@ const Item = () => {
     setShow(false);
     fetchOutletData();
     fetchItemSizeData();
-
     const stored = localStorage.getItem("tableData");
   };
 
@@ -790,6 +789,43 @@ const Item = () => {
       setLoading(false);
     }
   };
+
+  const [imageMap, setImageMap] = useState({});
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      const newImageMap = {};
+
+      const fetchImageForRow = async (row) => {
+        if (!row.ItemImageFile) return;
+        console.log(ItemImageFile,'gg');
+        
+
+        try {
+          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/${row.ItemImageFile}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Image fetch failed");
+
+          const blob = await response.blob();
+          console.log(blob,'jj');
+          
+          const url = URL.createObjectURL(blob);
+          newImageMap[row.itemId] = url;
+        } catch (err) {
+          console.error(`Error loading image for ${row.itemName}:`, err);
+        }
+      };
+
+      await Promise.all(formRows.map(fetchImageForRow));
+      setImageMap(newImageMap);
+    };
+
+    fetchImages();
+  }, [formRows]); 
 
 
   return (
@@ -1266,7 +1302,6 @@ const Item = () => {
                       <FaRegStar size={20} color={primaryState.taxes ? "gold" : "gray"} />
                     </span>
                   </th>
-                  <th>Add on Item</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -1387,14 +1422,6 @@ const Item = () => {
                       ) : (
                         <span style={{ color: "gray", fontStyle: "italic" }}>No Tax</span>
                       )}
-                    </td>
-                    <td>
-                      <Select
-                        //options={options}
-                        //value={selectedOption}
-                        //onChange={onChange}
-                        placeholder="Select add on items"
-                      />
                     </td>
                     <td>
                       <MdDeleteForever

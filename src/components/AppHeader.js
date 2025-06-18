@@ -45,7 +45,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
   const { isMergeTable, setIsMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
 
   const isTablePage = location.pathname === "/table-reservations";
-  const isOrderPage = location.pathname === 'order-management';
+  const isOrderPage = location.pathname === '/order-management';
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
@@ -241,7 +241,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                 <CIcon icon={cilBell} size="md" />
               </CNavLink>
             </CNavItem>
-            {isTablePage ? (
+            {(isTablePage || isOrderPage) ? (
               <>
                 <CNavItem>
                   <CNavLink href="#">
@@ -257,8 +257,11 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                 </CNavItem>
 
               </>
-
             ) : ""}
+            {/* {isTablePage ? (
+              
+
+            ) : ""} */}
 
             {/* <CDropdown variant="nav-item" placement="bottom-end">
               <CDropdownToggle caret={false}>
@@ -305,9 +308,9 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
 
 
           <li className="nav-item py-1 d-flex">
-          
+
             <div className="vr h-100 text-body text-opacity-75"></div>
-           
+
           </li>
           <AppHeaderDropdown />
           {/* <div className='d-flex align-items-center justify-content-center'>

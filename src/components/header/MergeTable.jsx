@@ -214,7 +214,7 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
                             </div>
                         </div>
 
-                        <div className="d-flex flex-wrap w-100" style={{ maxWidth: "72vw", height: "80vh", gap: "1rem" }}>
+                        <div className="d-flex flex-wrap w-100" style={{ width: "72vw", height: "80vh", gap: "1rem" }}>
                             <div
                                 ref={dropAvailableRef}
                                 style={{ flex: 1, paddingRight: "1rem", overflowY: "auto", borderRight: "1px solid #ccc" }}
