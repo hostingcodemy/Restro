@@ -683,6 +683,7 @@ const Item = () => {
 
   const columns = [
     {
+<<<<<<< HEAD
       name: <h5>Item Image</h5>,
       selector: (row) => (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -692,6 +693,13 @@ const Item = () => {
                 ? `${import.meta.env.VITE_IMG_BASE_URL}/${row.itemImage}`
                 : 'src/assets/food.png'
             }
+=======
+      name: <h5>Item Photo</h5>,
+      selector: (row) =>
+        row.ItemImageFile && imageMap[row.itemId] ? (
+          <img
+            src={imageMap[row.itemId]}
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
             alt={row.itemName}
             style={{
               width: '60px',
@@ -700,8 +708,24 @@ const Item = () => {
               borderRadius: '0px',
             }}
           />
+<<<<<<< HEAD
         </div>
       ),
+=======
+        ) : (
+          <img
+            src="src/assets/food.png"
+            alt="default"
+            style={{
+              width: "60px",
+              height: "60px",
+              objectFit: "cover",
+              borderRadius: "50%",
+              border: "2px solid #ccc",
+            }}
+          />
+        ),
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
       sortable: false,
       center: true,
     },
@@ -938,6 +962,7 @@ const Item = () => {
     }
   };
 
+<<<<<<< HEAD
   const itemOptions = itemsData?.map((item) => ({
     value: item.itemId,
     label: item.itemName,
@@ -962,6 +987,45 @@ const Item = () => {
       toast.error("Failed to save add-on items.");
     }
   };
+=======
+  const [imageMap, setImageMap] = useState({});
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      const newImageMap = {};
+
+      const fetchImageForRow = async (row) => {
+        if (!row.ItemImageFile) return;
+        console.log(ItemImageFile,'gg');
+        
+
+        try {
+          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/${row.ItemImageFile}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Image fetch failed");
+
+          const blob = await response.blob();
+          console.log(blob,'jj');
+          
+          const url = URL.createObjectURL(blob);
+          newImageMap[row.itemId] = url;
+        } catch (err) {
+          console.error(`Error loading image for ${row.itemName}:`, err);
+        }
+      };
+
+      await Promise.all(formRows.map(fetchImageForRow));
+      setImageMap(newImageMap);
+    };
+
+    fetchImages();
+  }, [formRows]); 
+
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
 
   return (
     <>

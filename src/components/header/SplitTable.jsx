@@ -238,7 +238,11 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     <div className="d-flex flex-wrap w-100" style={{  height: "80vh", gap: "1rem" }}>
+=======
+                    <div className="d-flex flex-wrap" style={{ width: "72vw", height: "80vh", gap: "1rem" }}>
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
                         <div style={{ flex: 1, paddingRight: "1rem", overflowY: "auto", borderRight: "1px solid #ccc", width: "50%", paddingLeft: "0.5rem" }}>
                             <div className="floorSearch d-flex align-items-center gap-2 px-1 overflow-hidden mb-2"  >
 
