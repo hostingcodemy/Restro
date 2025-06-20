@@ -48,12 +48,28 @@ input {
 }
 
 .subcategoryName {
+<<<<<<< HEAD
   font-size: 0.7rem;
+=======
+<<<<<<< HEAD
+  font-size: 0.7rem;
+=======
+  font-size: 0.8rem;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   text-align: center;
 }
 
 .posLeft {
+<<<<<<< HEAD
   width: 70%;
+=======
+<<<<<<< HEAD
+  width: 70%;
+=======
+  width: 70.5%;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -61,14 +77,39 @@ input {
 }
 
 .posRight {
+<<<<<<< HEAD
   width: 26%;
+=======
+<<<<<<< HEAD
+  width: 26%;
+=======
+  width: 24.3%;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   background-color: rgb(255, 255, 255);
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+
+=======
+/* .posLeftTop {
+  overflow-x: auto;
+  height: 15%;
+  /* width: 300%;
+  padding: 0.35rem;
+  background-color: #fafafa;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+} */
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
 
 /* .subacetgoryWrapper {
   background-color: #fff;
@@ -140,7 +181,15 @@ input {
 .posLeftTop {
   height: 7%;
   width: 100%;
+<<<<<<< HEAD
   background-color: #fff;
+=======
+<<<<<<< HEAD
+  background-color: #fff;
+=======
+  /* background-color: #fafafa; */
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   padding: 0.25rem;
   display: flex;
   justify-content: space-between;
@@ -203,7 +252,15 @@ input {
 
 .itemBox {
   background-color: white;
+<<<<<<< HEAD
   border: 0.15rem solid rgb(246, 246, 246);
+=======
+<<<<<<< HEAD
+  border: 0.15rem solid rgb(246, 246, 246);
+=======
+   border: 0.15rem solid rgb(246, 246, 246);
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   padding: 0.35rem;
   border-radius: 0.5rem;
   height: 23vh;
@@ -215,12 +272,26 @@ input {
   height: 70%;
   border-radius: 0.5rem;
   overflow: hidden;
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+
+=======
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
 }
 
 .imageWrapper img {
   height: 100%;
   width: 100%;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
 }
 
 .itemName {
@@ -255,7 +326,14 @@ input {
 
 .itemPrice {
   font-weight: 600;
+<<<<<<< HEAD
   color: black;
+=======
+<<<<<<< HEAD
+  color: black;
+=======
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   font-size: 0.8rem;
 }
 
@@ -263,9 +341,19 @@ input {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+<<<<<<< HEAD
   width: 100%;
   padding: 0.1rem;
   overflow-x: auto;
+=======
+<<<<<<< HEAD
+  width: 100%;
+  padding: 0.1rem;
+  overflow-x: auto;
+=======
+  padding: 0.1rem;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
 }
 
 
@@ -281,7 +369,15 @@ input {
 
 
 .posCart {
+<<<<<<< HEAD
   height: 75%;
+=======
+<<<<<<< HEAD
+  height: 75%;
+=======
+  height: 70%;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   /* background-color: red; */
 }
 
@@ -317,10 +413,23 @@ input {
 
 .cartMiddle {
   display: flex;
+<<<<<<< HEAD
   flex-direction: column;
   /* justify-content: space-between; */
   padding: 0.5rem 0.3rem;
   height: 12%;
+=======
+<<<<<<< HEAD
+  flex-direction: column;
+  /* justify-content: space-between; */
+  padding: 0.5rem 0.3rem;
+  height: 12%;
+=======
+  justify-content: space-between;
+  padding: 0.5rem 0.3rem;
+  height: 10%;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   align-items: center;
 }
 
@@ -369,7 +478,15 @@ input {
 .cartBtm {
   overflow: auto;
   padding: 0.2rem 0.3rem;
+<<<<<<< HEAD
   height: 78%;
+=======
+<<<<<<< HEAD
+  height: 78%;
+=======
+  height: 80%;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   /* background-color: red; */
   display: flex;
   flex-direction: column;
@@ -379,7 +496,15 @@ input {
 .cartItemFull {
   width: 100%;
   background-color: #fff;
+<<<<<<< HEAD
   height: 6.5rem;
+=======
+<<<<<<< HEAD
+  height: 6.5rem;
+=======
+  height: 8rem;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   padding: 0.3rem 0.2rem;
   border-bottom: 0.01rem dashed rgb(179, 179, 179);
   display: flex;
@@ -473,7 +598,14 @@ input {
   align-items: center;
   justify-content: center;
   border-radius: 2rem;
+<<<<<<< HEAD
   cursor: pointer;
+=======
+<<<<<<< HEAD
+  cursor: pointer;
+=======
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
 }
 
 .cartQuantityBtns {
@@ -483,7 +615,15 @@ input {
 }
 
 .posBill {
+<<<<<<< HEAD
   height: 25%;
+=======
+<<<<<<< HEAD
+  height: 25%;
+=======
+  height: 30%;
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -596,6 +736,10 @@ input {
 
 .popup button:hover {
   background: #eaeaea;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
 }
 
 .filterIcon {
@@ -618,4 +762,9 @@ input {
 
 .cartDetailsItem{
   width: 33.3%;
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
 }

@@ -683,6 +683,7 @@ const Item = () => {
 
   const columns = [
     {
+<<<<<<< HEAD
       name: <h5>Item Image</h5>,
       selector: (row) => (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -692,6 +693,25 @@ const Item = () => {
                 ? `${import.meta.env.VITE_IMG_BASE_URL}/${row.itemImage}`
                 : 'src/assets/food.png'
             }
+=======
+<<<<<<< HEAD
+      name: <h5>Item Image</h5>,
+      selector: (row) => (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img
+            src={
+              row.itemImage
+                ? `${import.meta.env.VITE_IMG_BASE_URL}/${row.itemImage}`
+                : 'src/assets/food.png'
+            }
+=======
+      name: <h5>Item Photo</h5>,
+      selector: (row) =>
+        row.ItemImageFile && imageMap[row.itemId] ? (
+          <img
+            src={imageMap[row.itemId]}
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
             alt={row.itemName}
             style={{
               width: '60px',
@@ -700,8 +720,29 @@ const Item = () => {
               borderRadius: '0px',
             }}
           />
+<<<<<<< HEAD
         </div>
       ),
+=======
+<<<<<<< HEAD
+        </div>
+      ),
+=======
+        ) : (
+          <img
+            src="src/assets/food.png"
+            alt="default"
+            style={{
+              width: "60px",
+              height: "60px",
+              objectFit: "cover",
+              borderRadius: "50%",
+              border: "2px solid #ccc",
+            }}
+          />
+        ),
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
       sortable: false,
       center: true,
     },
@@ -938,10 +979,16 @@ const Item = () => {
     }
   };
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
   const itemOptions = itemsData?.map((item) => ({
     value: item.itemId,
     label: item.itemName,
   }));
+<<<<<<< HEAD
+=======
 
   const handleAddOnSubmit = async () => {
     const isValid = validateAddForm();
@@ -962,6 +1009,33 @@ const Item = () => {
       toast.error("Failed to save add-on items.");
     }
   };
+=======
+  const [imageMap, setImageMap] = useState({});
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
+
+  const handleAddOnSubmit = async () => {
+    const isValid = validateAddForm();
+    if (!isValid) return;
+
+    const payload = {
+      itemParentId: selectedItemId,
+      itemIds: addFormValues.itemId,
+    };
+
+    try {
+      const res = await api.post("/itemaddon", payload);
+      toast.success(res.data.successMessage || "Success!");
+      handleAddOnClose();
+
+<<<<<<< HEAD
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save add-on items.");
+    }
+  };
+=======
+>>>>>>> 68a08561502c7800cb795698f2ffb1011814928d
+>>>>>>> 70332d634caef1d128b672c9a859c249f42007b9
 
   return (
     <>
