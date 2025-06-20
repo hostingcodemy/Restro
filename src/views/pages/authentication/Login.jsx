@@ -100,7 +100,7 @@ const Login = () => {
                 localStorage.setItem("refreshToken", res.data.data.refreshToken);
                 localStorage.setItem("authChannels", JSON.stringify(res.data.data.authChannels));
 
-                
+
                 if (res.data.data.authChannels.length === 0) {
                     navigate("/channel-outlet");
                 } else {

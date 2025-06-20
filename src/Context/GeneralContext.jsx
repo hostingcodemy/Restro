@@ -4,8 +4,8 @@ const GeneralContext = createContext();
 
 export const GeneralProvider = ({ children }) => {
 
-
   const [isMergeTable, setIsMergeTable] = useState(false);
+
   const [isSplitTable, setisSplitTable] = useState(false);
 
 

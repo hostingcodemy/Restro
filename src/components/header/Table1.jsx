@@ -4,6 +4,7 @@ import { useDrag, useDrop } from "react-dnd";
 import Chair from "./Chair";
 import { PiUserCirclePlusLight } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
+import { useGeneralContext } from "../../Context/GeneralContext";
 
 const ItemTypes = { TABLE: "table", CHAIR: "chair" };
 
@@ -13,6 +14,7 @@ const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onA
   const [chairCount, setChairCount] = useState('');
   const popupRef = useRef(null);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     if (showChairModal && popupRef.current) {
@@ -25,13 +27,10 @@ const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onA
 
   const handleTableClick = () => {
     if (isAddChairMode) {
-
       setShowChairModal(true);
-
     } else {
-
+      localStorage.setItem("navigateTable", JSON.stringify(table));
       navigate("/order-management");
-
     }
   };
 
@@ -240,7 +239,8 @@ const Table = ({ table, moveTable, onDropChair, dragEnabled, isAddChairMode, onA
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "white"
+            color: "white",
+            cursor: "pointer"
           }}
           onMouseDown={handleMouseDown}
           onClick={handleTableClick}

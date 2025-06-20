@@ -36,6 +36,7 @@ import { LuMessagesSquare } from "react-icons/lu";
 import { MdOutlineMerge } from "react-icons/md";
 import { MdOutlineCallSplit } from "react-icons/md";
 import { useGeneralContext } from '../Context/GeneralContext';
+import { CiBookmarkPlus } from "react-icons/ci";
 
 
 const AppHeader = ({ sidebarShow, setSidebarShow }) => {
@@ -45,7 +46,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
   const { isMergeTable, setIsMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
 
   const isTablePage = location.pathname === "/table-reservations";
-  const isOrderPage = location.pathname === 'order-management';
+  const isOrderPage = location.pathname === '/order-management';
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
@@ -73,7 +74,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
     '/departments': 'Department',
     '/employee-types': 'Employee Type',
     '/employees': 'Employee',
-    '/table-reservations': 'Table Layout',
+    '/restro-pos': 'Table Layout',
     '/order-management': 'Point of Sale',
     '/facility-status': 'Facility Status',
     '/outlet-type': 'Outlet Type'
@@ -112,6 +113,13 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
           >
             {(isTablePage || isOrderPage) ? (
               <>
+                <div className="d-flex gap-2 align-items-center ">
+                  <div className="tableHeaderButton">
+                    <CiBookmarkPlus size={14} /> Reservation
+                  </div>
+
+                </div>
+
                 <div className="d-flex gap-2 align-items-center ">
                   <div
                     className='tableHeaderButton d-flex align-items-center gap-1'
@@ -200,6 +208,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
 
 
                 <div className="d-flex gap-2 align-items-center">
+
                   <div
                     className=' tableHeaderButton d-flex align-items-center gap-1'
 
@@ -207,6 +216,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                     <PiHandshakeThin />
                     Settlement
                   </div>
+
                   <div
                     className=' tableHeaderButton d-flex align-items-center gap-1'
 
@@ -214,12 +224,21 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                     <CiDeliveryTruck />
                     Dispatch
                   </div>
+
                   <div
                     className=' tableHeaderButton d-flex align-items-center gap-1'
                   >
                     <PiGlobeThin />
                     Online
                   </div>
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+
+                  >
+                    <PiHandshakeThin />
+                    Pickup
+                  </div>
+
                 </div>
 
                 <div
@@ -241,7 +260,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                 <CIcon icon={cilBell} size="md" />
               </CNavLink>
             </CNavItem>
-            {isTablePage ? (
+            {(isTablePage || isOrderPage) ? (
               <>
                 <CNavItem>
                   <CNavLink href="#">
@@ -257,8 +276,11 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                 </CNavItem>
 
               </>
-
             ) : ""}
+            {/* {isTablePage ? (
+              
+
+            ) : ""} */}
 
             {/* <CDropdown variant="nav-item" placement="bottom-end">
               <CDropdownToggle caret={false}>
@@ -305,9 +327,9 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
 
 
           <li className="nav-item py-1 d-flex">
-          
+
             <div className="vr h-100 text-body text-opacity-75"></div>
-           
+
           </li>
           <AppHeaderDropdown />
           {/* <div className='d-flex align-items-center justify-content-center'>

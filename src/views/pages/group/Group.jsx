@@ -255,10 +255,16 @@ const Group = () => {
       center: true,
       cell: (row) => (
         <>
-          <Link className="action-icon" onClick={() => handleEditClick(row)}>
+          <Link className="action-icon"
+            onClick={(e) => {
+              e.preventDefault();
+              handleEditClick(row);
+            }}
+            title='Edit'
+          >
             <FaRegEdit size={24} color="#87CEEB" />
           </Link>
-          <Link className="action-icon" onClick={() => handleDeleteClick(row.itemGroupId, row.itemGroupName)}>
+          <Link className="action-icon" onClick={() => handleDeleteClick(row.itemGroupId, row.itemGroupName)} title='Delete'>
             <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
           </Link>
         </>
