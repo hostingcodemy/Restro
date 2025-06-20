@@ -80,7 +80,7 @@ const AppRoutes = () => {
           <Route path="/departments" element={<Department />} />
           <Route path="/employee-types" element={<EmployeeType />} />
           <Route path="/facility-status" element={<FacilityStatus />} />
-          <Route path="/table-reservations" element={<TableReservation />} />
+          <Route path="/restro-pos" element={<TableReservation />} />
           <Route path="/customer-form" element={<CustomerForm />} />
           <Route path="/order-management" element={<PosScreen />} />
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
 import DataTableSettings from "../../../helpers/DataTableSettings";
 import { Form, Button, Offcanvas, InputGroup, Row, Col, Spinner, Table, Modal } from "react-bootstrap";
-import { MdDeleteForever, MdOutlineFastfood, MdCurrencyRupee } from "react-icons/md";
+import { MdDeleteForever, MdOutlineFastfood } from "react-icons/md";
 import { FaRegEdit, FaRegFile, FaRegStar, FaExclamationTriangle, FaTimesCircle, FaTrash } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
 import { Link } from 'react-router-dom';
@@ -16,6 +16,8 @@ import { LiaProductHunt, LiaWeightSolid } from "react-icons/lia";
 import { LuTypeOutline } from "react-icons/lu";
 import { IoBarcodeOutline } from "react-icons/io5";
 import Select from 'react-select';
+import { LiaSitemapSolid } from "react-icons/lia";
+import { PiMicrophoneThin } from "react-icons/pi";
 
 const Item = () => {
 
@@ -48,6 +50,11 @@ const Item = () => {
     taxWithDiscount: false,
   };
 
+  const addInitialValues = {
+    itemId: []
+  }
+  const [addFormValues, setAddFormValues] = useState(addInitialValues);
+  const [addErrors, setAddErrors] = useState({});
   const [formValues, setFormValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [groupData, setGroupData] = useState([]);
@@ -70,6 +77,9 @@ const Item = () => {
   const handleExpoClose = () => setExpoShow(false);
   const handleExpoShow = () => setExpoShow(true);
   const handleMappingClose = () => setMappingShow(false);
+  const [addOnShow, setAddOnShow] = useState(false);
+  const handleAddOnClose = () => setAddOnShow(false);
+  const handleAddOnShow = () => setAddOnShow(true);
   const [formRows, setFormRows] = useState([]);
   const [taxData, setTaxData] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -88,7 +98,7 @@ const Item = () => {
 
   const hasFetchedTaxes = useRef(false);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [selectedItemId, setSelectedItemId] = useState(null);
   const filteredTaxes = taxData?.filter((tax) =>
     tax.taxName.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -344,8 +354,6 @@ const Item = () => {
   };
 
   const handleChange = (name, value) => {
-    console.log(name, value, 'pp');
-
     if (formValues[name] === value) return;
 
     setFormValues((prevValues) => ({
@@ -513,15 +521,102 @@ const Item = () => {
     return isValid;
   };
 
+  useEffect(() => {
+    if (formValues.itemGroupId) fetchSubGroupData(formValues.itemGroupId);
+    if (formValues.itemSubGroupId) fetchItemTypeData(formValues.itemSubGroupId);
+    if (formValues.itemCategoryId) fetchItemSubTypeData(formValues.itemCategoryId);
+  }, [formValues.itemGroupId, formValues.itemSubGroupId, formValues.itemCategoryId]);
+
+
+  // const handleEditClick = (row) => {
+  //   console.log(row, 'oo');
+
+  //   setIsEditMode(true);
+  //   setFormValues({
+  //     ...initialValues,
+  //     itemName: row.itemName,
+  //     itemGroupId: String(row.itemGroupId ?? ""),
+  //     itemSubGroupId: String(row.itemSubGroupId ?? ""),
+  //     itemCategoryId: String(row.itemCategoryId ?? ""),
+  //     itemSubCategoryId: String(row.itemSubCategoryId ?? ""),
+  //     productType: row.productType ?? "",
+  //     itemType: row.itemType ?? "",
+  //     itemCode: row.itemCode ?? "",
+  //     uom: String(row.uomID ?? ""),
+  //     ItemImageFile: row.itemImage,
+  //     HSNCode: row.hsnCode ?? "",
+  //     qrCode: row.qrCode ?? "",
+  //     itemQuantity: row.itemQuantity ?? "",
+  //     itemPrice: row.itemPrice ?? "",
+  //     itemSize: String(row.itemSizeId ?? ""),
+  //     outletId: String(row.outletId ?? ""),
+  //     isVisible: !!row.isVisible,
+  //     isDiscountable: !!row.isDiscountable,
+  //     isSoldMRP: !!row.isSoldMRP,
+  //     isActive: !!row.isActive,
+  //     taxWithDiscount: !!row.taxWithDiscount,
+  //   });
+  //   setShow(true);
+  // };
+
   const handleEditClick = (row) => {
-    setIsEditMode(true);
+    console.log(row, 'oo');
+
+    fetchGroupData();
+    fetchUomData();
+    fetchSubGroupData(row.itemGroupId);
+    fetchItemTypeData(row.itemSubGroupId);
+    fetchItemSubTypeData(row.itemCategoryId);
+
     setFormValues({
       itemId: row.itemId,
-      itemName: row.itemName,
-      itemGroupId: row.itemGroupId,
-      itemSubGroupId: row.itemSubGroupId,
-      isActive: row.isActive
+      itemName: row.itemName || "",
+      itemGroupId: String(row.itemGroupId || ""),
+      itemSubGroupId: String(row.itemSubGroupId || ""),
+      itemCategoryId: String(row.itemCategoryId || ""),
+      itemSubCategoryId: String(row.itemSubCategoryId || ""),
+      productType: row.productType || "",
+      itemType: row.itemType || "",
+      itemCode: row.itemCode || "",
+      uom: String(row.uomID || ""),
+      ItemImageFile: null,
+      HSNCode: row.hsnCode || "",
+      qrCode: row.qrCode || "",
+      itemQuantity: "",
+      itemPrice: "",
+      itemSize: "",
+      outletId: "",
+      isVisible: !!row.isVisible,
+      isDiscountable: !!row.isDiscountable,
+      isSoldMRP: !!row.isSoldMRP,
+      isActive: !!row.isActive,
+      taxWithDiscount: !!row.taxWithDiscount,
     });
+    const taxMap = {};
+    (row.taxes || []).forEach(tax => {
+      if (!taxMap[tax.outletId]) taxMap[tax.outletId] = [];
+      taxMap[tax.outletId].push({
+        taxName: tax.taxName,
+        taxRate: tax.taxRate,
+        taxId: tax.taxId
+      });
+    });
+
+    const mappedRows = (row.prices || []).map(price => ({
+      outletId: String(price.outletId),
+      outletName: price.outletName || "",
+      itemSize: String(price.itemSizeId || ""),
+      itemPrice: String(price.itemPrice || ""),
+      isSoldMRP: !!price.isSoldMRP,
+      isDiscountable: !!price.isDiscountable,
+      isVisible: !!price.isVisible,
+      taxes: taxMap[price.outletId] || [],
+      isNew: false,
+    }));
+
+    setFormRows(mappedRows);
+
+    setIsEditMode(true);
     setShow(true);
   };
 
@@ -555,35 +650,58 @@ const Item = () => {
     setToDelete(null);
   };
 
+  const handleAddChange = (name, value) => {
+    setAddFormValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setAddErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: "",
+    }));
+  };
+
+  const validateAddForm = () => {
+    const { itemId } = addFormValues;
+    const errors = {};
+    let isValid = true;
+
+    if (!itemId || itemId.length === 0) {
+      isValid = false;
+      errors.itemId = "Please select at least one item.";
+    }
+
+    setAddErrors(errors);
+    return isValid;
+  };
+
+  const handleAddOnClick = (itemId) => {
+    setSelectedItemId(itemId);
+    setAddFormValues({ itemId: [] });
+    setAddOnShow(true);
+  };
+
   const columns = [
     {
-      name: <h5>Item Photo</h5>,
-      selector: (row) =>
-        row.ItemImageFile && imageMap[row.itemId] ? (
+      name: <h5>Item Image</h5>,
+      selector: (row) => (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img
-            src={imageMap[row.itemId]}
+            src={
+              row.itemImage
+                ? `${import.meta.env.VITE_IMG_BASE_URL}/${row.itemImage}`
+                : 'src/assets/food.png'
+            }
             alt={row.itemName}
             style={{
-              width: "60px",
-              height: "60px",
-              objectFit: "cover",
-              borderRadius: "50%",
-              border: "2px solid #ccc",
+              width: '60px',
+              height: '60px',
+              objectFit: 'fill',
+              borderRadius: '0px',
             }}
           />
-        ) : (
-          <img
-            src="src/assets/food.png"
-            alt="default"
-            style={{
-              width: "60px",
-              height: "60px",
-              objectFit: "cover",
-              borderRadius: "50%",
-              border: "2px solid #ccc",
-            }}
-          />
-        ),
+        </div>
+      ),
       sortable: false,
       center: true,
     },
@@ -595,6 +713,26 @@ const Item = () => {
     {
       name: <h5>Item Code</h5>,
       selector: (row) => row.itemCode,
+      sortable: true,
+    },
+    {
+      name: <h5>Group</h5>,
+      selector: (row) => row.itemGroupName,
+      sortable: true,
+    },
+    {
+      name: <h5>Sub Group</h5>,
+      selector: (row) => row.itemSubGroupName,
+      sortable: true,
+    },
+    {
+      name: <h5>Category</h5>,
+      selector: (row) => row.itemCategoryName,
+      sortable: true,
+    },
+    {
+      name: <h5>Sub Category</h5>,
+      selector: (row) => row.itemSubCategoryName,
       sortable: true,
     },
     {
@@ -620,6 +758,15 @@ const Item = () => {
           <Link className="action-icon" onClick={() => handleDeleteClick(row.itemId, row.itemName)} title='Delete'>
             <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
           </Link>
+          <Link
+            onClick={(e) => {
+              e.preventDefault();
+              handleAddOnClick(row.itemId);
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <LiaSitemapSolid size={30} style={{ margin: "0.2vh" }} color="green" />
+          </Link>
         </>
       ),
     },
@@ -636,6 +783,7 @@ const Item = () => {
           onChange={(e) => setFilterText(e.target.value)}
         />
       </Form>
+      <PiMicrophoneThin size={30} color='yellow' />
       <Button variant="info" onClick={handleExpoShow}>
         <CiExport size={20} /> Import
       </Button>
@@ -790,43 +938,30 @@ const Item = () => {
     }
   };
 
-  const [imageMap, setImageMap] = useState({});
+  const itemOptions = itemsData?.map((item) => ({
+    value: item.itemId,
+    label: item.itemName,
+  }));
 
-  useEffect(() => {
-    const fetchImages = async () => {
-      const newImageMap = {};
+  const handleAddOnSubmit = async () => {
+    const isValid = validateAddForm();
+    if (!isValid) return;
 
-      const fetchImageForRow = async (row) => {
-        if (!row.ItemImageFile) return;
-        console.log(ItemImageFile,'gg');
-        
-
-        try {
-          const response = await fetch(`${import.meta.env.VITE_BASE_URL}/${row.ItemImageFile}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          });
-
-          if (!response.ok) throw new Error("Image fetch failed");
-
-          const blob = await response.blob();
-          console.log(blob,'jj');
-          
-          const url = URL.createObjectURL(blob);
-          newImageMap[row.itemId] = url;
-        } catch (err) {
-          console.error(`Error loading image for ${row.itemName}:`, err);
-        }
-      };
-
-      await Promise.all(formRows.map(fetchImageForRow));
-      setImageMap(newImageMap);
+    const payload = {
+      itemParentId: selectedItemId,
+      itemIds: addFormValues.itemId,
     };
 
-    fetchImages();
-  }, [formRows]); 
+    try {
+      const res = await api.post("/itemaddon", payload);
+      toast.success(res.data.successMessage || "Success!");
+      handleAddOnClose();
 
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save add-on items.");
+    }
+  };
 
   return (
     <>
@@ -1242,7 +1377,9 @@ const Item = () => {
         <Offcanvas.Header closeButton>
           <div className="w-100 text-center">
             <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
-              {`Outlet & Tax Mapping - ${formValues.itemName || ""}`}
+              {isEditMode
+                ? `Edit Outlet & Tax Mapping - ${formValues.itemName || ""}`
+                : `Add Outlet & Tax Mapping - ${formValues.itemName || ""}`}
             </Offcanvas.Title>
           </div>
         </Offcanvas.Header>
@@ -1445,7 +1582,7 @@ const Item = () => {
                 Back
               </Button>
               <Button type="submit" variant="warning" onClick={handleSubmit} className="ms-3">
-                Save
+                {isEditMode ? "Update" : "Save"}
               </Button>
             </div>
           </Form>
@@ -1482,6 +1619,93 @@ const Item = () => {
               </Button>
             </div>
           </Form>
+        </Offcanvas.Body>
+      </Offcanvas>
+
+      <Offcanvas
+        show={addOnShow}
+        onHide={handleAddOnClose}
+        placement="end"
+        backdrop="static"
+        style={{ "--bs-offcanvas-width": "1000px" }}
+      >
+        <Offcanvas.Header closeButton>
+          <div className="w-100 text-center">
+            <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
+              Add on Item
+            </Offcanvas.Title>
+          </div>
+        </Offcanvas.Header>
+        <Offcanvas.Body className='mt-2 d-flex flex-column gap-3'>
+          <InputGroup className="mb-3">
+            <InputGroup.Text id="itemId">
+              <FaObjectUngroup size={25} color="#ffc800" />
+            </InputGroup.Text>
+            <Select
+              isMulti
+              name="itemId"
+              options={itemOptions}
+              value={itemOptions?.filter((opt) =>
+                addFormValues.itemId?.includes(opt.value)
+              )}
+              onChange={(selectedOptions) =>
+                handleAddChange(
+                  "itemId",
+                  selectedOptions.map((opt) => opt.value)
+                )
+              }
+              styles={{
+                control: (provided, state) => ({
+                  ...provided,
+                  width: "19.5rem",
+                  borderColor: state.isFocused ? '#ffc800' : provided.borderColor,
+                  boxShadow: state.isFocused
+                    ? '0 0 0 0.2rem rgba(255, 200, 0, 0.25)'
+                    : provided.boxShadow,
+                  '&:hover': {
+                    borderColor: '#ffc800',
+                  },
+                }),
+                option: (provided, state) => ({
+                  ...provided,
+                  backgroundColor: state.isSelected
+                    ? '#ffc800'
+                    : state.isFocused
+                      ? '#ffe066'
+                      : 'white',
+                  color: state.isSelected || state.isFocused ? 'black' : 'inherit',
+                  cursor: 'pointer',
+                }),
+                multiValue: (provided) => ({
+                  ...provided,
+                  backgroundColor: '#fff3cd',
+                }),
+                multiValueLabel: (provided) => ({
+                  ...provided,
+                  color: '#856404',
+                }),
+                multiValueRemove: (provided) => ({
+                  ...provided,
+                  color: '#856404',
+                  ':hover': {
+                    backgroundColor: '#ffc800',
+                    color: 'black',
+                  },
+                }),
+              }}
+            />
+            {addErrors.itemId && <span className="error-msg">{addErrors.itemId}</span>}
+          </InputGroup>
+
+          <div className="d-flex justify-content-center mt-5">
+            <Button
+              onClick={handleAddOnSubmit}
+              type="submit" variant="warning"
+            >
+              Save
+            </Button>
+          </div>
+
         </Offcanvas.Body>
       </Offcanvas>
 

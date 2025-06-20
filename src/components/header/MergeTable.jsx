@@ -88,7 +88,8 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
         const payload = {
             tableId: droppedTables.map(t => t.tableId),
             sectionId: selectedSection,
-            outletId: outletId,
+            // outletId: outletId,
+            outletId: "a546dd1d-9963-47e4-aa92-47ee1d2770f1",
             name: mergeName,
             orderTaker: userId,
             pax: mergePax,
@@ -160,7 +161,6 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
     return (
         <>
 
-            <ToastContainer />
             <DndProvider backend={HTML5Backend}>
 
 
@@ -178,9 +178,9 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
                         zIndex: 9999,
                     }}
                 >
-
+                    <ToastContainer />
                     <div
-                        className="merge-modal-content w-90"
+                        className="merge-modal-content"
                         style={{
                             backgroundColor: "#fff",
                             borderRadius: "12px",
@@ -190,6 +190,7 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
                             alignItems: "flex-end",
                             boxShadow: "0 0 20px rgba(0,0,0,0.2)",
                             animation: "slideInRight 0.5s ease-out",
+                            width: "75vw"
                         }}
                     >
 
@@ -214,7 +215,7 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
                             </div>
                         </div>
 
-                        <div className="d-flex flex-wrap w-100" style={{ width: "72vw", height: "80vh", gap: "1rem" }}>
+                        <div className="d-flex flex-wrap w-100" style={{ height: "80vh", gap: "1rem" }}>
                             <div
                                 ref={dropAvailableRef}
                                 style={{ flex: 1, paddingRight: "1rem", overflowY: "auto", borderRight: "1px solid #ccc" }}
@@ -287,7 +288,7 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
 
                                         <div style={{ flex: 2 }}>
                                             <InputGroup className="">
-                                                <InputGroup.Text id="employeeTypeId">
+                                                <InputGroup.Text id="">
                                                     <IoLayersOutline size={25} color="#ffc800" />
                                                 </InputGroup.Text>
                                                 <Form.Select

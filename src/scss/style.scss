@@ -3949,6 +3949,7 @@ height: 94.5vh;
 }
 
 .chair-modal-content {
+  width: 20%;
   background: white;
   padding: 2rem;
   border-radius: 20px;
@@ -4015,7 +4016,7 @@ height: 94.5vh;
 
 .modal-btn {
   padding: 0.3rem 1.2rem;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s ease;

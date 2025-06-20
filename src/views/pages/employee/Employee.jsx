@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
-import { Form, Button, Offcanvas, InputGroup, Row, Col } from "react-bootstrap";
+import { Form, Button, Offcanvas, InputGroup, Row, Col, Accordion } from "react-bootstrap";
 import { MdDeleteForever } from "react-icons/md";
-import { FaRegEdit, FaCodeBranch, FaRegFile } from "react-icons/fa";
+import { FaRegEdit, FaRegFile } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
 import DataTableSettings from '../../../helpers/DataTableSettings';
-import { MdOutlinePersonOutline, MdOutlineLockPerson, MdSecurity, MdOutlineQuestionAnswer, MdOutlineWorkOutline } from "react-icons/md";
+import {
+    MdOutlinePersonOutline,
+    MdOutlineLockPerson,
+    MdSecurity,
+    MdOutlineQuestionAnswer,
+    MdOutlineWorkOutline
+}
+    from "react-icons/md";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { BsTelephone, BsCalendarDate, BsPersonRolodex, BsBuilding } from "react-icons/bs";
 import { FaRegIdBadge, FaIdCardAlt } from "react-icons/fa";
@@ -18,17 +25,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaTrash, FaTimesCircle, FaExclamationTriangle } from "react-icons/fa";
 import { Spinner } from 'react-bootstrap';
+import { LiaSitemapSolid } from "react-icons/lia";
 
 const Employee = () => {
-
-    const location = useLocation();
-    const [permissions, setPermissions] = useState({});
-
-    useEffect(() => {
-        if (location.state?.permissions) {
-            setPermissions(location.state.permissions);
-        }
-    }, [location.state]);
 
     const fetchCalled = useRef(false);
     const channelId = localStorage.getItem("channelId");
@@ -52,16 +51,28 @@ const Employee = () => {
         designation: "",
     };
 
-    const [loading, setLoading] = useState(true);
-
     useEffect(() => {
-
         const timer = setTimeout(() => {
             setLoading(false);
         }, 2000);
-
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        const menuInfo = JSON.parse(localStorage.getItem('authChannels'))
+        console.log(menuInfo[0].channelOutlets[0].outletName,'jj');
+        
+        if (menuInfo?.length > 0) {
+            const channelData = menuInfo[0]
+            const outletsList = channelData.channelOutlets || []
+            setOutlets(outletsList)
+            setSelectedOutletId(outletsList[0]?.outletID || null)
+
+            const modules = channelData.subscriptionModules || []
+            setRestaurantModule(modules.find(m => m.moduleName === 'Restaurant') || null)
+            setConfigurationModule(modules.find(m => m.moduleName === 'Configuration') || null)
+        }
+    }, [])
 
     const [formValues, setFormValues] = useState(initialValues);
     const [errors, setErrors] = useState({});
@@ -78,6 +89,16 @@ const Employee = () => {
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const handleExpoClose = () => setExpoShow(false);
     const handleExpoShow = () => setExpoShow(true);
+    const [accessshow, setAccessShow] = useState(false);
+    const handleAccessClose = () => setAccessShow(false);
+    const handleAccessShow = () => setAccessShow(true);
+    const [loading, setLoading] = useState(true);
+    const [outlets, setOutlets] = useState([]);
+    const [restaurantModule, setRestaurantModule] = useState(null);
+    const [configurationModule, setConfigurationModule] = useState(null);
+    const [selectedOutletId, setSelectedOutletId] = useState(null);
+    const [activeKey, setActiveKey] = useState("config");
+
 
     const handleClose = () => {
         setShow(false);
@@ -104,6 +125,8 @@ const Employee = () => {
     const fetchDepartmentData = async () => {
         try {
             const res = await api.get(`/department`);
+            console.log(res.data[0].list,'rr');
+            
             setDepartmentData(res?.data?.list);
         } catch (error) {
             setLoadingIndicator(false)
@@ -251,7 +274,7 @@ const Employee = () => {
     };
 
     const columns = [
-         {
+        {
             name: <h5>Name</h5>,
             selector: (row) => row.name,
             sortable: true,
@@ -302,12 +325,18 @@ const Employee = () => {
             center: true,
             cell: (row) => (
                 <>
-                        <Link className="action-icon" onClick={() => handleEditClick(row)}>
-                            <FaRegEdit size={24} color="#87CEEB" />
-                        </Link>
-                        <Link className="action-icon" onClick={() => handleDeleteClick(row.employeeID, row.name)}>
-                            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-                        </Link>
+                    <Link className="action-icon" onClick={() => handleEditClick(row)} title='Edit'>
+                        <FaRegEdit size={24} color="#87CEEB" />
+                    </Link>
+                    <Link className="action-icon" onClick={() => handleDeleteClick(row.employeeID, row.name)} title='Delete'>
+                        <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
+                    </Link>
+                    <Link
+                        onClick={handleAccessShow}
+                        style={{ cursor: "pointer" }}
+                    >
+                        <LiaSitemapSolid size={30} style={{ margin: "0.2vh" }} color="green" title='Access Mapping' />
+                    </Link>
                 </>
             ),
         },
@@ -325,18 +354,18 @@ const Employee = () => {
                         onChange={(e) => setFilterText(e.target.value)}
                     />
                 </Form>
-                    <Button variant="info"
-                        onClick={handleExpoShow}
-                    >
-                        <CiExport size={20} style={{ marginTop: "-0.5vh" }} /> Import
-                    </Button>
-                    <Button variant="success"
-                    >
-                        <CiImport size={20} style={{ marginTop: "-0.5vh" }} /> Export
-                    </Button>
-                    <Button variant="warning" onClick={handleShow}>
-                        <GoPlus size={20} style={{ marginTop: "-0.5vh" }} /> Add
-                    </Button>
+                <Button variant="info"
+                    onClick={handleExpoShow}
+                >
+                    <CiExport size={20} style={{ marginTop: "-0.5vh" }} /> Import
+                </Button>
+                <Button variant="success"
+                >
+                    <CiImport size={20} style={{ marginTop: "-0.5vh" }} /> Export
+                </Button>
+                <Button variant="warning" onClick={handleShow}>
+                    <GoPlus size={20} style={{ marginTop: "-0.5vh" }} /> Add
+                </Button>
             </div>
         );
     }, [filterText]);
@@ -858,6 +887,110 @@ const Employee = () => {
                             </Button>
                         </div>
                     </Form>
+                </Offcanvas.Body>
+            </Offcanvas>
+
+            <Offcanvas
+                show={accessshow}
+                onHide={handleAccessClose}
+                backdrop="static"
+                placement="end"
+                className="custom-offcanvass"
+            >
+                <Offcanvas.Header closeButton>
+                    <div className="w-100 text-center">
+                        <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
+                            Employee Access
+                        </Offcanvas.Title>
+                    </div>
+                </Offcanvas.Header>
+                <Offcanvas.Body>
+                    <Accordion activeKey={activeKey} onSelect={(key) => setActiveKey(key)}>
+                        {configurationModule && (
+                            <Accordion.Item eventKey="config">
+                                <Accordion.Header>{configurationModule.moduleName}</Accordion.Header>
+                                <Accordion.Body>
+                                    {configurationModule.menus.map((menu, j) => (
+                                        <div key={j} className="mb-3">
+                                            <div className="fw-bold">{menu.menuName}</div>
+                                            <div className="d-flex flex-wrap gap-3 ps-3 mt-1">
+                                                <Form.Check type="checkbox" label="Read" />
+                                                <Form.Check type="checkbox" label="Write" />
+                                                <Form.Check type="checkbox" label="Delete" />
+                                                <Form.Check type="checkbox" label="Export" />
+                                                <Form.Check type="checkbox" label="Import" />
+                                                <Form.Check type="checkbox" label="Print" />
+                                                <Form.Check type="checkbox" label="Approve" />
+                                                <Form.Control
+                                                    type="text"
+                                                    placeholder="Print Limit"
+                                                    style={{ width: "120px" }}
+                                                />
+                                                <Form.Control
+                                                    type="text"
+                                                    placeholder="Print Count"
+                                                    style={{ width: "120px" }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </Accordion.Body>
+                            </Accordion.Item>
+                        )}
+                        {outlets.map((outlet, index) => (
+                            <Accordion.Item eventKey={outlet.outletID.toString()} key={outlet.outletID}>
+                                <Accordion.Header>
+                                    <div className="d-flex w-100 align-items-center justify-content-between">
+                                        <span>{outlet.outletName}</span>
+                                        <Form.Check
+                                            type="radio"
+                                            name="selectedOutlet"
+                                            value={outlet.outletID}
+                                            checked={selectedOutletId === outlet.outletID}
+                                            onChange={() => setSelectedOutletId(outlet.outletID)}
+                                            className="ms-3"
+                                        />
+                                    </div>
+                                </Accordion.Header>
+                                <Accordion.Body>
+                                    {restaurantModule && (
+                                        <>
+                                            <h6 className="mb-3">Module - {restaurantModule.moduleName}</h6>
+                                            {restaurantModule.menus.map((menu, j) => (
+                                                <div key={j} className="mb-3">
+                                                    <div className="fw-bold">{menu.menuName}</div>
+                                                    <div className="d-flex flex-wrap gap-3 ps-3 mt-1">
+                                                        <Form.Check type="checkbox" label="Read" />
+                                                        <Form.Check type="checkbox" label="Write" />
+                                                        <Form.Check type="checkbox" label="Delete" />
+                                                        <Form.Check type="checkbox" label="Export" />
+                                                        <Form.Check type="checkbox" label="Import" />
+                                                        <Form.Check type="checkbox" label="Print" />
+                                                        <Form.Check type="checkbox" label="Approve" />
+                                                        <Form.Control
+                                                            type="text"
+                                                            placeholder="Print Limit"
+                                                            style={{ width: "120px" }}
+                                                        />
+                                                        <Form.Control
+                                                            type="text"
+                                                            placeholder="Print Count"
+                                                            style={{ width: "120px" }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
+                                </Accordion.Body>
+                            </Accordion.Item>
+                        ))}
+                    </Accordion>
+                    <div className="d-flex justify-content-center mt-4">
+                        <Button type="submit" variant="warning">
+                            Save
+                        </Button>
+                    </div>
                 </Offcanvas.Body>
             </Offcanvas>
         </>

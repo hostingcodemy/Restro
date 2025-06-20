@@ -26,12 +26,12 @@ import { useGeneralContext } from "../../Context/GeneralContext";
 import SplitModal from "./SplitTable";
 import { toast, ToastContainer } from 'react-toastify';
 import { MdOutlineFolderDelete } from "react-icons/md";
-import { CiBookmarkPlus } from "react-icons/ci";
+
 
 const TableBook = () => {
     const [errors, setErrors] = useState({});
     const [isAddChairMode, setIsAddChairMode] = useState(false);
-
+    const { setIsMergeTable, isMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [selected, setSelected] = useState("table");
@@ -70,11 +70,20 @@ const TableBook = () => {
     const userDetails = authChannels[0]?.adminDetails;
     const outletId = localStorage.getItem("currentOutletId");
     const [saveLayoutData, setSaveLayoutData] = useState('');
-
     const [tableType, setTableType] = useState('');
     const [selectedStatusId, setSelectedStatusId] = useState(null);
     const [selectedSection, setSelectedSection] = useState("all");
-
+    const select = [
+        {
+            id: 1,
+            value: "open",
+            name: "Open Table"
+        }, {
+            id: 2,
+            value: "vip",
+            name: "Vip Table"
+        }
+    ]
 
     const postOpenTable = async () => {
 
@@ -83,7 +92,8 @@ const TableBook = () => {
 
             tableId: [],
             sectionId: formData.section,
-            outletId: outletId,
+            // outletId: outletId,
+            outletId: "a546dd1d-9963-47e4-aa92-47ee1d2770f1",
             name: formData.tableName,
             orderTaker: userDetails?.userID,
             pax: formData.pax,
@@ -99,13 +109,12 @@ const TableBook = () => {
             facilityStatusId: formData.status
         };
 
-        console.log(payload);
-
         try {
 
             const postOpenTable = await api.post("/tablelog", payload);
 
             if (postOpenTable.data.isValid) {
+                fetchTableData();
                 toast.success(`${formData.tableName} table created successfully`);
             } else {
                 toast.dismiss(`Failed to create table ${formData.tableName}`);
@@ -172,7 +181,8 @@ const TableBook = () => {
 
     const fetchTableData = async () => {
         try {
-            const response = await api.get(`/tablelog/outlet/${outletId}`);
+            // const response = await api.get(`/tablelog/outlet/${outletId}`);
+            const response = await api.get(`/tablelog/outlet/a546dd1d-9963-47e4-aa92-47ee1d2770f1`);
             const fetchedTables = response.data.list;
 
             const transformed = fetchedTables.map((t, index) => ({
@@ -469,11 +479,8 @@ const TableBook = () => {
         setSearchTerm('');
         setSelectedSection('all');
         setSelectedStatusId(null);
+        setTableType("all");
     }
-
-    const { setIsMergeTable, isMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
-
-
 
 
     return (
@@ -491,9 +498,7 @@ const TableBook = () => {
                             <div className='topHeader px-2 w-100 d-flex align-items-center justify-content-end gap-4 bg-white'>
                                 <div className="d-flex align-items-center justify-content-end w-100 gap-3">
 
-                                    <div className="tableHeaderButton">
-                                        <CiBookmarkPlus size={14} /> Reservation
-                                    </div>
+                                 
 
                                     <div>
                                         <div className="transfer-toggle-container">
@@ -777,10 +782,10 @@ const TableBook = () => {
                                     <div className="">
                                         <select className="border-0" value={tableType}
                                             onChange={(e) => setTableType(e.target.value)}>
-                                            <option> Select</option>
+                                            <option value="all"> Select</option>
                                             {
-                                                ["Open Table", "VIP Table"].map((item) => {
-                                                    return <option key={item} value={item}>{item}</option>
+                                                select.map((selectItem) => {
+                                                    return <option key={selectItem.id} value={selectItem.value}>{selectItem.name}</option>
                                                 })
                                             }
 
@@ -888,8 +893,8 @@ const TableBook = () => {
                                                         table.capacity.toString().includes(search);
 
                                                     const statusMatch = !selectedStatusId || table.facilityStatusId === selectedStatusId;
-
-                                                    return sectionMatch && statusMatch && searchMatch;
+                                                    const typeMatch = tableType === "" || tableType === "all" || table.type === tableType;
+                                                    return sectionMatch && statusMatch && searchMatch && typeMatch;
                                                 })
                                                 .reduce((acc, table) => {
                                                     const section = table.sectionName || "Unknown Section";

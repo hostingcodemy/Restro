@@ -5,6 +5,7 @@ import './scss/examples.scss';
 import AppRoutes from './routes';
 import { Spinner } from 'react-bootstrap';
 import { GeneralProvider } from './Context/GeneralContext';
+import { CartProvider } from './Context/ItemCartContext';
 
 const App = () => {
 
@@ -15,7 +16,6 @@ const App = () => {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
-  
 
   return (
     <>
@@ -28,9 +28,11 @@ const App = () => {
         </div>
       ) : (
         <BrowserRouter>
+            <CartProvider>
           <GeneralProvider>
-            <AppRoutes />
+              <AppRoutes />
           </GeneralProvider>
+            </CartProvider>
         </BrowserRouter>
       )}
     </>

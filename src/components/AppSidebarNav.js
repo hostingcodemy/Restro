@@ -1,58 +1,48 @@
-import React, { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
-import SimpleBar from 'simplebar-react'
-import 'simplebar-react/dist/simplebar.min.css'
+import { useEffect, useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 import {
   CBadge,
   CNavItem,
   CNavLink,
   CSidebarNav,
   CNavGroup,
-} from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilSpeedometer } from '@coreui/icons'
+} from '@coreui/react';
+import CIcon from '@coreui/icons-react';
+import { cilSpeedometer } from '@coreui/icons'; 
 
-export const AppSidebarNav = () => {
-  const [items, setItems] = useState([])
-
+export const AppSidebarNav = ({ modules, selectedOutlet }) => {
+  const [items, setItems] = useState([]);
+  
   useEffect(() => {
-    const authChannels = JSON.parse(localStorage.getItem('authChannels'))
-
-    if (!authChannels || !Array.isArray(authChannels) || authChannels.length === 0) return
-
-    const selectedChannel = authChannels[0]
-    localStorage.setItem('channelId', selectedChannel.channelId)
-
-    const outletIds = selectedChannel.channelOutlets.map(o => o.outletID)
-    localStorage.setItem('outletIds', JSON.stringify(outletIds))
-
-    if (outletIds.length > 0) {
-      localStorage.setItem('currentOutletId', outletIds[0])
+    if (modules && modules.length > 0) {
+      const sidebarItems = generateSidebarItems(modules);
+      setItems(sidebarItems);
+    } else {
+      setItems([]); 
     }
+  }, [modules]); 
 
-    const sidebarItems = generateSidebarItems(selectedChannel.subscriptionModules)
-    setItems(sidebarItems)
-  }, [])
-
-  const generateSidebarItems = (modules) => {
-    return modules.map((module) => {
-      const menus = module.menus || []
+  const generateSidebarItems = (modulesToProcess) => {
+    return modulesToProcess.map((module) => {
+      const menus = module.menus || [];
 
       const menuItems = menus.map((menu) => ({
         component: CNavItem,
         name: menu.menuName,
         to: menu.menuPath,
-        icon: <span className="nav-icon-bullet" />,
-      }))
+        icon: <span className="nav-icon-bullet" />, 
+      }));
 
       return {
         component: CNavGroup,
         name: module.moduleName,
-        icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+        icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />, 
         items: menuItems,
-      }
-    })
-  }
+      };
+    });
+  };
 
   const navLink = (name, icon, badge, indent = false) => (
     <>
@@ -64,11 +54,11 @@ export const AppSidebarNav = () => {
         </CBadge>
       )}
     </>
-  )
+  );
 
   const navItem = (item, index, indent = false) => {
-    const { component, name, badge, icon, ...rest } = item
-    const Component = component
+    const { component, name, badge, icon, ...rest } = item;
+    const Component = component;
     return (
       <Component as="div" key={index}>
         {rest.to || rest.href ? (
@@ -83,20 +73,20 @@ export const AppSidebarNav = () => {
           navLink(name, icon, badge, indent)
         )}
       </Component>
-    )
-  }
+    );
+  };
 
   const navGroup = (item, index) => {
-    const { component, name, icon, items, ...rest } = item
-    const Component = component
+    const { component, name, icon, items: groupItems, ...rest } = item; 
+    const Component = component;
     return (
       <Component compact as="div" key={index} toggler={navLink(name, icon)} {...rest}>
-        {items?.map((child, childIndex) =>
+        {groupItems?.map((child, childIndex) =>
           child.items ? navGroup(child, childIndex) : navItem(child, childIndex, true)
         )}
       </Component>
-    )
-  }
+    );
+  };
 
   return (
     <CSidebarNav as={SimpleBar}>
@@ -104,5 +94,5 @@ export const AppSidebarNav = () => {
         item.items ? navGroup(item, index) : navItem(item, index)
       )}
     </CSidebarNav>
-  )
-}
+  );
+};

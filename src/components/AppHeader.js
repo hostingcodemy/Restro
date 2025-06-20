@@ -36,6 +36,7 @@ import { LuMessagesSquare } from "react-icons/lu";
 import { MdOutlineMerge } from "react-icons/md";
 import { MdOutlineCallSplit } from "react-icons/md";
 import { useGeneralContext } from '../Context/GeneralContext';
+import { CiBookmarkPlus } from "react-icons/ci";
 
 
 const AppHeader = ({ sidebarShow, setSidebarShow }) => {
@@ -73,7 +74,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
     '/departments': 'Department',
     '/employee-types': 'Employee Type',
     '/employees': 'Employee',
-    '/table-reservations': 'Table Layout',
+    '/restro-pos': 'Table Layout',
     '/order-management': 'Point of Sale',
     '/facility-status': 'Facility Status',
     '/outlet-type': 'Outlet Type'
@@ -112,6 +113,13 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
           >
             {(isTablePage || isOrderPage) ? (
               <>
+                <div className="d-flex gap-2 align-items-center ">
+                  <div className="tableHeaderButton">
+                    <CiBookmarkPlus size={14} /> Reservation
+                  </div>
+
+                </div>
+
                 <div className="d-flex gap-2 align-items-center ">
                   <div
                     className='tableHeaderButton d-flex align-items-center gap-1'
@@ -200,6 +208,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
 
 
                 <div className="d-flex gap-2 align-items-center">
+
                   <div
                     className=' tableHeaderButton d-flex align-items-center gap-1'
 
@@ -207,6 +216,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                     <PiHandshakeThin />
                     Settlement
                   </div>
+
                   <div
                     className=' tableHeaderButton d-flex align-items-center gap-1'
 
@@ -214,12 +224,21 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
                     <CiDeliveryTruck />
                     Dispatch
                   </div>
+
                   <div
                     className=' tableHeaderButton d-flex align-items-center gap-1'
                   >
                     <PiGlobeThin />
                     Online
                   </div>
+                  <div
+                    className=' tableHeaderButton d-flex align-items-center gap-1'
+
+                  >
+                    <PiHandshakeThin />
+                    Pickup
+                  </div>
+
                 </div>
 
                 <div

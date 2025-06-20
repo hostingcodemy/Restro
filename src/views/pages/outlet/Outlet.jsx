@@ -4,7 +4,7 @@ import DataTableSettings from "../../../helpers/DataTableSettings";
 import { Form, Button, Offcanvas, InputGroup, Row, Col } from "react-bootstrap";
 import { MdDeleteForever } from "react-icons/md";
 import {
-  FaRegEdit, FaTimesCircle,FaTrash ,
+  FaRegEdit, FaTimesCircle, FaTrash,
   FaExclamationTriangle, FaRegFile
 } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
@@ -38,7 +38,7 @@ const Outlet = () => {
     outletId: "",
     outletName: "",
     outletTypeID: "",
-    outletImage: null,
+    outletImageFile: null,
     sac: "",
     phone: "",
     mobile: "",
@@ -190,16 +190,16 @@ const Outlet = () => {
     if (!phone) {
       isValid = false;
       errors.phone = "Phone is required.";
-    } else if (!/^\d{10}$/.test(phone)) {
+    } else if (!/^91\d{10}$/.test(phone)) {
       isValid = false;
-      errors.phone = "Phone must be a valid 10-digit number.";
+      errors.phone = "Phone must start with '91' followed by a valid 10-digit number.";
     }
     if (!mobile) {
       isValid = false;
       errors.mobile = "Mobile is required.";
-    } else if (!/^\d{10}$/.test(mobile)) {
+    } else if (!/^91\d{10}$/.test(mobile)) {
       isValid = false;
-      errors.mobile = "Mobile must be a valid 10-digit number.";
+      errors.mobile = "Mobile must start with '91' followed by a valid 10-digit number.";
     }
     if (!email) {
       isValid = false;
@@ -272,8 +272,8 @@ const Outlet = () => {
       email: row.email,
       outletCode: row.outletCode,
       cuisineType: row.cuisineType,
-      openingHoursrow: row.openingHours,
-      billPrefix: rw.billPrefix,
+      openingHours: row.openingHours,
+      billPrefix: row.billPrefix,
       billType: row.billType,
       barBillPrefix: row.barBillPrefix,
       defaultPaymode: row.defaultPaymode,
@@ -315,6 +315,29 @@ const Outlet = () => {
   };
 
   const columns = [
+   {
+      name: <h5>Outlet Image</h5>,
+      selector: (row) => (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img
+            src={
+              row.outletImage
+                ? `${import.meta.env.VITE_IMG_BASE_URL}/${row.outletImage}`
+                : 'src/assets/outlet.png'
+            }
+            alt={row.itemName}
+            style={{
+              width: '60px',
+              height: '60px',
+              objectFit: 'fill',
+              borderRadius: '0px',
+            }}
+          />
+        </div>
+      ),
+      sortable: false,
+      center: true,
+    },
     {
       name: <h5>Outlet Name</h5>,
       selector: (row) => row.outletName,
@@ -354,7 +377,12 @@ const Outlet = () => {
       center: true,
       cell: (row) => (
         <>
-          <Link className="action-icon" onClick={() => handleEditClick(row)} title='Edit'>
+          <Link className="action-icon" onClick={(e) => {
+            e.preventDefault();
+            handleEditClick(row);
+          }}
+            title='Edit'
+          >
             <FaRegEdit size={24} color="#87CEEB" />
           </Link>
           <Link className="action-icon" onClick={() => handleDeleteClick(row.outletId, row.outletName)} title='Delete'>
@@ -411,8 +439,8 @@ const Outlet = () => {
     formData.append("outletAddress", formValues.outletAddress);
     formData.append("outletTaxNo", formValues.outletTaxNo);
     formData.append("isActive", formValues.isActive);
-    if (formValues.outletImage) {
-      formData.append("outletImage", formValues.outletImage);
+    if (formValues.outletImageFile) {
+      formData.append("outletImageFile", formValues.outletImageFile);
     }
 
     setLoading(true);
@@ -873,7 +901,7 @@ const Outlet = () => {
                       if (file) {
                         setFormValues(prev => ({
                           ...prev,
-                          outletImage: file
+                          outletImageFile: file
                         }));
                       }
                     }}

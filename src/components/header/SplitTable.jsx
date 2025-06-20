@@ -5,7 +5,7 @@ import { MdOutlineCancel, MdOutlinePersonOutline, MdOutlineTableRestaurant } fro
 import { IoLayersOutline } from "react-icons/io5";
 import InputGroup from "react-bootstrap/InputGroup";
 import Form from "react-bootstrap/Form";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from 'react-toastify';
 import { PiMicrophoneThin } from "react-icons/pi";
 import api from "../../config/AxiosInterceptor";
 
@@ -150,7 +150,8 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
             tableId: [droppedTable.tableId],
             sectionId: droppedTable.sectionId,
             customerId: null,
-            outletId: outletId,
+            // outletId: outletId,
+            outletId: "a546dd1d-9963-47e4-aa92-47ee1d2770f1", // hardcoded
             name: droppedTable.tableName,
             orderTaker: userId,
             pax: droppedTable.pax,
@@ -169,9 +170,9 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
             const post = await api.post("/tablelog", payload)
 
             if (post.data.isValid) {
-                fetchTableData()
+                fetchTableData();
                 toast.success(`${droppedTable.tableName} split successfully`);
-                    setIsMergeTable(false);
+                    setIsSplitTable(false);
             } else {
                 toast.error(post.data.errorMessage)
             }
@@ -201,8 +202,9 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
                     zIndex: 9999,
                 }}
             >
+                  <ToastContainer />
                 <div
-                    className="merge-modal-content w-90"
+                    className="merge-modal-content"
                     style={{
                         backgroundColor: "#fff",
                         borderRadius: "12px",
@@ -212,6 +214,7 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
                         alignItems: "flex-end",
                         boxShadow: "0 0 20px rgba(0,0,0,0.2)",
                         animation: "slideInRight 0.5s ease-out",
+                           width:"75vw"
                     }}
                 >
                     <div className="d-flex align-items-center justify-content-between w-100 px-3 py-1">
@@ -235,7 +238,7 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
                         </div>
                     </div>
 
-                    <div className="d-flex flex-wrap" style={{ width: "72vw", height: "80vh", gap: "1rem" }}>
+                    <div className="d-flex flex-wrap w-100" style={{  height: "80vh", gap: "1rem" }}>
                         <div style={{ flex: 1, paddingRight: "1rem", overflowY: "auto", borderRight: "1px solid #ccc", width: "50%", paddingLeft: "0.5rem" }}>
                             <div className="floorSearch d-flex align-items-center gap-2 px-1 overflow-hidden mb-2"  >
 
