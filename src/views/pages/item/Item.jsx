@@ -51,7 +51,9 @@ const Item = () => {
   };
 
   const addInitialValues = {
-    itemId: []
+    itemId: [],
+    IsCompulsory: false,
+    isActive: true
   }
   const [addFormValues, setAddFormValues] = useState(addInitialValues);
   const [addErrors, setAddErrors] = useState({});
@@ -102,6 +104,22 @@ const Item = () => {
   const filteredTaxes = taxData?.filter((tax) =>
     tax.taxName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const [selectedItems, setSelectedItems] = useState([]);
+
+  const handleSelectChange = (selectedOptions) => {
+    const updatedItems = selectedOptions.map((opt) => {
+      const existing = selectedItems.find((item) => item.value === opt.value);
+      return {
+        value: opt.value,
+        label: opt.label,
+        isCompulsory: existing ? existing.isCompulsory : false,
+      };
+    });
+
+    setSelectedItems(updatedItems);
+    //handleAddChange("itemId", updatedItems.map((item) => item.value));
+  };
 
   const handleClose = () => {
     setShow(false);
@@ -348,6 +366,26 @@ const Item = () => {
       const res = await api.get("/itemsize");
       const sortedData = res?.data?.list?.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
       setItemSizeData(sortedData);
+    } catch (error) {
+      console.error("Error fetching item size data", error);
+    }
+  };
+
+  const [addOnItems, setAddOnItems] = useState([]);
+
+  const fetchItemAddOnData = async (itemId) => {
+    try {
+      const res = await api.get(`/itemaddon/parent/${itemId}`);
+      const sortedData = res?.data?.list?.sort(
+        (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+      );
+      setAddOnItems(sortedData);
+
+      if (res?.data?.data?.items?.length > 0) {
+        setAddOnItems(res.data.data.items);
+      } else {
+        setAddOnItems([]);
+      }
     } catch (error) {
       console.error("Error fetching item size data", error);
     }
@@ -662,13 +700,20 @@ const Item = () => {
   };
 
   const validateAddForm = () => {
-    const { itemId } = addFormValues;
     const errors = {};
     let isValid = true;
 
-    if (!itemId || itemId.length === 0) {
+    // Validate item selection
+    if (selectedItems.length === 0) {
       isValid = false;
       errors.itemId = "Please select at least one item.";
+    }
+
+    // Validate that at least one item has isCompulsory === true
+    const hasCompulsory = selectedItems.some(item => item.isCompulsory);
+    if (selectedItems.length > 0 && !hasCompulsory) {
+      isValid = false;
+      errors.isCompulsory = "At least one item must be marked as compulsory.";
     }
 
     setAddErrors(errors);
@@ -679,6 +724,7 @@ const Item = () => {
     setSelectedItemId(itemId);
     setAddFormValues({ itemId: [] });
     setAddOnShow(true);
+    fetchItemAddOnData(itemId);
   };
 
   const columns = [
@@ -766,6 +812,34 @@ const Item = () => {
             style={{ cursor: "pointer" }}
           >
             <LiaSitemapSolid size={30} style={{ margin: "0.2vh" }} color="green" />
+          </Link>
+        </>
+      ),
+    },
+  ];
+
+  const addOnColumns = [
+
+    {
+      name: <h5>Item Name</h5>,
+      selector: (row) => row.itemName,
+      sortable: true,
+    },
+    {
+      name: <h5>Item Price</h5>,
+      selector: (row) => `₹ ${row.itemPrice}`,
+      sortable: true,
+    },
+    {
+      name: <h5>Action</h5>,
+      center: true,
+      cell: (row) => (
+        <>
+          <Link className="action-icon" onClick={() => handleEditClick(row)} title='Edit'>
+            <FaRegEdit size={24} color="#87CEEB" />
+          </Link>
+          <Link className="action-icon" onClick={() => handleDeleteClick(row.itemId, row.itemName)} title='Delete'>
+            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
           </Link>
         </>
       ),
@@ -949,14 +1023,21 @@ const Item = () => {
 
     const payload = {
       itemParentId: selectedItemId,
-      itemIds: addFormValues.itemId,
+      itemIds: selectedItems.map(item => item.value),
+      isCompulsory: selectedItems.some(item => item.isCompulsory),
+      isActive: addFormValues.isActive,
     };
 
     try {
       const res = await api.post("/itemaddon", payload);
       toast.success(res.data.successMessage || "Success!");
-      handleAddOnClose();
+      setSelectedItems([]);
+      setAddFormValues({
+        isActive: true,
+      });
+      setAddErrors({});
 
+      handleAddOnClose();
     } catch (error) {
       console.error(error);
       toast.error("Failed to save add-on items.");
@@ -1627,7 +1708,7 @@ const Item = () => {
         onHide={handleAddOnClose}
         placement="end"
         backdrop="static"
-        style={{ "--bs-offcanvas-width": "1000px" }}
+        className="custom-offcanvas"
       >
         <Offcanvas.Header closeButton>
           <div className="w-100 text-center">
@@ -1636,74 +1717,144 @@ const Item = () => {
             </Offcanvas.Title>
           </div>
         </Offcanvas.Header>
-        <Offcanvas.Body className='mt-2 d-flex flex-column gap-3'>
-          <InputGroup className="mb-3">
-            <InputGroup.Text id="itemId">
-              <FaObjectUngroup size={25} color="#ffc800" />
-            </InputGroup.Text>
-            <Select
-              isMulti
-              name="itemId"
-              options={itemOptions}
-              value={itemOptions?.filter((opt) =>
-                addFormValues.itemId?.includes(opt.value)
-              )}
-              onChange={(selectedOptions) =>
-                handleAddChange(
-                  "itemId",
-                  selectedOptions.map((opt) => opt.value)
-                )
-              }
-              styles={{
-                control: (provided, state) => ({
-                  ...provided,
-                  width: "19.5rem",
-                  borderColor: state.isFocused ? '#ffc800' : provided.borderColor,
-                  boxShadow: state.isFocused
-                    ? '0 0 0 0.2rem rgba(255, 200, 0, 0.25)'
-                    : provided.boxShadow,
-                  '&:hover': {
-                    borderColor: '#ffc800',
-                  },
-                }),
-                option: (provided, state) => ({
-                  ...provided,
-                  backgroundColor: state.isSelected
-                    ? '#ffc800'
-                    : state.isFocused
-                      ? '#ffe066'
-                      : 'white',
-                  color: state.isSelected || state.isFocused ? 'black' : 'inherit',
-                  cursor: 'pointer',
-                }),
-                multiValue: (provided) => ({
-                  ...provided,
-                  backgroundColor: '#fff3cd',
-                }),
-                multiValueLabel: (provided) => ({
-                  ...provided,
-                  color: '#856404',
-                }),
-                multiValueRemove: (provided) => ({
-                  ...provided,
-                  color: '#856404',
-                  ':hover': {
-                    backgroundColor: '#ffc800',
-                    color: 'black',
-                  },
-                }),
-              }}
-            />
-            {addErrors.itemId && <span className="error-msg">{addErrors.itemId}</span>}
-          </InputGroup>
 
-          <div className="d-flex justify-content-center mt-5">
-            <Button
-              onClick={handleAddOnSubmit}
-              type="submit" variant="warning"
-            >
+        <Offcanvas.Body className='mt-2 d-flex flex-column gap-3'>
+          <Row className='mb-2'>
+            <Col md={6}>
+              <InputGroup className="mb-3">
+                <InputGroup.Text id="itemId">
+                  <FaObjectUngroup size={25} color="#ffc800" />
+                </InputGroup.Text>
+                <Select
+                  isMulti
+                  name="itemId"
+                  options={itemOptions}
+                  value={selectedItems.map(({ value }) =>
+                    itemOptions.find(opt => opt.value === value)
+                  )}
+                  onChange={handleSelectChange}
+                  styles={{
+                    control: (provided, state) => ({
+                      ...provided,
+                      width: "19.5rem",
+                      borderColor: state.isFocused ? '#ffc800' : provided.borderColor,
+                      boxShadow: state.isFocused
+                        ? '0 0 0 0.2rem rgba(255, 200, 0, 0.25)'
+                        : provided.boxShadow,
+                      '&:hover': {
+                        borderColor: '#ffc800',
+                      },
+                    }),
+                    option: (provided, state) => ({
+                      ...provided,
+                      backgroundColor: state.isSelected
+                        ? '#ffc800'
+                        : state.isFocused
+                          ? '#ffe066'
+                          : 'white',
+                      color: state.isSelected || state.isFocused ? 'black' : 'inherit',
+                      cursor: 'pointer',
+                    }),
+                    multiValue: (provided) => ({
+                      ...provided,
+                      backgroundColor: '#fff3cd',
+                    }),
+                    multiValueLabel: (provided) => ({
+                      ...provided,
+                      color: '#856404',
+                    }),
+                    multiValueRemove: (provided) => ({
+                      ...provided,
+                      color: '#856404',
+                      ':hover': {
+                        backgroundColor: '#ffc800',
+                        color: 'black',
+                      },
+                    }),
+                  }}
+                />
+                {addErrors.itemId && <span className="error-msg">{addErrors.itemId}</span>}
+              </InputGroup>
+            </Col>
+            <Col md={6}>
+              <InputGroup className="mb-3">
+                <InputGroup.Text>
+                  <TbHandClick size={25} color="#ffc800" />
+                </InputGroup.Text>
+                <Form.Check
+                  type="checkbox"
+                  label="IsActive"
+                  checked={addFormValues.isActive}
+                  onChange={(e) => handleChange("isActive", e.target.checked)}
+                  className="ms-3"
+                />
+              </InputGroup>
+            </Col>
+          </Row>
+          {selectedItems.length > 0 && (
+            <>
+              <Table bordered hover>
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th className='text-center'>Is Compulsory</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedItems.map((item, idx) => (
+                    <tr key={item.value}>
+                      <td>{item.label}</td>
+                      <td className='text-center'>
+                        <Form.Check
+                          type="checkbox"
+                          checked={item.isCompulsory}
+                          onChange={() => {
+                            const updated = [...selectedItems];
+                            updated[idx].isCompulsory = !updated[idx].isCompulsory;
+                            setSelectedItems(updated);
+                          }}
+                          style={{ transform: "scale(1.5)" }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+
+              {/* Error message */}
+              {addErrors.isCompulsory && (
+                <div className="text-danger mt-1">{addErrors.isCompulsory}</div>
+              )}
+            </>
+          )}
+          <div className="d-flex justify-content-center mt-4">
+            <Button onClick={handleAddOnSubmit} variant="warning">
               Save
             </Button>
+          </div>
+          <div className='d-flex'>
+            <div className='p-3' style={{ width: "93vw" }}>
+              <div className="" style={{ width: "100%" }}>
+                <DataTable
+                  columns={addOnColumns}
+                  data={DataTableSettings.filterItems(
+                    addOnItems,
+                    searchParam,
+                    filterText
+                  )}
+                  pagination
+                  paginationPerPage={DataTableSettings.paginationPerPage}
+                  paginationRowsPerPageOptions={
+                    DataTableSettings.paginationRowsPerPageOptions
+                  }
+                  progressPending={loadingIndicator}
+                  subHeader
+                  fixedHeaderScrollHeight="400px"
+                  //subHeaderComponent={subHeaderComponentMemo}
+                  persistTableHead
+                />
+              </div>
+            </div>
           </div>
 
         </Offcanvas.Body>

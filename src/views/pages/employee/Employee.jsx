@@ -23,9 +23,23 @@ import { FaRegIdBadge, FaIdCardAlt } from "react-icons/fa";
 import { TbHandClick } from "react-icons/tb";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { FaTrash, FaTimesCircle, FaExclamationTriangle } from "react-icons/fa";
 import { Spinner } from 'react-bootstrap';
 import { LiaSitemapSolid } from "react-icons/lia";
+import {
+    FaUserCheck,
+    FaHandPaper,
+    FaUserCog,
+    FaFileAlt,
+    FaDollarSign,
+    FaBullhorn,
+    FaTrash,
+    FaTimesCircle,
+    FaExclamationTriangle,
+    FaTools,
+    FaHotel
+}
+    from "react-icons/fa";
+import { RxHamburgerMenu } from "react-icons/rx";
 
 const Employee = () => {
 
@@ -60,8 +74,8 @@ const Employee = () => {
 
     useEffect(() => {
         const menuInfo = JSON.parse(localStorage.getItem('authChannels'))
-        console.log(menuInfo[0].channelOutlets[0].outletName,'jj');
-        
+        console.log(menuInfo, 'gg');
+
         if (menuInfo?.length > 0) {
             const channelData = menuInfo[0]
             const outletsList = channelData.channelOutlets || []
@@ -98,7 +112,22 @@ const Employee = () => {
     const [configurationModule, setConfigurationModule] = useState(null);
     const [selectedOutletId, setSelectedOutletId] = useState(null);
     const [activeKey, setActiveKey] = useState("config");
+    const [showDetails, setShowDetails] = useState(true);
+    const [showConfigurationMenus, setShowConfigurationMenus] = useState(false);
+    const [activeOutletId, setActiveOutletId] = useState(null);
 
+
+    const toggleDetails = () => {
+        setShowDetails((prev) => !prev);
+    };
+
+    const toggleConfigurationMenus = () => {
+        setShowConfigurationMenus(prev => !prev);
+    };
+
+    const toggleOutletMenus = (outletId) => {
+        setActiveOutletId((prev) => (prev === outletId ? null : outletId));
+    };
 
     const handleClose = () => {
         setShow(false);
@@ -125,8 +154,8 @@ const Employee = () => {
     const fetchDepartmentData = async () => {
         try {
             const res = await api.get(`/department`);
-            console.log(res.data[0].list,'rr');
-            
+            console.log(res.data[0].list, 'rr');
+
             setDepartmentData(res?.data?.list);
         } catch (error) {
             setLoadingIndicator(false)
@@ -905,87 +934,94 @@ const Employee = () => {
                     </div>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
-                    <Accordion activeKey={activeKey} onSelect={(key) => setActiveKey(key)}>
-                        {configurationModule && (
-                            <Accordion.Item eventKey="config">
-                                <Accordion.Header>{configurationModule.moduleName}</Accordion.Header>
-                                <Accordion.Body>
-                                    {configurationModule.menus.map((menu, j) => (
-                                        <div key={j} className="mb-3">
-                                            <div className="fw-bold">{menu.menuName}</div>
-                                            <div className="d-flex flex-wrap gap-3 ps-3 mt-1">
-                                                <Form.Check type="checkbox" label="Read" />
-                                                <Form.Check type="checkbox" label="Write" />
-                                                <Form.Check type="checkbox" label="Delete" />
-                                                <Form.Check type="checkbox" label="Export" />
-                                                <Form.Check type="checkbox" label="Import" />
-                                                <Form.Check type="checkbox" label="Print" />
-                                                <Form.Check type="checkbox" label="Approve" />
-                                                <Form.Control
-                                                    type="text"
-                                                    placeholder="Print Limit"
-                                                    style={{ width: "120px" }}
-                                                />
-                                                <Form.Control
-                                                    type="text"
-                                                    placeholder="Print Count"
-                                                    style={{ width: "120px" }}
-                                                />
+                    <div className="p-3" style={{ maxWidth: "600px" }}>
+                        <div className="mt-4">
+                            <div
+                                style={{
+                                    cursor: "pointer",
+                                    display: "inline-block",
+                                    marginBottom: "15px",
+                                }}
+                                onClick={toggleDetails}
+                            >
+                                <RxHamburgerMenu size={25} />
+                            </div>
+                            {configurationModule && (
+                                <>
+                                    <div
+                                        className="border rounded p-3 mb-3 d-flex align-items-center justify-content-center"
+                                        style={{
+                                            minHeight: "60px",
+                                            backgroundColor: "#f8f9fa",
+                                            cursor: "pointer",
+                                        }}
+                                        onClick={toggleConfigurationMenus}
+                                    >
+                                        {showDetails ? (
+                                            <div className="w-100">
+                                                <div className="fw-bold fs-5 text-success">
+                                                    {configurationModule.moduleName}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </Accordion.Body>
-                            </Accordion.Item>
-                        )}
-                        {outlets.map((outlet, index) => (
-                            <Accordion.Item eventKey={outlet.outletID.toString()} key={outlet.outletID}>
-                                <Accordion.Header>
-                                    <div className="d-flex w-100 align-items-center justify-content-between">
-                                        <span>{outlet.outletName}</span>
-                                        <Form.Check
-                                            type="radio"
-                                            name="selectedOutlet"
-                                            value={outlet.outletID}
-                                            checked={selectedOutletId === outlet.outletID}
-                                            onChange={() => setSelectedOutletId(outlet.outletID)}
-                                            className="ms-3"
-                                        />
+                                        ) : (
+                                            <FaTools className="text-success" size={20} />
+                                        )}
                                     </div>
-                                </Accordion.Header>
-                                <Accordion.Body>
-                                    {restaurantModule && (
-                                        <>
-                                            <h6 className="mb-3">Module - {restaurantModule.moduleName}</h6>
-                                            {restaurantModule.menus.map((menu, j) => (
-                                                <div key={j} className="mb-3">
+                                    {showConfigurationMenus && showDetails && (
+                                        <div className="mb-3">
+                                            {configurationModule.menus?.map((menu) => (
+                                                <div
+                                                    key={menu.menuId}
+                                                    className="ps-3 py-2 border-start border-3 border-success bg-light rounded mb-2"
+                                                >
                                                     <div className="fw-bold">{menu.menuName}</div>
-                                                    <div className="d-flex flex-wrap gap-3 ps-3 mt-1">
-                                                        <Form.Check type="checkbox" label="Read" />
-                                                        <Form.Check type="checkbox" label="Write" />
-                                                        <Form.Check type="checkbox" label="Delete" />
-                                                        <Form.Check type="checkbox" label="Export" />
-                                                        <Form.Check type="checkbox" label="Import" />
-                                                        <Form.Check type="checkbox" label="Print" />
-                                                        <Form.Check type="checkbox" label="Approve" />
-                                                        <Form.Control
-                                                            type="text"
-                                                            placeholder="Print Limit"
-                                                            style={{ width: "120px" }}
-                                                        />
-                                                        <Form.Control
-                                                            type="text"
-                                                            placeholder="Print Count"
-                                                            style={{ width: "120px" }}
-                                                        />
-                                                    </div>
                                                 </div>
                                             ))}
-                                        </>
+                                        </div>
                                     )}
-                                </Accordion.Body>
-                            </Accordion.Item>
-                        ))}
-                    </Accordion>
+                                </>
+                            )}
+                            {restaurantModule &&
+                                outlets.map((outlet) => (
+                                    <div key={outlet.outletID}>
+                                        <div
+                                            className="border rounded p-3 mb-2 d-flex align-items-center justify-content-center"
+                                            style={{
+                                                minHeight: "60px",
+                                                backgroundColor: "#f0f8ff",
+                                                cursor: "pointer",
+                                            }}
+                                            onClick={() => toggleOutletMenus(outlet.outletID)}
+                                        >
+                                            {showDetails ? (
+                                                <div className="w-100">
+                                                    <div className="fw-bold fs-6 text-primary">
+                                                        {outlet.outletName}
+                                                    </div>
+                                                    <div className="text-muted">
+                                                        {restaurantModule.moduleName}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <FaHotel className="text-primary" size={18} />
+                                            )}
+                                        </div>
+                                        {showDetails && activeOutletId === outlet.outletID && (
+                                            <div className="mb-3">
+                                                {restaurantModule.menus?.map((menu) => (
+                                                    <div
+                                                        key={menu.menuId}
+                                                        className="ps-3 py-2 border-start border-3 border-primary bg-light rounded mb-2"
+                                                    >
+                                                        <div className="fw-bold">{menu.menuName}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
                     <div className="d-flex justify-content-center mt-4">
                         <Button type="submit" variant="warning">
                             Save

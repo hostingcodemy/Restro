@@ -4,7 +4,7 @@ import { Form, Button, Offcanvas, InputGroup, Row, Col, Table } from "react-boot
 import { MdDeleteForever } from "react-icons/md";
 import { FaRegEdit, FaRegFile } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
-import { Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import { GoPlus } from "react-icons/go";
 import { CiImport, CiExport } from "react-icons/ci";
@@ -44,7 +44,6 @@ const TablePage = () => {
     const searchParam = [
         "tableName",
         "capacity",
-        "tableStatus",
         "tableLocation",
         "isActive"
     ];
@@ -54,7 +53,6 @@ const TablePage = () => {
         tableName: "",
         capacity: "",
         outletId: "",
-        tableStatus: "",
         direction: "",
         type: "",
         serial: "",
@@ -154,7 +152,6 @@ const TablePage = () => {
             tableName,
             capacity,
             outletId,
-            tableStatus,
             direction,
             type,
             serial
@@ -173,10 +170,6 @@ const TablePage = () => {
         if (!outletId) {
             isValid = false;
             errors.outletId = "Outlet is required";
-        }
-        if (!tableStatus) {
-            isValid = false;
-            errors.tableStatus = "Table status is required";
         }
         if (!direction) {
             isValid = false;
@@ -208,7 +201,6 @@ const TablePage = () => {
             type: row.type,
             channelID: channelId,
             tableLocation: row.tableLocation,
-            tableStatus: row.tableStatus,
             openTable: row.openTable,
             isActive: row.isActive,
             section: row.section
@@ -263,11 +255,6 @@ const TablePage = () => {
             sortable: true,
         },
         {
-            name: <h5>Table Status</h5>,
-            selector: (row) => row.tableStatus,
-            sortable: true,
-        },
-        {
             name: <h5>Status</h5>,
             cell: (row) => (
                 <span
@@ -309,18 +296,18 @@ const TablePage = () => {
                         onChange={(e) => setFilterText(e.target.value)}
                     />
                 </Form>
-                    <Button variant="info"
-                        onClick={handleExpoShow}
-                    >
-                        <CiExport size={20} style={{ marginTop: "-0.5vh" }} /> Import
-                    </Button>
-                    <Button variant="success"
-                    >
-                        <CiImport size={20} style={{ marginTop: "-0.5vh" }} /> Export
-                    </Button>
-                    <Button variant="warning" onClick={handleShow}>
-                        <GoPlus size={20} style={{ marginTop: "-0.5vh" }} /> Add
-                    </Button>
+                <Button variant="info"
+                    onClick={handleExpoShow}
+                >
+                    <CiExport size={20} style={{ marginTop: "-0.5vh" }} /> Import
+                </Button>
+                <Button variant="success"
+                >
+                    <CiImport size={20} style={{ marginTop: "-0.5vh" }} /> Export
+                </Button>
+                <Button variant="warning" onClick={handleShow}>
+                    <GoPlus size={20} style={{ marginTop: "-0.5vh" }} /> Add
+                </Button>
             </div>
         );
     }, [filterText]);
@@ -336,7 +323,6 @@ const TablePage = () => {
             tableName: formValues.tableName,
             capacity: formValues.capacity,
             outletId: formValues.outletId,
-            tableStatus: formValues.tableStatus,
             direction: formValues.direction,
             type: formValues.type,
             isActive: formValues.isActive,
@@ -544,26 +530,6 @@ const TablePage = () => {
                                 </InputGroup>
                             </Col>
                             <Col md={6}>
-                                <InputGroup className="mb-4">
-                                    <InputGroup.Text>
-                                        <MdOutlineTableBar size={25} color="#ffc800" />
-                                    </InputGroup.Text>
-                                    <Form.Select
-                                        value={formValues.tableStatus}
-                                        onChange={(e) => setFormValues({ ...formValues, tableStatus: e.target.value })}
-                                        required
-                                    >
-                                        <option value="">Select Table Status</option>
-                                        <option value="Available">Available</option>
-                                        <option value="Occupied">Occupied</option>
-                                        <option value="Reserved">Reserved</option>
-                                        <option value="Hold">Hold</option>
-                                    </Form.Select>
-                                </InputGroup>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
                                         <GrDirections size={24} color='#ffc800' />
@@ -581,6 +547,8 @@ const TablePage = () => {
                                     />
                                 </InputGroup>
                             </Col>
+                        </Row>
+                        <Row>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
@@ -599,8 +567,6 @@ const TablePage = () => {
                                     />
                                 </InputGroup>
                             </Col>
-                        </Row>
-                        <Row>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
@@ -619,6 +585,8 @@ const TablePage = () => {
                                     />
                                 </InputGroup>
                             </Col>
+                        </Row>
+                        <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
                                     <InputGroup.Text id="employeeTypeId">
@@ -640,8 +608,6 @@ const TablePage = () => {
                                     </Form.Select>
                                 </InputGroup>
                             </Col>
-                        </Row>
-                        <Row>
                             <Col md={6} className='d-flex gap-2 align-items-center'>
                                 <InputGroup className="mb-4">
                                     <InputGroup.Text>
@@ -659,7 +625,8 @@ const TablePage = () => {
                                     </Form.Select>
                                 </InputGroup>
                             </Col>
-
+                        </Row>
+                        <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
                                     <InputGroup.Text id="isActive">
