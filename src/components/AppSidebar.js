@@ -53,17 +53,12 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
     }
   }, []);
 
-<<<<<<< HEAD
   useEffect(() => {
     const hiddenPaths = ['/table-reservations', '/order-management'];
     if (hiddenPaths.includes(location.pathname)) {
       setSidebarShow(false);
     }
   }, [location.pathname, setSidebarShow]);
-=======
-useEffect(() => {
-  const hiddenPaths = ['/table-management', '/order-management'];
->>>>>>> e1d50592c1ddcf7dc41188282b874d4fe922dc44
 
   const handleChannelChange = useCallback((channel) => {
     setSelectedChannel(channel);

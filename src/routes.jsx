@@ -86,15 +86,12 @@ const AppRoutes = () => {
           <Route path="/departments" element={<Department />} />
           <Route path="/employee-types" element={<EmployeeType />} />
           <Route path="/facility-status" element={<FacilityStatus />} />
-<<<<<<< HEAD
           <Route path="/member-type" element={<MemberType />} />
           <Route path="/address-type" element={<AddressType />} />
           <Route path="/customer-doc-type" element={<CustomerDocType />} />
           <Route path="/customer-type" element={<CustomerType />} />
           <Route path="/restro-pos" element={<TableReservation />} />
-=======
           <Route path="/table-management" element={<TableReservation />} />
->>>>>>> e1d50592c1ddcf7dc41188282b874d4fe922dc44
           <Route path="/customer-form" element={<CustomerForm />} />
           <Route path="/order-management" element={<PosScreen />} />
 
