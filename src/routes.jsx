@@ -36,6 +36,11 @@ const SuccessPage = React.lazy(() => import('src/views/pages/TransactionPages/Su
 const EmployeePage = React.lazy(() => import('src/views/pages/employee/Employee.jsx'));
 const FacilityStatus = React.lazy(() => import('./views/pages/facilityStatus/FacilityStatus.jsx'));
 const CustomerForm = React.lazy(() => import('./views/pages/customer/CustomerForm.jsx'));
+const TableType = React.lazy(() => import('./views/pages/tableType/TableType.jsx'));
+const MemberType = React.lazy(() => import('./views/pages/memberType/MemberType.jsx'));
+const AddressType = React.lazy(() => import('./views/pages/addressType/AddressType.jsx'));
+const CustomerDocType = React.lazy(() => import('./views/pages/customerDocType/CustomerDocType.jsx'));
+const CustomerType = React.lazy(() => import('./views/pages/customerType/CustomerType.jsx'));
 
 
 const AppRoutes = () => {
@@ -68,6 +73,7 @@ const AppRoutes = () => {
           <Route path="/item-sub-type" element={<ItemSubType />} />
           <Route path="/items" element={<Item />} />
           <Route path="/tables" element={<Table />} />
+          <Route path="/table-type" element={<TableType />} />
           <Route path="/channels" element={<Channel />} />
           <Route path="/outlets" element={<Outlet />} />
           <Route path="/outlet-type" element={<OutletType />} />
@@ -80,7 +86,15 @@ const AppRoutes = () => {
           <Route path="/departments" element={<Department />} />
           <Route path="/employee-types" element={<EmployeeType />} />
           <Route path="/facility-status" element={<FacilityStatus />} />
+<<<<<<< HEAD
+          <Route path="/member-type" element={<MemberType />} />
+          <Route path="/address-type" element={<AddressType />} />
+          <Route path="/customer-doc-type" element={<CustomerDocType />} />
+          <Route path="/customer-type" element={<CustomerType />} />
           <Route path="/restro-pos" element={<TableReservation />} />
+=======
+          <Route path="/table-management" element={<TableReservation />} />
+>>>>>>> e1d50592c1ddcf7dc41188282b874d4fe922dc44
           <Route path="/customer-form" element={<CustomerForm />} />
           <Route path="/order-management" element={<PosScreen />} />
 

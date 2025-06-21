@@ -105,6 +105,12 @@ const Item = () => {
     tax.taxName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+    if (addOnShow) {
+      fetchItemSizeData();
+    }
+  }, [addOnShow]);
+
   const [selectedItems, setSelectedItems] = useState([]);
 
   const handleSelectChange = (selectedOptions) => {
@@ -114,12 +120,19 @@ const Item = () => {
         value: opt.value,
         label: opt.label,
         isCompulsory: existing ? existing.isCompulsory : false,
+        itemSizeId: existing ? existing.itemSizeId : "",
+        qty: existing ? existing.qty : ""
       };
     });
 
     setSelectedItems(updatedItems);
-    //handleAddChange("itemId", updatedItems.map((item) => item.value));
+    if (updatedItems.length > 0) {
+      fetchItemAddOnData(updatedItems[0].value);
+    } else {
+      setAddOnItems([]);
+    }
   };
+
 
   const handleClose = () => {
     setShow(false);
@@ -688,17 +701,6 @@ const Item = () => {
     setToDelete(null);
   };
 
-  const handleAddChange = (name, value) => {
-    setAddFormValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setAddErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-  };
-
   const validateAddForm = () => {
     const errors = {};
     let isValid = true;
@@ -812,34 +814,6 @@ const Item = () => {
             style={{ cursor: "pointer" }}
           >
             <LiaSitemapSolid size={30} style={{ margin: "0.2vh" }} color="green" />
-          </Link>
-        </>
-      ),
-    },
-  ];
-
-  const addOnColumns = [
-
-    {
-      name: <h5>Item Name</h5>,
-      selector: (row) => row.itemName,
-      sortable: true,
-    },
-    {
-      name: <h5>Item Price</h5>,
-      selector: (row) => `₹ ${row.itemPrice}`,
-      sortable: true,
-    },
-    {
-      name: <h5>Action</h5>,
-      center: true,
-      cell: (row) => (
-        <>
-          <Link className="action-icon" onClick={() => handleEditClick(row)} title='Edit'>
-            <FaRegEdit size={24} color="#87CEEB" />
-          </Link>
-          <Link className="action-icon" onClick={() => handleDeleteClick(row.itemId, row.itemName)} title='Delete'>
-            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
           </Link>
         </>
       ),
@@ -1043,6 +1017,9 @@ const Item = () => {
       toast.error("Failed to save add-on items.");
     }
   };
+
+  console.log(addOnItems, 'kk');
+
 
   return (
     <>
@@ -1717,7 +1694,6 @@ const Item = () => {
             </Offcanvas.Title>
           </div>
         </Offcanvas.Header>
-
         <Offcanvas.Body className='mt-2 d-flex flex-column gap-3'>
           <Row className='mb-2'>
             <Col md={6}>
@@ -1776,54 +1752,100 @@ const Item = () => {
                 {addErrors.itemId && <span className="error-msg">{addErrors.itemId}</span>}
               </InputGroup>
             </Col>
-            <Col md={6}>
-              <InputGroup className="mb-3">
-                <InputGroup.Text>
-                  <TbHandClick size={25} color="#ffc800" />
-                </InputGroup.Text>
-                <Form.Check
-                  type="checkbox"
-                  label="IsActive"
-                  checked={addFormValues.isActive}
-                  onChange={(e) => handleChange("isActive", e.target.checked)}
-                  className="ms-3"
-                />
-              </InputGroup>
-            </Col>
           </Row>
           {selectedItems.length > 0 && (
             <>
-              <Table bordered hover>
-                <thead>
-                  <tr>
-                    <th>Item Name</th>
-                    <th className='text-center'>Is Compulsory</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedItems.map((item, idx) => (
-                    <tr key={item.value}>
-                      <td>{item.label}</td>
-                      <td className='text-center'>
-                        <Form.Check
-                          type="checkbox"
-                          checked={item.isCompulsory}
-                          onChange={() => {
-                            const updated = [...selectedItems];
-                            updated[idx].isCompulsory = !updated[idx].isCompulsory;
-                            setSelectedItems(updated);
-                          }}
-                          style={{ transform: "scale(1.5)" }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-
-              {/* Error message */}
-              {addErrors.isCompulsory && (
-                <div className="text-danger mt-1">{addErrors.isCompulsory}</div>
+              {addOnItems.length > 0 ? (
+                <>
+                  <h5>Add-On Items</h5>
+                  <Table bordered hover responsive>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Item Name</th>
+                        <th>Size</th>
+                        <th>Qty</th>
+                        <th className="text-center">Is Compulsory</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {addOnItems?.map((addOn, index) => (
+                        <tr key={addOn.itemId || index}>
+                          <td>{index + 1}</td>
+                          <td>{addOn.itemName || addOn.itemName}</td>
+                          <td>{addOn.itemSizeName || "N/A"}</td>
+                          <td>{addOn.itemQuantity || "1"}</td>
+                          <td className="text-center">{addOn.isCompulsory ? "Yes" : "No"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </>
+              ) : (
+                <>
+                  <Table bordered hover responsive>
+                    <thead>
+                      <tr>
+                        <th>Item Name</th>
+                        <th>Item Size</th>
+                        <th>Item Qty</th>
+                        <th className="text-center">Is Compulsory</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedItems.map((item, idx) => (
+                        <tr key={item.value}>
+                          <td>{item.label}</td>
+                          <td>
+                            <Form.Select
+                              value={item.itemSizeId}
+                              onChange={(e) => {
+                                const updated = [...selectedItems];
+                                updated[idx].itemSizeId = e.target.value;
+                                setSelectedItems(updated);
+                              }}
+                            >
+                              <option value="">Select</option>
+                              {itemSizeData?.map((size) => (
+                                <option key={size.id} value={size.id}>
+                                  {size.sizeName}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          </td>
+                          <td>
+                            <Form.Control
+                              type="number"
+                              min="0"
+                              value={item.qty}
+                              onChange={(e) => {
+                                const updated = [...selectedItems];
+                                updated[idx].qty = e.target.value.replace(/\D/g, '');
+                                setSelectedItems(updated);
+                              }}
+                              className="w-75"
+                            />
+                          </td>
+                          <td className="text-center">
+                            <Form.Check
+                              type="checkbox"
+                              checked={item.isCompulsory}
+                              onChange={() => {
+                                const updated = [...selectedItems];
+                                updated[idx].isCompulsory = !updated[idx].isCompulsory;
+                                setSelectedItems(updated);
+                              }}
+                              style={{ transform: "scale(1.5)" }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                  {addErrors.isCompulsory && (
+                    <div className="text-danger mt-1">{addErrors.isCompulsory}</div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -1832,31 +1854,6 @@ const Item = () => {
               Save
             </Button>
           </div>
-          <div className='d-flex'>
-            <div className='p-3' style={{ width: "93vw" }}>
-              <div className="" style={{ width: "100%" }}>
-                <DataTable
-                  columns={addOnColumns}
-                  data={DataTableSettings.filterItems(
-                    addOnItems,
-                    searchParam,
-                    filterText
-                  )}
-                  pagination
-                  paginationPerPage={DataTableSettings.paginationPerPage}
-                  paginationRowsPerPageOptions={
-                    DataTableSettings.paginationRowsPerPageOptions
-                  }
-                  progressPending={loadingIndicator}
-                  subHeader
-                  fixedHeaderScrollHeight="400px"
-                  //subHeaderComponent={subHeaderComponentMemo}
-                  persistTableHead
-                />
-              </div>
-            </div>
-          </div>
-
         </Offcanvas.Body>
       </Offcanvas>
 

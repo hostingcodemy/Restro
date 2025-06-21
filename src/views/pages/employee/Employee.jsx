@@ -26,12 +26,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Spinner } from 'react-bootstrap';
 import { LiaSitemapSolid } from "react-icons/lia";
 import {
-    FaUserCheck,
-    FaHandPaper,
-    FaUserCog,
-    FaFileAlt,
-    FaDollarSign,
-    FaBullhorn,
     FaTrash,
     FaTimesCircle,
     FaExclamationTriangle,
@@ -63,6 +57,8 @@ const Employee = () => {
         dob: "",
         anniversary: "",
         designation: "",
+        isAllowBackDays: false,
+        noOfDays: "",
     };
 
     useEffect(() => {
@@ -113,21 +109,13 @@ const Employee = () => {
     const [selectedOutletId, setSelectedOutletId] = useState(null);
     const [activeKey, setActiveKey] = useState("config");
     const [showDetails, setShowDetails] = useState(true);
-    const [showConfigurationMenus, setShowConfigurationMenus] = useState(false);
-    const [activeOutletId, setActiveOutletId] = useState(null);
 
 
     const toggleDetails = () => {
         setShowDetails((prev) => !prev);
     };
 
-    const toggleConfigurationMenus = () => {
-        setShowConfigurationMenus(prev => !prev);
-    };
 
-    const toggleOutletMenus = (outletId) => {
-        setActiveOutletId((prev) => (prev === outletId ? null : outletId));
-    };
 
     const handleClose = () => {
         setShow(false);
@@ -154,8 +142,6 @@ const Employee = () => {
     const fetchDepartmentData = async () => {
         try {
             const res = await api.get(`/department`);
-            console.log(res.data[0].list, 'rr');
-
             setDepartmentData(res?.data?.list);
         } catch (error) {
             setLoadingIndicator(false)
@@ -270,6 +256,8 @@ const Employee = () => {
             dob: row.dob,
             anniversary: row.doa,
             designation: row.designation,
+            isAllowBackDays: row.isAllowBackDays,
+            noOfDays: row.noOfDays
         });
         setShow(true);
     };
@@ -416,8 +404,9 @@ const Employee = () => {
             empTypeId: formValues.empTypeId,
             empCode: formValues.empCode,
             isActive: formValues.isActive,
+            isAllowBackDays: formValues.isAllowBackDays,
+            noOfDays: formValues.noOfDays
         }
-
 
         const payloadForPut = {
             ...payloadForPost,
@@ -426,8 +415,9 @@ const Employee = () => {
             dob: formValues.dob,
             doa: formValues.anniversary,
             designation: formValues.designation,
+            isAllowBackDays: formValues.isAllowBackDays,
+            noOfDays: formValues.noOfDays
         }
-
 
         try {
             let res;
@@ -450,6 +440,20 @@ const Employee = () => {
 
         fetchEmployeeData();
     };
+
+
+
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [showConfigurationMenus, setShowConfigurationMenus] = useState(false);
+    const [activeOutletId, setActiveOutletId] = useState(null);
+    const [selectedConfigMenu, setSelectedConfigMenu] = useState(null);
+
+    const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+    const toggleConfigurationMenus = () =>
+        setShowConfigurationMenus((prev) => !prev);
+    const toggleOutletMenus = (id) =>
+        setActiveOutletId((prev) => (prev === id ? null : id));
+
 
     return (
         <>
@@ -677,9 +681,7 @@ const Employee = () => {
 
                                 </InputGroup>
                             </Col>
-
                         </Row>
-
                         <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
@@ -699,7 +701,6 @@ const Employee = () => {
                                     />
 
                                 </InputGroup>
-
                             </Col>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
@@ -721,16 +722,13 @@ const Employee = () => {
                                             </option>
                                         ))}
                                     </Form.Select>
-
                                 </InputGroup>
                             </Col>
-
                         </Row>
-
                         <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
-                                    <InputGroup.Text id="departmentId">
+                                    <InputGroup.Text id="deptId">
                                         <BsBuilding size={25} color="#ffc800" />
                                     </InputGroup.Text>
                                     <Form.Select
@@ -748,10 +746,31 @@ const Employee = () => {
                                             </option>
                                         ))}
                                     </Form.Select>
-
                                 </InputGroup>
-
                             </Col>
+                            <Col md={6}>
+                                <InputGroup className="mb-4">
+                                    <InputGroup.Text id="noOfDays">
+                                        <FaIdCardAlt size={25} color='#ffc800' />
+                                    </InputGroup.Text>
+                                    <Form.Control
+                                        name="noOfDays"
+                                        value={formValues.noOfDays || ""}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (/^\d*$/.test(value)) {
+                                                handleChange("noOfDays", value);
+                                            }
+                                        }}
+                                        placeholder="Enter no of days"
+                                        aria-label="psid"
+                                        isInvalid={!!errors.noOfDays}
+                                        isValid={formValues.noOfDays && !errors.noOfDays}
+                                    />
+                                </InputGroup>
+                            </Col>
+                        </Row>
+                        <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
                                     <InputGroup.Text id="isActive">
@@ -791,7 +810,45 @@ const Employee = () => {
                                     </Form.Check>
                                 </InputGroup>
                             </Col>
+                            <Col md={6}>
+                                <InputGroup className="mb-4">
+                                    <InputGroup.Text id="isAllowBackDays">
+                                        <TbHandClick size={25} color="#ffc800" />
+                                    </InputGroup.Text>
+                                    <Form.Check
+                                        type="checkbox"
+                                        id="custom-checkbox"
+                                        label="isAllowBackDays"
+                                        name="isAllowBackDays"
 
+                                        className="ms-3"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            fontSize: '1rem',
+                                        }}
+                                        custom="true"
+                                    >
+                                        <Form.Check.Input
+                                            type="checkbox"
+                                            className="custom-yellow-checkbox"
+                                            onChange={(e) =>
+                                                setFormValues({ ...formValues, isAllowBackDays: e.target.checked })
+                                            }
+                                            checked={formValues.isAllowBackDays}
+                                            style={{
+                                                width: "20px",
+                                                height: "20px",
+                                                cursor: "pointer",
+                                                marginRight: "8px",
+                                            }}
+                                        />
+                                        <Form.Check.Label htmlFor="custom-checkbox">
+                                            Allow Back Days
+                                        </Form.Check.Label>
+                                    </Form.Check>
+                                </InputGroup>
+                            </Col>
                         </Row>
                         {isEditMode && (
                             <>
@@ -858,7 +915,6 @@ const Employee = () => {
                                         </InputGroup>
                                     </Col>
                                 </Row>
-
                                 <Row>
                                     <Col md={6}>
                                         <InputGroup className="mb-4">
@@ -875,7 +931,6 @@ const Employee = () => {
                                 </Row>
                             </>
                         )}
-
 
                         <div className="d-flex justify-content-center mt-4">
                             <Button type="submit" variant="warning">
@@ -934,90 +989,98 @@ const Employee = () => {
                     </div>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
-                    <div className="p-3" style={{ maxWidth: "600px" }}>
-                        <div className="mt-4">
+                    <div className="d-flex" style={{ minHeight: "100vh" }}>
+                        <div className="flex-grow-1 p-4">
+                            {isSidebarOpen && showConfigurationMenus && (
+                                <div className="mb-3 ms-4">
+                                    <div className="d-flex flex-wrap gap-2">
+                                        {configurationModule.menus?.map((menu) => (
+                                            <Button key={menu.menuId} variant="warning">
+                                                {menu.menuName}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* {isSidebarOpen && activeOutletId === outlet.outletID && (
+                                <div className="mb-3 ms-4">
+                                    {restaurantModule.menus?.map((menu) => (
+                                        <div
+                                            key={menu.menuId}
+                                            className="py-1 text-muted"
+                                            style={{ fontSize: "0.9rem" }}
+                                        >
+                                            {menu.menuName}
+                                        </div>
+                                    ))}
+                                </div>
+                            )} */}
+
+                        </div>
+                        <div
+                            className="bg-light p-2 d-flex flex-column"
+                            style={{
+                                width: isSidebarOpen ? "240px" : "72px",
+                                transition: "width 0.3s",
+                                minHeight: "100vh",
+                                borderLeft: "1px solid #dee2e6",
+                            }}
+                        >
                             <div
-                                style={{
-                                    cursor: "pointer",
-                                    display: "inline-block",
-                                    marginBottom: "15px",
-                                }}
-                                onClick={toggleDetails}
+                                className="d-flex align-items-center justify-content-center mb-3"
+                                style={{ cursor: "pointer", height: "48px" }}
+                                onClick={toggleSidebar}
                             >
-                                <RxHamburgerMenu size={25} />
+                                <RxHamburgerMenu size={24} />
                             </div>
                             {configurationModule && (
                                 <>
                                     <div
-                                        className="border rounded p-3 mb-3 d-flex align-items-center justify-content-center"
+                                        className="d-flex align-items-center mb-2 px-2 py-2 rounded"
                                         style={{
-                                            minHeight: "60px",
-                                            backgroundColor: "#f8f9fa",
+                                            backgroundColor: "#eaf1fb",
                                             cursor: "pointer",
+                                            height: "48px",
                                         }}
                                         onClick={toggleConfigurationMenus}
                                     >
-                                        {showDetails ? (
-                                            <div className="w-100">
-                                                <div className="fw-bold fs-5 text-success">
-                                                    {configurationModule.moduleName}
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <FaTools className="text-success" size={20} />
+                                        <FaTools className="text-success" size={20} />
+                                        {isSidebarOpen && (
+                                            <span className="ms-3 fw-semibold text-success">
+                                                {configurationModule.moduleName}
+                                            </span>
                                         )}
                                     </div>
-                                    {showConfigurationMenus && showDetails && (
-                                        <div className="mb-3">
-                                            {configurationModule.menus?.map((menu) => (
-                                                <div
-                                                    key={menu.menuId}
-                                                    className="ps-3 py-2 border-start border-3 border-success bg-light rounded mb-2"
-                                                >
-                                                    <div className="fw-bold">{menu.menuName}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
                                 </>
                             )}
                             {restaurantModule &&
                                 outlets.map((outlet) => (
                                     <div key={outlet.outletID}>
                                         <div
-                                            className="border rounded p-3 mb-2 d-flex align-items-center justify-content-center"
+                                            className="d-flex align-items-center mb-2 px-2 py-2 rounded"
                                             style={{
-                                                minHeight: "60px",
                                                 backgroundColor: "#f0f8ff",
                                                 cursor: "pointer",
+                                                height: "48px",
                                             }}
                                             onClick={() => toggleOutletMenus(outlet.outletID)}
                                         >
-                                            {showDetails ? (
-                                                <div className="w-100">
-                                                    <div className="fw-bold fs-6 text-primary">
+                                            <FaHotel className="text-primary" size={18} />
+                                            {isSidebarOpen && (
+                                                <div className="ms-3">
+                                                    <div
+                                                        className="fw-semibold text-primary"
+                                                        style={{ fontSize: "0.95rem" }}
+                                                    >
                                                         {outlet.outletName}
                                                     </div>
-                                                    <div className="text-muted">
+                                                    <div className="text-muted" style={{ fontSize: "0.75rem" }}>
                                                         {restaurantModule.moduleName}
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                <FaHotel className="text-primary" size={18} />
                                             )}
                                         </div>
-                                        {showDetails && activeOutletId === outlet.outletID && (
-                                            <div className="mb-3">
-                                                {restaurantModule.menus?.map((menu) => (
-                                                    <div
-                                                        key={menu.menuId}
-                                                        className="ps-3 py-2 border-start border-3 border-primary bg-light rounded mb-2"
-                                                    >
-                                                        <div className="fw-bold">{menu.menuName}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
                                     </div>
                                 ))}
                         </div>

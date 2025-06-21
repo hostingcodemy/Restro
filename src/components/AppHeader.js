@@ -45,7 +45,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
   const headerRef = useRef();
   const { isMergeTable, setIsMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
 
-  const isTablePage = location.pathname === "/table-reservations";
+  const isTablePage = location.pathname === "/table-management";
   const isOrderPage = location.pathname === '/order-management';
 
   useEffect(() => {
@@ -77,7 +77,12 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
     '/restro-pos': 'Table Layout',
     '/order-management': 'Point of Sale',
     '/facility-status': 'Facility Status',
-    '/outlet-type': 'Outlet Type'
+    '/outlet-type': 'Outlet Type',
+    '/table-type': 'Table Type',
+    '/member-type': 'Member Type',
+    '/address-type': 'Address Type',
+    '/customer-type': 'Customer Type',
+    '/customer-doc-type': 'Customer Doc Type',
   };
 
   const currentPath = location.pathname

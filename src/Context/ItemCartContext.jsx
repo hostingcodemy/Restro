@@ -3,26 +3,50 @@ import React, { createContext, useContext, useState } from 'react';
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
+  
   const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (item) => {
-    setCartItems((prev) => {
-      const exists = prev.find(i => i.itemId === item.itemId);
+  const [addonItem, setAddonItem] = useState([])
 
-      if (exists) {
-        const updatedItems = prev.map(i =>
-          i.itemId === item.itemId ? { ...i, quantity: i.quantity + 1 } : i
-        )
-        localStorage.setItem('cartItems', JSON.stringify(updatedItems));
-        return updatedItems;
-      } else {
-        const newItem = { ...item, quantity: 1 };
-        const updatedItems = [...prev, newItem];
-        localStorage.setItem('cartItems', JSON.stringify(updatedItems));
-        return updatedItems;
-      }
-    });
-  };
+
+console.log(cartItems);
+
+
+const addToCart = (item, addons = []) => {
+  const selectedPrice = item.prices?.[0]; // assume size is already filtered
+  const uniqueKey = `${item.itemId}_${selectedPrice.itemSizeId}`;
+
+  setCartItems((prev) => {
+    const exists = prev.find(i => i.uniqueKey === uniqueKey);
+
+    if (exists) {
+      const updatedItems = prev.map(i =>
+        i.uniqueKey === uniqueKey
+          ? {
+              ...i,
+              quantity: i.quantity + item.quantity, // use quantity from popup
+              // addonItems: i.addonItems || addons
+            }
+          : i
+      );
+      localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+      return updatedItems;
+    } else {
+      const newItem = {
+        ...item,
+        prices: [selectedPrice], // only the selected size
+        quantity: item.quantity || 1,
+        uniqueKey, // for identifying unique size-item combo
+        // addonItems: addons,
+      };
+      const updatedItems = [...prev, newItem];
+      localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+      return updatedItems;
+    }
+  });
+};
+
+
 
   const removeFromCart = (itemId) => {
     setCartItems((prev) => {
@@ -56,6 +80,53 @@ export const CartProvider = ({ children }) => {
     });
   };
 
+  
+
+
+  const increaseAddonQty = (itemId, addonId) => {
+  setCartItems(prev =>
+    prev.map(item => {
+      if (item.itemId !== itemId) return item;
+
+      const updatedAddons = item.addonItems.items.map(addon =>
+        addon.itemId === addonId
+          ? { ...addon, itemQuantity: (addon.itemQuantity || 1) + 1 }
+          : addon
+      );
+
+      return { ...item, addonItems: { ...item.addonItems, items: updatedAddons } };
+    })
+  );
+};
+
+const decreaseAddonQty = (itemId, addonId) => {
+  setCartItems(prev =>
+    prev.map(item => {
+      if (item.itemId !== itemId) return item;
+
+      const updatedAddons = item.addonItems.items.map(addon =>
+        addon.itemId === addonId
+          ? { ...addon, itemQuantity: Math.max(1, (addon.itemQuantity || 1) - 1) }
+          : addon
+      );
+
+      return { ...item, addonItems: { ...item.addonItems, items: updatedAddons } };
+    })
+  );
+};
+
+
+
+const updateRemarks = (itemId, value) => {
+  setCartItems((prevItems) =>
+    prevItems.map((item) =>
+      item.itemId === itemId ? { ...item, remarks: value } : item
+    )
+  );
+};
+
+
+
   return (
     <CartContext.Provider value={{
       setCartItems,
@@ -63,7 +134,11 @@ export const CartProvider = ({ children }) => {
       removeFromCart,
       cartItems,
       increaseQuantity,
-      decreaseQuantity
+      decreaseQuantity,
+      setAddonItem,
+      increaseAddonQty,
+      decreaseAddonQty,
+      updateRemarks
     }}>
       {children}
     </CartContext.Provider>

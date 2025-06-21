@@ -37,6 +37,12 @@ const AppHeaderDropdown = () => {
       localStorage.removeItem('outletId');
       localStorage.removeItem('authChannels');
       localStorage.removeItem('currentOutletId');
+<<<<<<< HEAD
+=======
+      localStorage.removeItem('navigateTable');
+      localStorage.removeItem('tableLayout');
+      localStorage.removeItem('outletIds');
+>>>>>>> e1d50592c1ddcf7dc41188282b874d4fe922dc44
       localStorage.removeItem('coreui-free-react-admin-template-theme');
 
       navigate('/login');
@@ -47,6 +53,10 @@ const AppHeaderDropdown = () => {
     <>
       <ToastContainer />
       <CDropdown variant="nav-item">
+<<<<<<< HEAD
+=======
+
+>>>>>>> e1d50592c1ddcf7dc41188282b874d4fe922dc44
         <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
           <CAvatar src={avatar8} size="md" />
         </CDropdownToggle>
@@ -63,6 +73,10 @@ const AppHeaderDropdown = () => {
         </CDropdownMenu>
       </CDropdown>
     </>
+<<<<<<< HEAD
+=======
+
+>>>>>>> e1d50592c1ddcf7dc41188282b874d4fe922dc44
   )
 }
 
