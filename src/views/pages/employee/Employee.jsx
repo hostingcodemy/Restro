@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
-import { Form, Button, Offcanvas, InputGroup, Row, Col, Accordion } from "react-bootstrap";
+import { Form, Button, Offcanvas, InputGroup, Row, Col, Accordion, Modal } from "react-bootstrap";
 import { MdDeleteForever } from "react-icons/md";
 import { FaRegEdit, FaRegFile } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
@@ -70,7 +70,6 @@ const Employee = () => {
 
     useEffect(() => {
         const menuInfo = JSON.parse(localStorage.getItem('authChannels'))
-        console.log(menuInfo, 'gg');
 
         if (menuInfo?.length > 0) {
             const channelData = menuInfo[0]
@@ -446,13 +445,88 @@ const Employee = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [showConfigurationMenus, setShowConfigurationMenus] = useState(false);
     const [activeOutletId, setActiveOutletId] = useState(null);
-    const [selectedConfigMenu, setSelectedConfigMenu] = useState(null);
 
-    const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-    const toggleConfigurationMenus = () =>
-        setShowConfigurationMenus((prev) => !prev);
-    const toggleOutletMenus = (id) =>
+    // Handler
+    // const handleMenuClick = (menu) => {
+    //     handleModalShow();
+    //     setSelectedMenu((prev) => (prev?.menuId === menu.menuId ? null : menu));
+    // };
+
+    const handleMenuClick = (menu) => {
+        const savedData = menuDataMap[menu.menuId];
+
+        setSelectedMenu({
+            ...menu,
+            ...savedData, // if available, override defaults
+        });
+
+        handleModalShow();
+    };
+
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen((prev) => {
+            const next = !prev;
+            if (!next) {
+                setShowConfigurationMenus(false);
+                setActiveOutletId(null);
+            }
+            return next;
+        });
+    };
+
+    const toggleConfigurationMenus = () => {
+        setShowConfigurationMenus((prev) => {
+            if (!prev) setActiveOutletId(null);
+            return !prev;
+        });
+    };
+
+    const toggleOutletMenus = (id) => {
         setActiveOutletId((prev) => (prev === id ? null : id));
+        setShowConfigurationMenus(false);
+    };
+
+    const [showModal, setShowModal] = useState(false);
+
+    const handleModalClose = () => setShowModal(false);
+    const handleModalShow = () => setShowModal(true);
+    const [selectedMenu, setSelectedMenu] = useState(null);
+    const [menuDataMap, setMenuDataMap] = useState({});
+
+    const handlePermissionChange = (perm) => {
+        setSelectedMenu((prev) => ({
+            ...prev,
+            [perm]: !prev[perm],
+        }));
+    };
+
+    const handleInputChange = (field, value) => {
+        setSelectedMenu((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+    const handleModalSave = () => {
+        setMenuDataMap((prev) => ({
+            ...prev,
+            [selectedMenu.menuId]: {
+                write: selectedMenu.write || false,
+                delete: selectedMenu.delete || false,
+                export: selectedMenu.export || false,
+                import: selectedMenu.import || false,
+                print: selectedMenu.print || false,
+                approve: selectedMenu.approve || false,
+                printLimit: selectedMenu.printLimit || '',
+                printCount: selectedMenu.printCount || '',
+            },
+        }));
+
+        handleModalClose();
+    };
+
+
 
 
     return (
@@ -994,30 +1068,38 @@ const Employee = () => {
                             {isSidebarOpen && showConfigurationMenus && (
                                 <div className="mb-3 ms-4">
                                     <div className="d-flex flex-wrap gap-2">
-                                        {configurationModule.menus?.map((menu) => (
-                                            <Button key={menu.menuId} variant="warning">
-                                                {menu.menuName}
-                                            </Button>
+                                        {configurationModule?.menus?.map((menu) => (
+                                            <div key={menu.menuId}>
+                                                <Button
+                                                    variant="warning"
+                                                    onClick={() => handleMenuClick(menu)}
+                                                >
+                                                    {menu.menuName}
+                                                </Button>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* {isSidebarOpen && activeOutletId === outlet.outletID && (
+                            {isSidebarOpen && !showConfigurationMenus && activeOutletId !== null && (
                                 <div className="mb-3 ms-4">
-                                    {restaurantModule.menus?.map((menu) => (
-                                        <div
-                                            key={menu.menuId}
-                                            className="py-1 text-muted"
-                                            style={{ fontSize: "0.9rem" }}
-                                        >
-                                            {menu.menuName}
-                                        </div>
-                                    ))}
+                                    <div className="d-flex flex-wrap gap-2">
+                                        {restaurantModule?.menus?.map((menu) => (
+                                            <div key={menu.menuId}>
+                                                <Button
+                                                    variant="warning"
+                                                    onClick={() => handleMenuClick(menu)}
+                                                >
+                                                    {menu.menuName}
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            )} */}
-
+                            )}
                         </div>
+
                         <div
                             className="bg-light p-2 d-flex flex-column"
                             style={{
@@ -1092,6 +1174,69 @@ const Employee = () => {
                     </div>
                 </Offcanvas.Body>
             </Offcanvas>
+
+            <Modal
+                show={showModal}
+                onHide={handleModalClose}
+                size='lg'
+                backdrop='static'
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title className="w-100 text-center">
+                        {selectedMenu?.menuName || "Menu Details"}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedMenu && (
+                        <div className="mt-2 ms-3">
+                            <div className="d-flex flex-wrap gap-3">
+                                {["write", "delete", "export", "import", "print", "approve"].map((perm) => (
+                                    <div key={perm} className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id={`${selectedMenu.menuId}-${perm}`}
+                                            checked={selectedMenu[perm] || false}
+                                            onChange={() => handlePermissionChange(perm)}
+                                        />
+                                        <label className="form-check-label" htmlFor={`${selectedMenu.menuId}-${perm}`}>
+                                            {perm}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="d-flex gap-3 mt-3">
+                                <div>
+                                    <label className="form-label">Print Limit</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={selectedMenu.printLimit || ''}
+                                        onChange={(e) => handleInputChange("printLimit", e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="form-label">Print Count</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={selectedMenu.printCount || ''}
+                                        onChange={(e) => handleInputChange("printCount", e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button type="submit" variant="warning" onClick={() => {
+                        handleModalSave();
+                        handleModalClose();
+                    }}>
+                        Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </>
     );
 };

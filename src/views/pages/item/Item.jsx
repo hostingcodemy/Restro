@@ -126,13 +126,7 @@ const Item = () => {
     });
 
     setSelectedItems(updatedItems);
-    if (updatedItems.length > 0) {
-      fetchItemAddOnData(updatedItems[0].value);
-    } else {
-      setAddOnItems([]);
-    }
   };
-
 
   const handleClose = () => {
     setShow(false);
@@ -388,7 +382,7 @@ const Item = () => {
 
   const fetchItemAddOnData = async (itemId) => {
     try {
-      const res = await api.get(`/itemaddon/parent/${itemId}`);
+      const res = await api.get(`/itemaddon/${outletId}/${itemId}`);
       const sortedData = res?.data?.list?.sort(
         (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
       );
@@ -997,9 +991,13 @@ const Item = () => {
 
     const payload = {
       itemParentId: selectedItemId,
-      itemIds: selectedItems.map(item => item.value),
-      isCompulsory: selectedItems.some(item => item.isCompulsory),
-      isActive: addFormValues.isActive,
+      addonItems: selectedItems.map(item => ({
+        itemId: item.value,
+        itemSizeId: item.itemSizeId,
+        qty: Number(item.qty) || 0,
+        isCompulsory: item.isCompulsory,
+        isActive: true
+      }))
     };
 
     try {
@@ -1017,9 +1015,6 @@ const Item = () => {
       toast.error("Failed to save add-on items.");
     }
   };
-
-  console.log(addOnItems, 'kk');
-
 
   return (
     <>
@@ -1753,107 +1748,101 @@ const Item = () => {
               </InputGroup>
             </Col>
           </Row>
-          {selectedItems.length > 0 && (
-            <>
-              {addOnItems.length > 0 ? (
-                <>
-                  <h5>Add-On Items</h5>
-                  <Table bordered hover responsive>
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Item Name</th>
-                        <th>Size</th>
-                        <th>Qty</th>
-                        <th className="text-center">Is Compulsory</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {addOnItems?.map((addOn, index) => (
-                        <tr key={addOn.itemId || index}>
-                          <td>{index + 1}</td>
-                          <td>{addOn.itemName || addOn.itemName}</td>
-                          <td>{addOn.itemSizeName || "N/A"}</td>
-                          <td>{addOn.itemQuantity || "1"}</td>
-                          <td className="text-center">{addOn.isCompulsory ? "Yes" : "No"}</td>
-                        </tr>
+          <h5>Add on Item</h5>
+          <Table bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Item Size</th>
+                <th>Item Qty</th>
+                <th>Is Compulsory</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedItems.map((item, idx) => (
+                <tr key={item.value}>
+                  <td>{item.label}</td>
+                  <td>
+                    <Form.Select
+                      value={item.itemSizeId}
+                      onChange={(e) => {
+                        const updated = [...selectedItems];
+                        updated[idx].itemSizeId = e.target.value;
+                        setSelectedItems(updated);
+                      }}
+                    >
+                      <option value="">Select</option>
+                      {itemSizeData?.map((size) => (
+                        <option key={size.id} value={size.id}>
+                          {size.sizeName}
+                        </option>
                       ))}
-                    </tbody>
-                  </Table>
-                </>
-              ) : (
-                <>
-                  <Table bordered hover responsive>
-                    <thead>
-                      <tr>
-                        <th>Item Name</th>
-                        <th>Item Size</th>
-                        <th>Item Qty</th>
-                        <th className="text-center">Is Compulsory</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedItems.map((item, idx) => (
-                        <tr key={item.value}>
-                          <td>{item.label}</td>
-                          <td>
-                            <Form.Select
-                              value={item.itemSizeId}
-                              onChange={(e) => {
-                                const updated = [...selectedItems];
-                                updated[idx].itemSizeId = e.target.value;
-                                setSelectedItems(updated);
-                              }}
-                            >
-                              <option value="">Select</option>
-                              {itemSizeData?.map((size) => (
-                                <option key={size.id} value={size.id}>
-                                  {size.sizeName}
-                                </option>
-                              ))}
-                            </Form.Select>
-                          </td>
-                          <td>
-                            <Form.Control
-                              type="number"
-                              min="0"
-                              value={item.qty}
-                              onChange={(e) => {
-                                const updated = [...selectedItems];
-                                updated[idx].qty = e.target.value.replace(/\D/g, '');
-                                setSelectedItems(updated);
-                              }}
-                              className="w-75"
-                            />
-                          </td>
-                          <td className="text-center">
-                            <Form.Check
-                              type="checkbox"
-                              checked={item.isCompulsory}
-                              onChange={() => {
-                                const updated = [...selectedItems];
-                                updated[idx].isCompulsory = !updated[idx].isCompulsory;
-                                setSelectedItems(updated);
-                              }}
-                              style={{ transform: "scale(1.5)" }}
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                  {addErrors.isCompulsory && (
-                    <div className="text-danger mt-1">{addErrors.isCompulsory}</div>
-                  )}
-                </>
-              )}
-            </>
+                    </Form.Select>
+                  </td>
+                  <td>
+                    <Form.Control
+                      type="text"
+                      min="0"
+                      value={item.qty}
+                      onChange={(e) => {
+                        const updated = [...selectedItems];
+                        updated[idx].qty = e.target.value.replace(/\D/g, '');
+                        setSelectedItems(updated);
+                      }}
+                      className="w-75"
+                    />
+                  </td>
+                  <td className="text-center">
+                    <Form.Check
+                      type="checkbox"
+                      checked={item.isCompulsory}
+                      onChange={() => {
+                        const updated = [...selectedItems];
+                        updated[idx].isCompulsory = !updated[idx].isCompulsory;
+                        setSelectedItems(updated);
+                      }}
+                      style={{ transform: "scale(1.5)" }}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+          {addErrors.isCompulsory && (
+            <div className="text-danger mt-1">{addErrors.isCompulsory}</div>
           )}
+
           <div className="d-flex justify-content-center mt-4">
             <Button onClick={handleAddOnSubmit} variant="warning">
               Save
             </Button>
           </div>
+          <h5>Existing Item</h5>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item Name</th>
+                <th>Size</th>
+                <th>Qty</th>
+                <th className="text-center">Is Compulsory</th>
+              </tr>
+            </thead>
+            <tbody>
+              {addOnItems.map((item, index) => {
+                const defaultPrice = item.prices?.find(p => p.isDefaultSize) || item.prices?.[0];
+                return (
+                  <tr key={`${item.itemId}-${index}`}>
+                    <td>{index + 1}</td>
+                    <td>{item.itemName}</td>
+                    <td>{defaultPrice?.itemSizeName || "-"}</td>
+                    <td>{defaultPrice?.itemQuantity ?? "-"}</td>
+                    <td className="text-center">{item.isCompulsory ? "Yes" : "No"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
         </Offcanvas.Body>
       </Offcanvas>
 

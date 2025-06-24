@@ -12,13 +12,11 @@ import {
   LuHeart,
   LuBadgeCheck
 } from "react-icons/lu";
-import { PiPencilSimpleThin } from "react-icons/pi";
 import { RxValueNone } from "react-icons/rx";
 import api from '../../../config/AxiosInterceptor';
 import "src/views/pages/pos/Pos.css"
 import { PiStarLight } from "react-icons/pi";
 import { VscSettings } from "react-icons/vsc";
-import { useGeneralContext } from '../../../Context/GeneralContext';
 import { IoPersonOutline } from "react-icons/io5";
 import { BsRepeat } from "react-icons/bs";
 import { GoHistory } from "react-icons/go";
@@ -31,21 +29,21 @@ import { GoPerson } from "react-icons/go";
 import { CiMobile4 } from "react-icons/ci";
 import { PiArmchairLight } from "react-icons/pi";
 import { LuHandPlatter } from "react-icons/lu";
-import { MdOutlineFastfood } from "react-icons/md";
 import Select from 'react-select';
-import { LiaWindowCloseSolid } from "react-icons/lia";
 import { PiMicrophoneThin } from "react-icons/pi";
 import { FaHeart } from "react-icons/fa";
+import { MdOutlineCancelPresentation } from "react-icons/md";
+
 
 const PosScreen = () => {
 
-  const { addToCart, removeFromCart, increaseQuantity, decreaseQuantity, increaseAddonQty, decreaseAddonQty, updateRemarks } = useCart();
+  const { addToCart, removeFromCart, increaseQuantity, decreaseQuantity, increaseAddonQty, decreaseAddonQty, updateRemarks, setCartItems } = useCart();
   const navigateTable = JSON.parse(localStorage.getItem("navigateTable") || "[]");
   const fetchCalled = useRef(false);
   const [item, setItem] = useState(null);
   const [subcategory, setSubcategory] = useState([]);
   const [hover, SetHover] = useState(null);
-  // const outletId = localStorage.getItem("outletId");
+  const outletId = localStorage.getItem("currentOutletId");
   const baseImgUrl = import.meta.env.VITE_IMG_BASE_URL;
   const authChannelStr = localStorage.getItem("authChannels");
   const authChannels = JSON.parse(authChannelStr);
@@ -55,10 +53,9 @@ const PosScreen = () => {
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(false);
   const [popupData, setPopupData] = useState({
-    selectOption: '',
-    input1: '',
-    input2: '',
-    input3: '',
+    userName: '',
+    mobileNumber: '',
+    pax: '',
     remarks: '',
   });
   const totalQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -69,25 +66,11 @@ const PosScreen = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [itemAddons, setItemAddons] = useState([]);
+  const [selectedAddons, setSelectedAddons] = useState({});
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [remarks, setRemarks] = useState('');
 
-  console.log(cartItems);
-  
-
-  const useOutsideClick = (callback) => {
-    const ref = useRef();
-
-    useEffect(() => {
-      const handleClick = (e) => {
-        if (ref.current && !ref.current.contains(e.target)) {
-          callback();
-        }
-      };
-      document.addEventListener("mousedown", handleClick);
-      return () => document.removeEventListener("mousedown", handleClick);
-    }, [ref]);
-
-    return ref;
-  };
 
   useEffect(() => {
     if (fetchCalled.current) return;
@@ -98,8 +81,7 @@ const PosScreen = () => {
 
   const fetchItemsData = async () => {
     try {
-      // const res = await api.get(`/items/outlet/${outletId}`);
-      const res = await api.get(`/items/outlet/a546dd1d-9963-47e4-aa92-47ee1d2770f1`);
+      const res = await api.get(`/items/outlet/${outletId}`);
       setItem(res.data.list);
     } catch (error) {
       console.error("Error fetching Items data", error);
@@ -108,7 +90,7 @@ const PosScreen = () => {
 
   const fetchSubcategory = async () => {
     try {
-      const res = await api.get(`/itemsubcategory/outlet/a546dd1d-9963-47e4-aa92-47ee1d2770f1`);
+      const res = await api.get(`/itemsubcategory/outlet/${outletId}`);
       setSubcategory(res.data.list);
     } catch (error) {
       console.error("Error fetching Items data", error);
@@ -132,7 +114,10 @@ const PosScreen = () => {
 
   const handleChange = (selected) => {
     setSelectedCustomer(selected);
-    console.log("Selected customer:", selected);
+    setPopupData((prev) => ({
+      ...prev,
+      mobileNumber: selected.mobile
+    }))
   };
 
   const handlePlaceOrder = () => {
@@ -146,28 +131,44 @@ const PosScreen = () => {
 
   const placeOrder = async () => {
 
+    if (!cartItems || cartItems.length === 0) {
+      toast.error("Cannot place order: Cart is empty.");
+      return;
+    }
+
     const payload = {
-      outletId: "a546dd1d-9963-47e4-aa92-47ee1d2770f1",
+      outletId: outletId,
       tableID: navigateTable.tableId,
-      kotNumber: null,
-      pax: navigateTable.capacity || 1,
+      manualKotNumber: null,
+      pax: popupData.pax || navigateTable.capacity,
+      customerName: selectedCustomer.name || null,
+      customerPhone: popupData.mobileNumber || null,
       terminalID: null,
       orderType: "Dine in",
       orderDate: new Date().toISOString(),
       orderTaker: userId,
-      orderRemarks: null,
+      orderRemarks: popupData.remarks || null,
       isActive: true,
       orderDetailsList: cartItems.map((item, index) => {
         const matchedPrice = item.prices?.find(
-          (price) =>
-            price.outletId === "a546dd1d-9963-47e4-aa92-47ee1d2770f1"
+          (price) => price.outletId === outletId
         );
         const rate = matchedPrice?.itemPrice || 0;
+
+        const addonList = item.addonItems?.items?.map((addon) => ({
+          addonItemID: addon.itemId,
+          qty: addon.itemQuantity || 1,
+          uomId: addon.uomId || '',
+          sizeId: addon.itemSizeId || '',
+          rate: addon.itemPrice || 0,
+          total: (addon.itemPrice || 0) * (addon.itemQuantity || 1),
+          isNonChargeable: false,
+        })) || [];
+
         return {
-          orderID: null,
           serial: index + 1,
           itemId: item.itemId,
-          itemRemarks: item.itemRemarks || '',
+          itemRemarks: item.remarks || '',
           qty: item.quantity,
           uomId: item.uomID || '',
           sizeId: matchedPrice?.itemSizeId || '',
@@ -176,7 +177,12 @@ const PosScreen = () => {
           isPrint: item.isPrint ?? true,
           isNonChargeable: item.isNonChargeable ?? true,
           total: rate * item.quantity,
-          isActive: true
+          isActive: true,
+          isRateOrAmount: false,
+          discountRemarks: null,
+          itemDiscount: null,
+          isNonChargeable: false,
+          addonList: addonList
         };
       })
     };
@@ -191,15 +197,17 @@ const PosScreen = () => {
         toast.success(res.data.successMessage);
         localStorage.removeItem("cartItems");
         localStorage.removeItem("navigateTable");
-        navigate("/table-reservations");
+        navigate("/table-management");
       } else {
         toast.warning("Something went wrong during order placing");
       }
     } catch (error) {
       console.log(error);
+      toast.error("Server error while placing order.");
     }
 
-  }
+  };
+
 
 
 
@@ -285,7 +293,7 @@ const PosScreen = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState(foodSubcategoryList[0].itemId);
 
   const calculateTotalItemPrice = (cartItem) => {
-    const baseItemPrice = cartItem.prices?.reduce((sum, price) => sum + price.itemPrice, 0) || 0;
+    const baseItemPrice = cartItem.prices?.[0]?.itemPrice || 0;
     const quantity = cartItem.quantity || 1;
 
     const compulsoryAddons = cartItem.addonItems?.items?.filter(a => a.isCompulsory) || [];
@@ -300,25 +308,84 @@ const PosScreen = () => {
       (sum, addon) => sum + (addon.itemPrice * (addon.itemQuantity || 1)),
       0
     );
-
-    return (baseItemPrice + compulsoryPrice + optionalPrice) * quantity;
+    return (baseItemPrice * quantity) + compulsoryPrice + optionalPrice;
   };
 
   const subtotal = cartItems.reduce((sum, item) => {
     return sum + calculateTotalItemPrice(item);
   }, 0);
 
-
-  const addtoCart = async (item) => {
+  const fetchItemAddon = async (item) => {
     try {
-      const res = await api.get(`/itemaddon/parent/${item.itemId}`)
-      addToCart(item, res.data.data);
-      setAddonItem();
+      const res = await api.get(`/itemaddon/${outletId}/${item.itemId}`);
+      if (res.data?.isValid && res.data.data?.items) {
+        setItemAddons(res.data.data.items);
+      }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
+  const handleEditItem = (cartItem) => {
+    setSelectedItem(cartItem);
+    setSelectedSize(cartItem.prices[0]);
+    setQuantity(cartItem.quantity);
+    fetchItemAddon(cartItem);
+    setEditingItemId(cartItem.itemId);
+    const addons = {};
+    cartItem.addonItems?.items?.forEach((addon) => {
+      addons[addon.itemId] = {
+        ...addon,
+        selectedSize: {
+          itemPriceId: addon.itemPriceId,
+          itemPrice: addon.itemPrice,
+          itemSizeId: addon.itemSizeId,
+          itemSizeName: addon.itemSizeName,
+        },
+        quantity: addon.itemQuantity,
+        isCompulsory: addon.isCompulsory,
+      };
+    });
+
+    setSelectedAddons(addons);
+  };
+
+  const totalAddons = cartItems.reduce((total, item) => {
+    return (
+      total +
+      (item.addonItems?.items?.reduce((sum, addon) => sum + (addon.itemQuantity || 0), 0) || 0)
+    );
+  }, 0);
+
+  const calculateItemTax = (cartItem) => {
+    const quantity = cartItem.quantity || 1;
+    const itemBasePrice = cartItem.prices?.[0]?.itemPrice || 0;
+
+    let totalTax = 0;
+
+    const itemAmount = itemBasePrice * quantity;
+    if (Array.isArray(cartItem.taxes)) {
+      cartItem.taxes.forEach((tax) => {
+        totalTax += (itemAmount * tax.taxRate) / 100;
+      });
+    }
+
+    const addonItems = cartItem.addonItems?.items || [];
+    addonItems.forEach((addon) => {
+      const addonAmount = addon.itemPrice * (addon.itemQuantity || 1);
+      if (Array.isArray(addon.taxes)) {
+        addon.taxes.forEach((tax) => {
+          totalTax += (addonAmount * tax.taxRate) / 100;
+        });
+      }
+    });
+
+    return totalTax;
+  };
+
+  const totalTax = cartItems.reduce((sum, item) => {
+    return sum + calculateItemTax(item);
+  }, 0);
 
   return (
     <>
@@ -365,9 +432,9 @@ const PosScreen = () => {
                     <Form.Control
                       type="text"
                       placeholder="Mobile Number"
-                      value={popupData.input2}
+                      value={popupData.mobileNumber}
                       onChange={(e) =>
-                        setPopupData((prev) => ({ ...prev, input2: e.target.value }))
+                        setPopupData((prev) => ({ ...prev, mobileNumber: e.target.value }))
                       }
 
                     />
@@ -384,9 +451,9 @@ const PosScreen = () => {
                     <Form.Control
                       type="text"
                       placeholder="Pax"
-                      value={popupData.input3}
+                      value={popupData.pax}
                       onChange={(e) =>
-                        setPopupData((prev) => ({ ...prev, input3: e.target.value }))
+                        setPopupData((prev) => ({ ...prev, pax: e.target.value }))
                       }
 
                     />
@@ -402,15 +469,13 @@ const PosScreen = () => {
                       </InputGroup.Text>
                       <Form.Select
 
-                        value={popupData.selectOption}
+                        value={popupData.userName}
                         onChange={(e) =>
-                          setPopupData((prev) => ({ ...prev, selectOption: e.target.value }))
+                          setPopupData((prev) => ({ ...prev, userName: e.target.value }))
                         }
                       >
-                        <option value="">Choose...</option>
-                        <option value="option1">Option 1</option>
-                        <option value="option2">Option 2</option>
-                        <option value="option3">Option 3</option>
+                        <option value={userDetails.userID}>{userDetails.name}</option>
+
                       </Form.Select>
                     </InputGroup>
                   </Form.Group>
@@ -441,12 +506,14 @@ const PosScreen = () => {
             <Button variant="secondary" onClick={() => {
               setShowPopup(false);
               placeOrder();
+              setPopupData("");
             }}>
               Skip
             </Button>
             <Button variant="warning" onClick={() => {
               setShowPopup(false);
               placeOrder();
+              setPopupData("");
             }}>
               Confirm
             </Button>
@@ -484,7 +551,6 @@ const PosScreen = () => {
           </Modal>
         )}
 
-
         <div className="subcategoryWrapperVerticle">
           <div></div>
           {subcategory.map((subcategory, index) => (
@@ -502,7 +568,6 @@ const PosScreen = () => {
         </div>
 
         <div className="posLeft itemsShowCase">
-
 
           <div className="posLeftTop">
 
@@ -533,13 +598,16 @@ const PosScreen = () => {
 
           <div className="posLeftBtm SearchandBtn">
             <div className="itemsListing">
+
               {item?.map((item) => {
                 return (<div className="itemBox" key={item.itemId}>
-                  <div className="imageWrapper d-flex align-items-center justify-content-center" onClick={() => {
+                  <div className="imageWrapper d-flex align-items-center justify-content-center" onClick={async () => {
                     setSelectedItem(item);
                     const defaultSize = item.prices?.find(p => p.isDefaultSize);
                     setSelectedSize(defaultSize);
                     setQuantity(1);
+                    await fetchItemAddon(item);
+                    setSelectedAddons({});
                   }}>
                     {item.itemImage ? <img src={`${baseImgUrl}${item.itemImage}`} alt="" /> : <img src={`src/assets/food.png`} alt="" />}
                   </div>
@@ -553,11 +621,14 @@ const PosScreen = () => {
                         {item.itemType}
                       </div>
                       <div className="itemPrice">
-                        {item.prices?.map((price, i) => (
-                          <div key={i}>
-                            &#8377; {price.itemPrice}
-                          </div>
-                        ))}
+                        {item.prices
+                          ?.filter(price => price.isDefaultSize === true)
+                          .map((price, i) => (
+                            <div key={i}>
+                              &#8377; {price.itemPrice}
+                            </div>
+                          ))}
+
                       </div>
                     </div>
                   </div>
@@ -565,54 +636,239 @@ const PosScreen = () => {
               }
 
               )}
+
             </div>
+
             {selectedItem && (
               <div className="bottomPopup">
-                <div className="popupHeader">
-                  <strong>{selectedItem.itemName}</strong>
-                  <button onClick={() => setSelectedItem(null)}  className="btn btn-light">×</button>
+                <div className="popupHeader ">
+                  <strong className='fs-4 mb-3'>{selectedItem.itemName}</strong>
+                  <button onClick={() => setSelectedItem(null)} className="btn btn-light text-danger">×</button>
                 </div>
 
                 <div className="popupContent">
+
                   <div className="sizeOptions">
-                    {selectedItem.prices.map((price) => (
-                      <label key={price.itemSizeId} className="d-block">
-                        <input
-                          type="radio"
-                          name="size"
-                          checked={selectedSize?.itemSizeId === price.itemSizeId}
-                          onChange={() => setSelectedSize(price)}
-                        />
-                        {price.itemSizeName} - ₹{price.itemPrice}
-                      </label>
-                    ))}
+                    <h5 className='mb-2'>Item Sizes </h5>
+                    <div className='d-flex justify-content-between w-100'>
+                      <div>
+                        {selectedItem.prices.map((price) => (
+                          <label key={price.itemSizeId} className="d-block border px-2 py-1 rounded"
+                            style={{ width: "fit-content" }}>
+                            <input
+                              type="radio"
+                              name="size"
+
+                              checked={selectedSize?.itemSizeId === price.itemSizeId}
+                              onChange={() => setSelectedSize(price)}
+                            />
+                            {price.itemSizeName} - ₹{price.itemPrice}
+                          </label>
+                        ))}
+
+                      </div>
+                      <div className="quantitySelector d-flex align-items-center gap-3">
+                        <button className="btn btn-sm btn-outline-secondary" onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</button>
+                        <span>{quantity}</span>
+                        <button className="btn btn-sm btn-outline-secondary" onClick={() => setQuantity(q => q + 1)}>+</button>
+                      </div>
+
+                    </div>
                   </div>
 
-                  <div className="quantitySelector d-flex align-items-center gap-2 mt-3">
-                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</button>
-                    <span>{quantity}</span>
-                    <button onClick={() => setQuantity(q => q + 1)}>+</button>
-                  </div>
 
-                  <div className="totalPrice mt-3">
-                    Total: ₹{(selectedSize?.itemPrice || 0) * quantity}
+
+                  {itemAddons.length > 0 && (
+                    <div className="addonSection mt-3">
+                      <h5 className='mb-3'>Add Extra </h5>
+
+                      {itemAddons.map((addon) => {
+                        const addonId = addon.itemId;
+                        const isSelected = !!selectedAddons[addonId];
+                        const defaultSize = addon.prices.find(p => p.isDefaultSize) || addon.prices[0];
+
+                        return (
+                          <div key={addonId} className="addonBox border rounded p-2 mb-2 shadow-sm">
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div className="d-flex align-items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected || addon.isCompulsory}
+                                  disabled={addon.isCompulsory}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+
+                                    if (isChecked) {
+                                      setSelectedAddons((prev) => ({
+                                        ...prev,
+                                        [addonId]: {
+                                          ...addon,
+                                          selectedSize: addon.prices.find(p => p.isDefaultSize) || addon.prices[0],
+                                          quantity: 1,
+                                        },
+                                      }));
+                                    } else {
+                                      if (!addon.isCompulsory) {
+                                        setSelectedAddons((prev) => {
+                                          const newObj = { ...prev };
+                                          delete newObj[addonId];
+                                          return newObj;
+                                        });
+                                      }
+                                    }
+                                  }}
+
+                                />
+                                <strong>{addon.itemName}</strong>
+                              </div>
+
+                              {addon.isCompulsory && (
+                                <span className="badge bg-danger text-white">Compulsory</span>
+                              )}
+
+                              {(isSelected || !addon.isCompulsory) && (
+                                <>
+
+                                  <div className="sizeOptions mt-2 d-flex gap-3 flex-wrap">
+                                    {addon.prices.map((price) => (
+                                      <label
+                                        key={price.itemPriceId}
+                                        className="border px-2 py-1 rounded"
+                                        style={{ minWidth: '100px' }}
+                                      >
+                                        <input
+                                          type="radio"
+                                          name={`size-${addonId}`}
+                                          className="me-1"
+                                          checked={selectedAddons[addonId]?.selectedSize?.itemPriceId === price.itemPriceId}
+
+                                          onChange={() =>
+                                            setSelectedAddons((prev) => ({
+                                              ...prev,
+                                              [addonId]: {
+                                                ...prev[addonId],
+                                                selectedSize: price,
+                                              },
+                                            }))
+                                          }
+                                        />
+                                        {price.itemSizeName} - ₹{price.itemPrice}
+                                      </label>
+                                    ))}
+                                  </div>
+
+                                  {/* Quantity + Price */}
+                                  <div className="d-flex justify-content-between align-items-center gap-2">
+                                    <div className="d-flex align-items-center gap-3">
+                                      <span>Qty:</span>
+                                      <button
+                                        className="btn btn-sm btn-outline-secondary"
+                                        onClick={() =>
+                                          setSelectedAddons((prev) => ({
+                                            ...prev,
+                                            [addonId]: {
+                                              ...prev[addonId],
+                                              quantity: Math.max(1, prev[addonId].quantity - 1),
+                                            },
+                                          }))
+                                        }
+                                      >
+                                        -
+                                      </button>
+                                      <span>{selectedAddons[addonId]?.quantity || 0}</span>
+                                      <button
+                                        className="btn btn-sm btn-outline-secondary"
+                                        onClick={() =>
+                                          setSelectedAddons((prev) => ({
+                                            ...prev,
+                                            [addonId]: {
+                                              ...prev[addonId],
+                                              quantity: prev[addonId].quantity + 1,
+                                            },
+                                          }))
+                                        }
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+
+                                    <div className="fw-semibold" style={{ color: "#ffc300" }}>
+                                      ₹
+                                      {(selectedAddons[addonId]?.selectedSize?.itemPrice || 0) *
+                                        (selectedAddons[addonId]?.quantity || 1)}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+
+
+
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div>
+                    <textarea
+                      className="form-control mt-3"
+                      placeholder="Add remarks (optional)..."
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                    />
                   </div>
 
                   <button
-                    className="btn btn-warning mt-3"
+                    className="btn btn-warning mt-3 fw-bold text-white"
                     onClick={() => {
+                      const addonItems = Object.values(selectedAddons).map((addon) => ({
+                        itemId: addon.itemId,
+                        itemName: addon.itemName,
+                        itemPrice: addon.selectedSize.itemPrice,
+                        itemSizeId: addon.selectedSize.itemSizeId,
+                        itemSizeName: addon.selectedSize.itemSizeName,
+                        itemQuantity: addon.quantity,
+                        isCompulsory: addon.isCompulsory,
+                        uomId: addon.uomID,
+                        taxes: addon.taxes
+                      }));
+
                       const cartItem = {
                         ...selectedItem,
                         prices: [selectedSize],
                         quantity,
+                        remarks,
+                        addonItems: {
+                          items: addonItems,
+                        },
                       };
-                      addToCart(cartItem);
+
+                      if (editingItemId) {
+
+                        setCartItems((prev) =>
+                          prev.map((item) =>
+                            item.itemId === editingItemId ? cartItem : item
+                          )
+                        );
+                      } else {
+                        addToCart(cartItem);
+                      }
+
                       setSelectedItem(null);
+                      setItemAddons([]);
+                      setSelectedAddons({});
+                      setEditingItemId(null);
                     }}
                   >
-                    Add to Cart
+                    {editingItemId ? "Update item" : "Add item"} ₹ {(selectedSize?.itemPrice || 0) * quantity +
+                      Object.values(selectedAddons).reduce(
+                        (sum, addon) => sum + (addon.selectedSize?.itemPrice || 0) * (addon.quantity || 1),
+                        0
+                      )}
                   </button>
                 </div>
+
               </div>
             )}
 
@@ -626,9 +882,7 @@ const PosScreen = () => {
 
             <div className="cartTop shadow-sm">
               <div className=''>Frisky Byte</div>
-              {/* <div className=" circleIcon">
-              <PiNotePencilThin />
-            </div> */}
+
               <div className="tabelNameAndKot">
                 <div onClick={() => navigate("/table-management")}>{navigateTable.tableName}</div>
                 <div className='tabelDetails d-flex align-items-center gap-2'><div className='tableRunningTime'>44 Minutes</div>
@@ -642,7 +896,7 @@ const PosScreen = () => {
             <div className="cartMiddle shadow-sm">
               <div className='features d-flex align-items-center justify-content-between w-100'>
                 <div className="orderTakerDropDown">
-                  Rahul  <div className='DropDownIcon'><RiArrowDownSFill /></div>
+                  {userDetails.name}  <div className='DropDownIcon'><RiArrowDownSFill /></div>
                 </div>
 
                 <div className="AnBUtton">
@@ -658,7 +912,7 @@ const PosScreen = () => {
               <div className='cartDetails d-flex align-items-center justify-content-between w-100 py-1 px-2'>
                 <div className='cartDetailsItem d-flex align-items-center justify-content-start gap-1'><span className='text-warning'>{cartItems.length}</span> Items</div>
                 <div className='cartDetailsItem d-flex align-items-center justify-content-center gap-1'><span className='text-warning'>{totalQty}</span> Quantity</div>
-                <div className='cartDetailsItem d-flex align-items-center justify-content-end gap-1'><span className='text-warning'>{3}</span> Add ons</div>
+                <div className='cartDetailsItem d-flex align-items-center justify-content-end gap-1'><span className='text-warning'>{totalAddons}</span> Add ons</div>
               </div>
             </div>
 
@@ -673,109 +927,73 @@ const PosScreen = () => {
                         {cartItem.itemImage ? <img src={`${baseImgUrl}${cartItem.itemImage}`} alt="" /> : <img src={`src/assets/food.png`} alt="" />}
 
                       </div>
-                      <div className="rightCartItemDetails position-relative">
+                      <div className="rightCartItemDetails">
                         <div className="cartItemNameAndNote">
-                          {cartItem.itemName}
-                          <div
-                            className="remarks circleIcon"
-                            onClick={() =>
-                              setOpenRemarksFor((prev) =>
-                                prev === cartItem.itemId ? null : cartItem.itemId
-                              )
-                            }
-                          >
-                            <PiPencilSimpleThin size={13} />
+                          <div style={{ letterSpacing: "-0.04rem" }}>
+                            {cartItem.itemName}
+                          </div>
+                          <div className='d-flex align-items-center gap-3'>
+                            {cartItem.remarks && (
+                              <div style={{ borderRadius: "1rem", fontSize: "0.85rem", padding: "0rem 0.5rem", border: "0.01rem solid #e0e0e0", fontWeight: "400" }}>{cartItem.remarks}</div>
+
+                            )}
+                            <div onClick={() => removeFromCart(cartItem.itemId)}>
+
+                              <MdOutlineCancelPresentation color='red' size={23} />
+                            </div>
                           </div>
 
-                          {openRemarksFor === cartItem.itemId && (
-                            <div
-                              className="remarksBoxWrapper"
-                              ref={useOutsideClick(() => setOpenRemarksFor(null))}
-                            >
-                              <textarea
-                                className="remarksTextarea form-control"
-                                value={cartItem.remarks || ""}
-                                onChange={(e) => updateRemarks(cartItem.itemId, e.target.value)}
-                                placeholder="Add your note..."
-                                autoFocus
-                              />
-                            </div>
-                          )}
 
                         </div>
-                        {/* <div className='d-flex gap-2'>
-                          {cartItem.addonItems?.items?.filter(a => a.isCompulsory).map((addon, i) => (
-                            <div className="compulsoryAddonName text-muted " style={{ fontSize: "0.7vw" }} key={i}>
-                              + {addon.itemName}
-                            </div>
-                          ))}
 
-                        </div> */}
 
 
                         <div className="cartItemPriceamdsize">
                           <div className='prizeAndSize'>
                             <div className="cartItemPrice" style={{ color: `${cartItem.itemType === "Veg" ? "rgb(27, 203, 0)" : "rgb(255, 44, 44)"}` }}>
-                              {/* {cartItem.prices?.map((price, i) => (
-                                <div key={i}>
-                                  &#8377; {calculateTotalItemPrice(cartItem)}
-                                </div>
-                              ))} */}
-                              {/* &#8377; {calculateTotalItemPrice(cartItem)} */}
+
                               &#8377; {cartItem.prices[0].itemPrice}
                             </div>
 
+                            <div className='d-flex gap-2 align-items-center'>
+                              <div style={{ fontSize: "0.95rem" }}>Size: </div>
+                              <div className="cartSize">
+                                {cartItem.prices[0].itemSizeName}
+                              </div>
+                            </div>
+
+
+                            <div className="cartQuantityContainer">
+                              <div className="plusBtnDecrease" onClick={() => decreaseQuantity(cartItem.itemId)}>-</div>
+
+                              <div className="plusBtnIncrese" style={{ color: `${cartItem.itemType === "Veg" ? "rgb(27, 203, 0)" : "rgb(255, 44, 44)"}` }}>{cartItem.quantity}</div>
+
+                              <div className="plusBtnIncrease" onClick={() => increaseQuantity(cartItem.itemId)}>+</div>
+                            </div>
+
                           </div>
-                          {/* <div className="addonItem">
-                            <div>Extra Chessse</div>
-                            <div>Extra Chessse</div>
-                          </div> */}
-                          {/*
-                        <div className="addonItem">
-                            {cartItem.addonItems?.items?.filter(a => !a.isCompulsory).length > 1 ? (
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => setShowAddonModalFor(cartItem.itemId)}
-                              >
-                                View Addons
-                              </button>
-                            ) : (
-                              cartItem.addonItems?.items?.filter(a => !a.isCompulsory).map((addon, i) => (
-                                <div key={i} className="d-flex justify-content-between align-items-center mb-1">
-                                  <div>+ {addon.itemName}</div>
-                                  <div className="d-flex align-items-center gap-2">
-                                    <span>₹{addon.itemPrice * (addon.itemQuantity || 1)}</span>
-                                    <div className="addonQtyBtns d-flex gap-1">
-                                      <button onClick={() => decreaseAddonQty(cartItem.itemId, addon.itemId)}>-</button>
-                                      <span>{addon.itemQuantity || 1}</span>
-                                      <button onClick={() => increaseAddonQty(cartItem.itemId, addon.itemId)}>+</button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                       */}
 
 
                         </div>
 
                         <div className="cartQuantityBtns">
-                          <div className="cartSize">
-                            {/* {cartItem.prices?.map((price, i) => (
-                              <div key={i}>
-                                {price.itemSizeName}
-                              </div>
-                            ))} */}
-                        {    cartItem.prices[0].itemSizeName}
-                          </div>
-                          <div className="cartQuantityContainer">
-                            <div className="plusBtnDecrease" onClick={() => decreaseQuantity(cartItem.itemId)}>-</div>
 
-                            <div className="plusBtnIncrese" style={{ color: `${cartItem.itemType === "Veg" ? "rgb(27, 203, 0)" : "rgb(255, 44, 44)"}` }}>{cartItem.quantity}</div>
 
-                            <div className="plusBtnIncrease" onClick={() => increaseQuantity(cartItem.itemId)}>+</div>
-                          </div>
+                          {cartItem.addonItems?.items?.length > 0 && (
+                            <div className="addonItemList mt-2">
+                              {cartItem.addonItems.items.map((addon, i) => (
+                                <div key={i} style={{ fontSize: "0.75rem", cursor: 'pointer' }} onClick={() => handleEditItem(cartItem)}
+                                  className="addonItem text-muted gap-2 d-flex justify-content-between">
+                                  <div>
+                                    + {addon.itemName} ( {addon.itemSizeName} ) x {addon.itemQuantity}
+                                  </div>
+                                  <div>₹{addon.itemPrice * addon.itemQuantity}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+
                         </div>
                       </div>
                     </div>
@@ -792,16 +1010,15 @@ const PosScreen = () => {
                 <div>Subtotal</div>
                 <div className='text-warning'>&#8377;{subtotal}</div>
               </div>
-              <div
+              <div className="billRow taxRow"
                 onMouseEnter={() => SetHover("tax")}
                 onMouseLeave={() => SetHover(null)}
-                className="billRow taxRow"
               >
-                <div>Tax</div>
-                <div>&#8377; 500</div>
+                <div>Total Tax</div>
+                <div>&#8377; {totalTax}</div>
               </div>
 
-              {hover === "tax" && (
+              {/* {hover === "tax" && (
                 <div className='subRowWrapper'>
                   <div className='subRow'>IGST</div>
                   <div className='subRow'>CGST</div>
@@ -824,18 +1041,18 @@ const PosScreen = () => {
                   <div className='subRow'>Coupon Discount</div>
                   <div className='subRow'>Referral Discount</div>
                 </div>
-              )}
-              <div className="billRow">
+              )} */}
+              {/* <div className="billRow">
                 <div>Total</div>
                 <div className='text-warning'>&#8377;100</div>
               </div>
               <div className="billRow">
                 <div>Advance</div>
                 <div className='text-warning'>&#8377;500</div>
-              </div>
+              </div> */}
               <div className="billRow">
-                <div>Net</div>
-                <div className='text-warning'>&#8377;1000</div>
+                <div>Net Amount</div>
+                <div className='text-warning'>&#8377;{subtotal + totalTax}</div>
               </div>
 
             </div>

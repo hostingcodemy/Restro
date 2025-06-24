@@ -54,7 +54,7 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
   }, []);
 
   useEffect(() => {
-    const hiddenPaths = ['/table-reservations', '/order-management'];
+    const hiddenPaths = ['/table-management', '/order-management'];
     if (hiddenPaths.includes(location.pathname)) {
       setSidebarShow(false);
     }

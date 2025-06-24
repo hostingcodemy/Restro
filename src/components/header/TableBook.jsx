@@ -27,8 +27,8 @@ import SplitModal from "./SplitTable";
 import { toast, ToastContainer } from 'react-toastify';
 import { MdOutlineFolderDelete } from "react-icons/md";
 
-
 const TableBook = () => {
+
     const [errors, setErrors] = useState({});
     const [isAddChairMode, setIsAddChairMode] = useState(false);
     const { setIsMergeTable, isMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
@@ -138,27 +138,14 @@ const TableBook = () => {
         document.body.style.overflow = isOpen ? "hidden" : "auto";
     }, [isOpen]);
 
-    useEffect(() => {
-
-        fetchTableData();
-
-    }, []);
-
-    useEffect(() => {
-
-        fetchSectionData();
-
-    }, [])
-
-    useEffect(() => {
-
+      useEffect(() => {
+    if (fetchCalled.current) return;
+    fetchCalled.current = true;
+     fetchTableData();
+       fetchSectionData();
         fetchFacilityData();
-
-    }, [])
-
-    useEffect(() => {
-        getLayout();
-    }, [])
+          getLayout();
+  }, []);
 
 
     const getBackend = () => {

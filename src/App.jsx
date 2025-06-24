@@ -16,7 +16,6 @@ const App = () => {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
-  
 
   return (
     <>
