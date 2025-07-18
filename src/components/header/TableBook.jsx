@@ -24,9 +24,7 @@ import SplitModal from "./SplitTable";
 import { toast, ToastContainer } from 'react-toastify';
 import { MdOutlineFolderDelete } from "react-icons/md";
 import { Number } from "core-js";
-<<<<<<< HEAD
 import { decryptData } from "../../config/secureStorage";
-=======
 import "./TableBook.css";
 import { MdTableRestaurant } from "react-icons/md";
 import { FaExchangeAlt } from "react-icons/fa"
@@ -36,7 +34,6 @@ import LeftPart from "../SmallComponents/Transfer/LeftPart";
 import MiddlePart from "../SmallComponents/Transfer/MiddlePart";
 import RightPart from "../SmallComponents/Transfer/RightPart";
 import { useTransferTable } from "../../Context/TransferContext";
->>>>>>> cc9c78349cde42d145a78dbfbabfdf950ec2962f
 
 const TableBook = () => {
     const {transferMode,setTransferMode} = useTransferTable();
