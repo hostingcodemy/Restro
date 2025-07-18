@@ -118,6 +118,9 @@ const Offer = () => {
     const [toDelete, setToDelete] = useState(null);
     const [onItemSearch, setOnItemSearch] = useState("");
     const [freeItemSearch, setFreeItemSearch] = useState("");
+    const [itemSizeData, setItemSizeData] = useState([]);
+    const [itemTypesData, setItemTypesData] = useState([]);
+
 
     const handleClose = () => {
         setShow(false);
@@ -135,6 +138,8 @@ const Offer = () => {
         fetchCustomerData();
         fetchFreeItemData();
         fetchOutletData();
+        fetchItemSizeData();
+        fetchItemTypeData();
         const outletId = getDecryptedOutletId();
         if (outletId) {
             fetchItemData(outletId);
@@ -256,6 +261,28 @@ const Offer = () => {
             setCuponData(sortedData);
         } catch (error) {
             console.error("Error fetching table data", error);
+        }
+    };
+
+    const fetchItemSizeData = async () => {
+        try {
+            const res = await api.get(`/itemsize`);
+            const sortedData = res?.data?.list?.sort(
+                (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+            );
+            setItemSizeData(sortedData);
+        } catch (error) {
+            console.error("Error fetching table data", error);
+        }
+    };
+
+    const fetchItemTypeData = async () => {
+        try {
+            const res = await api.get("/itemtype");
+            setItemTypesData(res?.data?.list);
+        } catch (error) {
+            console.error("Error fetching table data", error);
+            setLoadingIndicator(false);
         }
     };
 
@@ -446,20 +473,29 @@ const Offer = () => {
     };
 
     const handleEditClick = (row) => {
+        console.log(row, 'kk')
         setIsEditMode(true);
         setFormValues({
-            OfferId: row.OfferId,
-            OfferName: row.OfferName,
-            OutletId: row.OutletId,
+            offerId: row.offerId,
+            offerName: row.offerName,
+            outletId: row.outletId,
             offerTypeId: row.offerTypeId,
-            CustomerId: row.CustomerId,
-            StartTime: row.StartTime,
-            EndTime: row.EndTime,
-            ValidFrom: row.ValidFrom,
-            ValidTo: row.ValidTo,
-            onBillingTotal: row.onBillingTotal,
-            OnVisitCount: row.OnVisitCount,
-            FreeCouponValue: row.FreeCouponValue,
+            startTime: row.startTime,
+            endTime: row.endTime,
+            validFrom: row.validFrom,
+            validTo: row.validTo,
+            onItemQty: Number(row.onItemQty),
+            onItemSizeID: row.onItemSizeID,
+            offerQty: Number(row.offerQty),
+            offerItemSizeID: row.offerItemSizeID,
+            onBillingTotal: Number(row.onBillingTotal),
+            onVisitCount: Number(row.onVisitCount),
+            freeCouponValue: Number(row.freeCouponValue),
+            offeerPercentage: Number(row.offeerPercentage),
+            nextVisitEligibiity: row.nextVisitEligibiity,
+            itemTypeID: row.itemTypeID,
+            offerItemTypeQty: Number(row.offerItemTypeQty),
+            offerPrice: Number(row.offerPrice),
             isActive: row.isActive
         });
         setShow(true);
@@ -618,7 +654,6 @@ const Offer = () => {
         </div>
     ), [filterText]);
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -657,8 +692,8 @@ const Offer = () => {
                 res = await api.post("/offer", payload);
             }
 
-            handleClose(); 
-            fetchOfferData(); 
+            handleClose();
+            fetchOfferData();
             toast.success(res.data.successMessage || "Offer saved successfully!");
         } catch (error) {
             console.error(error);
@@ -851,435 +886,426 @@ const Offer = () => {
                     </div>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
-                    <Form onClick={handleSubmit}>
-                        <Row className="align-items-start">
-                            <Col md={3} style={{ borderRight: '1px solid #ccc' }}>
-                                <h6>On Item</h6>
-                                <div className="position-relative">
-                                    <Form.Control
-                                        type="search"
-                                        placeholder="Search on item..."
-                                        className="me-2 rounded-pill"
-                                        aria-label="Search on item"
-                                        onChange={(e) => setOnItemSearch(e.target.value)}
-                                    />
-                                    <FaMicrophone
-                                        size={20}
-                                        color="#ffc800"
-                                        style={{
-                                            position: "absolute",
-                                            right: "15px",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            cursor: "pointer",
-                                        }}
-                                    />
-                                </div>
-                                <div className="mt-3" style={{ height: '300px', overflowY: 'auto' }}>
-                                    {freeData
-                                        .filter(item =>
-                                            item.itemName.toLowerCase().includes(onItemSearch.toLowerCase())
-                                        )
-                                        .map((item, idx) => (
-                                            <Form.Check
-                                                key={`onItem-${idx}`}
-                                                type="checkbox"
-                                                label={item.itemName}
-                                                className="mb-2"
-                                            />
-                                        ))}
-                                </div>
-                            </Col>
-                            <Col md={3} style={{ borderRight: '1px solid #ccc' }}>
-                                <h6>Free Item</h6>
-                                <div className="position-relative">
-                                    <Form.Control
-                                        type="search"
-                                        placeholder="Search free item..."
-                                        className="me-2 rounded-pill"
-                                        aria-label="Search free item"
-                                        onChange={(e) => setFreeItemSearch(e.target.value)}
-                                    />
-                                    <FaMicrophone
-                                        size={20}
-                                        color="#ffc800"
-                                        style={{
-                                            position: "absolute",
-                                            right: "15px",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            cursor: "pointer",
-                                        }}
-                                    />
-                                </div>
-                                <div className="mt-3" style={{ height: '300px', overflowY: 'auto' }}>
-                                    {freeData
-                                        .filter(item =>
-                                            item.freeItemName.toLowerCase().includes(freeItemSearch.toLowerCase())
-                                        )
-                                        .map((item, idx) => (
-                                            <Form.Check
-                                                key={`freeItem-${idx}`}
-                                                type="checkbox"
-                                                label={item.freeItemName}
-                                                className="mb-2"
-                                            />
-                                        ))}
-                                </div>
-                            </Col>
-                            <Col md={6}>
-                                <h6>Offer</h6>
-                                <div style={{ height: '300px' }}>
-                                    <Row className="g-4">
-                                        <Col md={12}>
-                                            <Form className="h-90">
-                                                <Row>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="offerName">
-                                                                <MdOutlinePersonOutline size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Control
-                                                                name="offerName"
-                                                                value={formValues.offerName}
-                                                                onChange={(e) =>
-                                                                    handleChange("offerName", e.target.value.replace(/[^a-zA-Z ]/g, ""))
+                    {/* <Form onClick={handleSubmit}> */}
+                    <Row className="align-items-start">
+                        <Col md={3} style={{ borderRight: '1px solid #ccc' }}>
+                            <h6>On Item</h6>
+                            <div className="position-relative">
+                                <Form.Control
+                                    type="search"
+                                    placeholder="Search on item..."
+                                    className="me-2 rounded-pill"
+                                    aria-label="Search on item"
+                                    onChange={(e) => setOnItemSearch(e.target.value)}
+                                />
+                                <FaMicrophone
+                                    size={20}
+                                    color="#ffc800"
+                                    style={{
+                                        position: "absolute",
+                                        right: "15px",
+                                        top: "50%",
+                                        transform: "translateY(-50%)",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </div>
+                            <div className="mt-3" style={{ height: '300px', overflowY: 'auto' }}>
+                                {freeData
+                                    .filter(item =>
+                                        item.itemName.toLowerCase().includes(onItemSearch.toLowerCase())
+                                    )
+                                    .map((item, idx) => (
+                                        <Form.Check
+                                            key={`onItem-${idx}`}
+                                            type="checkbox"
+                                            label={item.itemName}
+                                            className="mb-2"
+                                        />
+                                    ))}
+                            </div>
+                        </Col>
+                        <Col md={3} style={{ borderRight: '1px solid #ccc' }}>
+                            <h6>Free Item</h6>
+                            <div className="position-relative">
+                                <Form.Control
+                                    type="search"
+                                    placeholder="Search free item..."
+                                    className="me-2 rounded-pill"
+                                    aria-label="Search free item"
+                                    onChange={(e) => setFreeItemSearch(e.target.value)}
+                                />
+                                <FaMicrophone
+                                    size={20}
+                                    color="#ffc800"
+                                    style={{
+                                        position: "absolute",
+                                        right: "15px",
+                                        top: "50%",
+                                        transform: "translateY(-50%)",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </div>
+                            <div className="mt-3" style={{ height: '300px', overflowY: 'auto' }}>
+                                {freeData
+                                    .filter(item =>
+                                        item.freeItemName.toLowerCase().includes(freeItemSearch.toLowerCase())
+                                    )
+                                    .map((item, idx) => (
+                                        <Form.Check
+                                            key={`freeItem-${idx}`}
+                                            type="checkbox"
+                                            label={item.freeItemName}
+                                            className="mb-2"
+                                        />
+                                    ))}
+                            </div>
+                        </Col>
+                        <Col md={6}>
+                            <h6>Offer</h6>
+                            <div style={{ height: '300px' }}>
+                                <Row className="g-4">
+                                    <Col md={12}>
+                                        <Form className="h-90">
+                                            <Row>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="offerName">
+                                                            <MdOutlinePersonOutline size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Control
+                                                            name="offerName"
+                                                            value={formValues.offerName}
+                                                            onChange={(e) =>
+                                                                handleChange("offerName", e.target.value)
+                                                            }
+                                                            placeholder="Offer name"
+                                                            isInvalid={!!errors.offerName}
+                                                            isValid={formValues.offerName && !errors.offerName}
+                                                        />
+                                                    </InputGroup>
+                                                    {errors.offerName && <span className="error-msg">{errors.offerName}</span>}
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="offerTypeId">
+                                                            <MdOutlinePersonOutline size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Select
+                                                            name="offerTypeId"
+                                                            value={formValues.offerTypeId || ""}
+                                                            onChange={(e) => handleChange("offerTypeId", e.target.value)}
+                                                        >
+                                                            <option>Select offer type</option>
+                                                            {offerTypeData?.map((item) => (
+                                                                <option key={item.offerTypeId} value={item.offerTypeId}>
+                                                                    {item.offerTypeName}
+                                                                </option>
+                                                            ))}
+                                                        </Form.Select>
+                                                    </InputGroup>
+                                                    {errors.offerTypeId && (
+                                                        <span className="error-msg">{errors.offerTypeId}</span>
+                                                    )}
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="startTime">
+                                                            <MdOutlineAccessTime size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Control
+                                                            type="time"
+                                                            name="startTime"
+                                                            value={formValues.startTime ? formValues.startTime.substring(11, 16) : ""}
+                                                            onChange={(e) => handleChange("startTime", e.target.value)}
+                                                        />
+                                                    </InputGroup>
+                                                    {errors.startTime && (
+                                                        <span className="error-msg">{errors.startTime}</span>
+                                                    )}
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="endTime">
+                                                            <MdOutlineAccessTime size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Control
+                                                            type="time"
+                                                            name="endTime"
+                                                            value={formValues.endTime ? formValues.endTime.substring(11, 16) : ""}
+                                                            onChange={(e) => handleChange("endTime", e.target.value)}
+                                                        />
+                                                    </InputGroup>
+                                                    {errors.endTime && <span className="error-msg">{errors.endTime}</span>}
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="validFrom">
+                                                            <FaRegCalendarAlt size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Control
+                                                            type="date"
+                                                            name="validFrom"
+                                                            value={(formValues.validFrom || "").slice(0, 10)}
+                                                            onChange={(e) => handleChange("validFrom", e.target.value)}
+                                                        />
+                                                    </InputGroup>
+                                                    {errors.validFrom && (
+                                                        <span className="error-msg">{errors.validFrom}</span>
+                                                    )}
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="validTo">
+                                                            <FaRegCalendarAlt size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Control
+                                                            type="date"
+                                                            name="validTo"
+                                                             value={(formValues.validTo || "").slice(0, 10)}
+                                                            onChange={(e) => handleChange("validTo", e.target.value)}
+                                                        />
+                                                    </InputGroup>
+                                                    {errors.validTo && <span className="error-msg">{errors.validTo}</span>}
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="onBillingTotal">
+                                                            <CiMoneyBill size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Control
+                                                            type="text"
+                                                            name="onBillingTotal"
+                                                            placeholder="Billing Total"
+                                                            value={formValues.onBillingTotal || ""}
+                                                            onChange={(e) => {
+                                                                const v = e.target.value;
+                                                                if (/^\d*$/.test(v)) handleChange("onBillingTotal", v);
+                                                            }}
+                                                        />
+                                                    </InputGroup>
+                                                    {errors.onBillingTotal && (
+                                                        <span className="error-msg">{errors.onBillingTotal}</span>
+                                                    )}
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="onVisitCount">
+                                                            <CiMoneyBill size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Control
+                                                            type="text"
+                                                            name="onVisitCount"
+                                                            placeholder="Visit Count"
+                                                            value={formValues.onVisitCount || ""}
+                                                            onChange={(e) => {
+                                                                const v = e.target.value;
+                                                                if (/^\d*$/.test(v)) handleChange("onVisitCount", v);
+                                                            }}
+                                                        />
+                                                    </InputGroup>
+                                                    {errors.onVisitCount && (
+                                                        <span className="error-msg">{errors.onVisitCount}</span>
+                                                    )}
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>On Item Qty</InputGroup.Text>
+                                                        <Form.Control
+                                                            type="text"
+                                                            value={formValues.onItemQty || ""}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                if (/^\d*$/.test(value)) {
+                                                                    handleChange("onItemQty", value);
                                                                 }
-                                                                placeholder="Offer name"
-                                                                isInvalid={!!errors.offerName}
-                                                                isValid={formValues.offerName && !errors.offerName}
-                                                            />
-                                                        </InputGroup>
-                                                        {errors.offerName && <span className="error-msg">{errors.offerName}</span>}
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="offerTypeId">
-                                                                <MdOutlinePersonOutline size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Select
-                                                                name="offerTypeId"
-                                                                value={formValues.offerTypeId || ""}
-                                                                onChange={(e) => handleChange("offerTypeId", e.target.value)}
-                                                            >
-                                                                <option>Select offer type</option>
-                                                                {offerTypeData?.map((item) => (
-                                                                    <option key={item.offerTypeId} value={item.offerTypeId}>
-                                                                        {item.offerTypeName}
-                                                                    </option>
-                                                                ))}
-                                                            </Form.Select>
-                                                        </InputGroup>
-                                                        {errors.offerTypeId && (
-                                                            <span className="error-msg">{errors.offerTypeId}</span>
-                                                        )}
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="CustomerId">
-                                                                <MdOutlinePersonOutline size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Select
-                                                                name="CustomerId"
-                                                                value={formValues.CustomerId || ""}
-                                                                onChange={(e) => handleChange("CustomerId", e.target.value)}
-                                                            >
-                                                                <option>Select customer</option>
-                                                                {customerData?.map((item) => (
-                                                                    <option key={item.CustomerID} value={item.CustomerID}>
-                                                                        {item.name}
-                                                                    </option>
-                                                                ))}
-                                                            </Form.Select>
-                                                        </InputGroup>
-                                                        {errors.CustomerId && (
-                                                            <span className="error-msg">{errors.CustomerId}</span>
-                                                        )}
-                                                    </Col>
-                                                </Row>
-                                                <Row>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="StartTime">
-                                                                <MdOutlineAccessTime size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Control
-                                                                type="time"
-                                                                name="StartTime"
-                                                                value={formValues.StartTime || ""}
-                                                                onChange={(e) => handleChange("StartTime", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                        {errors.StartTime && (
-                                                            <span className="error-msg">{errors.StartTime}</span>
-                                                        )}
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="EndTime">
-                                                                <MdOutlineAccessTime size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Control
-                                                                type="time"
-                                                                name="EndTime"
-                                                                value={formValues.EndTime || ""}
-                                                                onChange={(e) => handleChange("EndTime", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                        {errors.EndTime && <span className="error-msg">{errors.EndTime}</span>}
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="ValidFrom">
-                                                                <FaRegCalendarAlt size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Control
-                                                                type="date"
-                                                                name="ValidFrom"
-                                                                value={formValues.ValidFrom || ""}
-                                                                onChange={(e) => handleChange("ValidFrom", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                        {errors.ValidFrom && (
-                                                            <span className="error-msg">{errors.ValidFrom}</span>
-                                                        )}
-                                                    </Col>
-                                                </Row>
-                                                <Row>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="ValidTo">
-                                                                <FaRegCalendarAlt size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Control
-                                                                type="date"
-                                                                name="ValidTo"
-                                                                value={formValues.ValidTo || ""}
-                                                                onChange={(e) => handleChange("ValidTo", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                        {errors.ValidTo && <span className="error-msg">{errors.ValidTo}</span>}
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="OnBillingTotal">
-                                                                <CiMoneyBill size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Control
-                                                                type="text"
-                                                                name="OnBillingTotal"
-                                                                placeholder="Billing Total"
-                                                                value={formValues.OnBillingTotal || ""}
-                                                                onChange={(e) => {
-                                                                    const v = e.target.value;
-                                                                    if (/^\d*$/.test(v)) handleChange("OnBillingTotal", v);
-                                                                }}
-                                                            />
-                                                        </InputGroup>
-                                                        {errors.OnBillingTotal && (
-                                                            <span className="error-msg">{errors.OnBillingTotal}</span>
-                                                        )}
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="OnVisitCount">
-                                                                <CiMoneyBill size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Control
-                                                                type="text"
-                                                                name="OnVisitCount"
-                                                                placeholder="Visit Count"
-                                                                value={formValues.OnVisitCount || ""}
-                                                                onChange={(e) => {
-                                                                    const v = e.target.value;
-                                                                    if (/^\d*$/.test(v)) handleChange("OnVisitCount", v);
-                                                                }}
-                                                            />
-                                                        </InputGroup>
-                                                        {errors.OnVisitCount && (
-                                                            <span className="error-msg">{errors.OnVisitCount}</span>
-                                                        )}
-                                                    </Col>
-                                                </Row>
-                                                <Row>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>On Item Qty</InputGroup.Text>
-                                                            <Form.Control
-                                                                type="number"
-                                                                value={formValues.onItemQty || ""}
-                                                                onChange={(e) => handleChange("onItemQty", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>On Item Size</InputGroup.Text>
-                                                            <Form.Select
-                                                                value={formValues.onItemSizeID || ""}
-                                                                onChange={(e) => handleChange("onItemSizeID", e.target.value)}
-                                                            >
-                                                                <option>Select size</option>
-                                                                {/* {itemSizeData.map((item) => (
-                                                                    <option key={item.itemSizeId} value={item.itemSizeId}>{item.itemSizeName}</option>
-                                                                ))} */}
-                                                            </Form.Select>
-                                                        </InputGroup>
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>Offer Qty</InputGroup.Text>
-                                                            <Form.Control
-                                                                type="number"
-                                                                value={formValues.offerQty || ""}
-                                                                onChange={(e) => handleChange("offerQty", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                    </Col>
-                                                </Row>
-                                                <Row>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>Offer Item Size</InputGroup.Text>
-                                                            <Form.Select
-                                                                value={formValues.offerItemSizeID || ""}
-                                                                onChange={(e) => handleChange("offerItemSizeID", e.target.value)}
-                                                            >
-                                                                <option>Select size</option>
-                                                                {/* {itemSizeData.map((item) => (
-                                                                    <option key={item.itemSizeId} value={item.itemSizeId}>{item.itemSizeName}</option>
-                                                                ))} */}
-                                                            </Form.Select>
-                                                        </InputGroup>
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>Offer %</InputGroup.Text>
-                                                            <Form.Control
-                                                                type="number"
-                                                                value={formValues.offeerPercentage || ""}
-                                                                onChange={(e) => handleChange("offeerPercentage", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>Next Visit Eligible</InputGroup.Text>
-                                                            <Form.Check
-                                                                type="switch"
-                                                                label=""
-                                                                checked={formValues.nextVisitEligibiity}
-                                                                onChange={(e) => handleChange("nextVisitEligibiity", e.target.checked)}
-                                                            />
-                                                        </InputGroup>
-                                                    </Col>
-                                                </Row>
-                                                <Row>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>Item Type</InputGroup.Text>
-                                                            <Form.Select
-                                                                value={formValues.itemTypeID || ""}
-                                                                onChange={(e) => handleChange("itemTypeID", e.target.value)}
-                                                            >
-                                                                <option>Select item type</option>
-                                                                {/* {itemTypeData.map((item) => (
-                                                                    <option key={item.itemTypeId} value={item.itemTypeId}>{item.itemTypeName}</option>
-                                                                ))} */}
-                                                            </Form.Select>
-                                                        </InputGroup>
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>Offer Item Type Qty</InputGroup.Text>
-                                                            <Form.Control
-                                                                type="number"
-                                                                value={formValues.offerItemTypeQty || ""}
-                                                                onChange={(e) => handleChange("offerItemTypeQty", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text>Offer Price</InputGroup.Text>
-                                                            <Form.Control
-                                                                type="number"
-                                                                value={formValues.offerPrice || ""}
-                                                                onChange={(e) => handleChange("offerPrice", e.target.value)}
-                                                            />
-                                                        </InputGroup>
-                                                    </Col>
-                                                </Row>
-                                                <Row>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="offerTypeId">
-                                                                <MdOutlinePersonOutline size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Select
-                                                                name="offerTypeId"
-                                                                value={formValues.offerTypeId || ""}
-                                                                onChange={(e) => handleChange("offerTypeId", e.target.value)}
-                                                            >
-                                                                <option>Select outlet</option>
-                                                                {outletData?.map((item) => (
-                                                                    <option key={item.outletId} value={item.outletId}>
-                                                                        {item.outletName}
-                                                                    </option>
-                                                                ))}
-                                                            </Form.Select>
-                                                        </InputGroup>
-                                                        {errors.offerTypeId && (
-                                                            <span className="error-msg">{errors.offerTypeId}</span>
-                                                        )}
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup className="mb-4">
-                                                            <InputGroup.Text id="FreeCouponValue">
-                                                                <MdOutlineLocalOffer size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Control
-                                                                type="text"
-                                                                name="FreeCouponValue"
-                                                                placeholder="Free Coupon Value"
-                                                                value={formValues.FreeCouponValue || ""}
-                                                                onChange={(e) => {
-                                                                    const v = e.target.value;
-                                                                    if (/^\d*$/.test(v)) handleChange("FreeCouponValue", v);
-                                                                }}
-                                                            />
-                                                        </InputGroup>
-                                                        {errors.FreeCouponValue && (
-                                                            <span className="error-msg">{errors.FreeCouponValue}</span>
-                                                        )}
-                                                    </Col>
-                                                    <Col md={4}>
-                                                        <InputGroup>
-                                                            <InputGroup.Text>
-                                                                <TbHandClick size={25} color="#ffc800" />
-                                                            </InputGroup.Text>
-                                                            <Form.Check
-                                                                type="checkbox"
-                                                                label="IsActive"
-                                                                checked={formValues.isActive}
-                                                                onChange={(e) => handleChange("isActive", e.target.checked)}
-                                                                className="ms-3"
-                                                            />
-                                                        </InputGroup>
-                                                    </Col>
-                                                </Row>
-                                            </Form>
-                                        </Col>
-                                    </Row>
-                                </div>
-                            </Col>
-                        </Row>
-                        <div className="d-flex justify-content-end mt-3 pe-3">
-                            <Button type="submit" variant="warning">
-                                {isEditMode ? 'Update' : 'Save'}
-                            </Button>
-                        </div>
-                    </Form>
+                                                            }}
+                                                        />
+                                                    </InputGroup>
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>On Item Size</InputGroup.Text>
+                                                        <Form.Select
+                                                            value={formValues.onItemSizeID || ""}
+                                                            onChange={(e) => handleChange("onItemSizeID", e.target.value)}
+                                                        >
+                                                            <option>Select size</option>
+                                                            {itemSizeData?.map((item) => (
+                                                                <option key={item.sizeId} value={item.sizeId}>{item.sizeName}</option>
+                                                            ))}
+                                                        </Form.Select>
+                                                    </InputGroup>
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>Offer Qty</InputGroup.Text>
+                                                        <Form.Control
+                                                            type="text"
+                                                            value={formValues.offerQty || ""}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                if (/^\d*$/.test(value)) {
+                                                                    handleChange("offerQty", value);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </InputGroup>
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>Offer Item Size</InputGroup.Text>
+                                                        <Form.Select
+                                                            value={formValues.offerItemSizeID || ""}
+                                                            onChange={(e) => handleChange("offerItemSizeID", e.target.value)}
+                                                        >
+                                                            <option>Select size</option>
+                                                            {itemSizeData?.map((item) => (
+                                                                <option key={item.sizeId} value={item.sizeId}>{item.sizeName}</option>
+                                                            ))}
+                                                        </Form.Select>
+                                                    </InputGroup>
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>Offer %</InputGroup.Text>
+                                                        <Form.Control
+                                                            type="number"
+                                                            value={formValues.offeerPercentage || ""}
+                                                            onChange={(e) => handleChange("offeerPercentage", e.target.value)}
+                                                        />
+                                                    </InputGroup>
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>Next Visit Eligible</InputGroup.Text>
+                                                        <Form.Check
+                                                            type="switch"
+                                                            label=""
+                                                            checked={formValues.nextVisitEligibiity}
+                                                            onChange={(e) => handleChange("nextVisitEligibiity", e.target.checked)}
+                                                        />
+                                                    </InputGroup>
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>Item Type</InputGroup.Text>
+                                                        <Form.Select
+                                                            value={formValues.itemTypeID || ""}
+                                                            onChange={(e) => handleChange("itemTypeID", e.target.value)}
+                                                        >
+                                                            <option>Select item type</option>
+                                                            {itemTypesData.map((item) => (
+                                                                <option key={item.typeid} value={item.typeid}>{item.ItemTypeName}</option>
+                                                            ))}
+                                                        </Form.Select>
+                                                    </InputGroup>
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>Offer Item Type Qty</InputGroup.Text>
+                                                        <Form.Control
+                                                            type="number"
+                                                            value={formValues.offerItemTypeQty || ""}
+                                                            onChange={(e) => handleChange("offerItemTypeQty", e.target.value)}
+                                                        />
+                                                    </InputGroup>
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text>Offer Price</InputGroup.Text>
+                                                        <Form.Control
+                                                            type="number"
+                                                            value={formValues.offerPrice || ""}
+                                                            onChange={(e) => handleChange("offerPrice", e.target.value)}
+                                                        />
+                                                    </InputGroup>
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="offerTypeId">
+                                                            <MdOutlinePersonOutline size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Select
+                                                            name="offerTypeId"
+                                                            value={formValues.offerTypeId || ""}
+                                                            onChange={(e) => handleChange("offerTypeId", e.target.value)}
+                                                        >
+                                                            <option>Select outlet</option>
+                                                            {outletData?.map((item) => (
+                                                                <option key={item.outletId} value={item.outletId}>
+                                                                    {item.outletName}
+                                                                </option>
+                                                            ))}
+                                                        </Form.Select>
+                                                    </InputGroup>
+                                                    {errors.offerTypeId && (
+                                                        <span className="error-msg">{errors.offerTypeId}</span>
+                                                    )}
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup className="mb-4">
+                                                        <InputGroup.Text id="freeCouponValue">
+                                                            <MdOutlineLocalOffer size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Control
+                                                            type="text"
+                                                            name="freeCouponValue"
+                                                            placeholder="Free Coupon Value"
+                                                            value={formValues.freeCouponValue || ""}
+                                                            onChange={(e) => {
+                                                                const v = e.target.value;
+                                                                if (/^\d*$/.test(v)) handleChange("freeCouponValue", v);
+                                                            }}
+                                                        />
+                                                    </InputGroup>
+                                                    {errors.freeCouponValue && (
+                                                        <span className="error-msg">{errors.freeCouponValue}</span>
+                                                    )}
+                                                </Col>
+                                                <Col md={4}>
+                                                    <InputGroup>
+                                                        <InputGroup.Text>
+                                                            <TbHandClick size={25} color="#ffc800" />
+                                                        </InputGroup.Text>
+                                                        <Form.Check
+                                                            type="checkbox"
+                                                            label="IsActive"
+                                                            checked={formValues.isActive}
+                                                            onChange={(e) => handleChange("isActive", e.target.checked)}
+                                                            className="ms-3"
+                                                        />
+                                                    </InputGroup>
+                                                </Col>
+                                            </Row>
+                                        </Form>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                    </Row>
+                    <div
+                        className="position-fixed bottom-0 end-0 p-3"
+                        style={{ zIndex: 1050, backgroundColor: '#fff' }}
+                    >
+                        <Button type="submit" variant="warning">
+                            {isEditMode ? 'Update' : 'Save'}
+                        </Button>
+                    </div>
+                    {/* </Form> */}
                 </Offcanvas.Body>
             </Offcanvas>
 
