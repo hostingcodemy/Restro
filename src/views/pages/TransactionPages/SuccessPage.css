@@ -1,0 +1,86 @@
+/* Background */
+.thankyou-bg {
+  min-height: 100vh;
+  background: #F0F0F0;
+  padding: 2rem;
+}
+
+/* Card */
+.thankyou-card {
+  background: white;
+  border-radius: 1.5rem;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  animation: fadeInSlide 0.6s ease-out;
+}
+
+/* Icon */
+.icon-wrapper {
+  animation: pop 0.5s ease-out;
+}
+
+.thankyou-icon {
+  font-size: 4rem;
+}
+
+/* Text */
+.thankyou-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.thankyou-message {
+  font-size: 1.1rem;
+  color: #495057;
+  margin-bottom: 1rem;
+}
+
+.thankyou-countdown {
+  font-size: 0.95rem;
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+}
+
+/* Animations */
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  .thankyou-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .thankyou-icon {
+    font-size: 3rem;
+  }
+
+  .thankyou-title {
+    font-size: 1.6rem;
+  }
+
+  .thankyou-message {
+    font-size: 1rem;
+  }
+}

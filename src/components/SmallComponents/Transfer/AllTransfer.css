@@ -1,0 +1,89 @@
+.table-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    width: 150px;
+    min-height: 80px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: white;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.4s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.fancy-loader-wrapper {
+    position: relative;
+}
+
+.fancy-spinner {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    border-top: 4px solid #ffc300;
+    border-right: 4px solid #ffc300;
+    animation: spin 0.8s linear infinite, glow 1.2s ease-in-out infinite alternate;
+    box-shadow: 0 0 10px #fddd0d55, 0 0 20px #fdcd0d33;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px #fdc50d55;
+    }
+    to {
+        box-shadow: 0 0 20px #fdc10d;
+    }
+}
+
+
+.animate-middle {
+  opacity: 1;
+  width: 100%;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease,width 0.4s ease;
+}
+
+.animate-middle-hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  height: 0;
+  overflow: hidden;
+  width: 0%;
+  padding: 0;
+  margin: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease,width 0.3s ease;
+}
+
+.small-box {
+  transition: all 0.3s ease-in-out;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.small-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.paxWrapper{
+    padding: 0 0.3rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+}
+

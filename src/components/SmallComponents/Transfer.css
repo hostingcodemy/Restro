@@ -1,0 +1,150 @@
+.small-box {
+  transition: all 0.3s ease-in-out;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.small-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.animate-slide {
+  animation: slideDown 0.4s ease-in-out;
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+@media (max-width: 768px) {
+  .small-box {
+    width: 65px !important;
+    font-size: 12px;
+    padding: 0.5rem;
+  }
+
+  .d-flex.flex-column.flex-md-row.h-100 {
+    flex-direction: column !important;
+  }
+
+  .w-md-25, .w-md-50 {
+    width: 100% !important;
+  }
+
+  .border-end {
+    border-right: none !important;
+    border-bottom: 1px solid #dee2e6 !important;
+  }
+}
+
+
+input.form-check-input {
+  cursor: pointer;
+}
+
+
+/* Transfer.css */
+
+.animate-middle {
+  opacity: 1;
+  width: 100%;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease,width 0.4s ease;
+}
+
+.animate-middle-hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  height: 0;
+  overflow: hidden;
+  width: 0%;
+  padding: 0;
+  margin: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease,width 0.3s ease;
+}
+
+.paxWrapper{
+    padding: 0 0.3rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+}
+
+.shadow-md {
+  box-shadow: 2px 4px 10px rgb(155, 155, 155);
+}
+
+.toggle-group {
+  border: 0.01rem solid #ffc300;
+  padding: 2px;
+}
+
+.toggle-btn {
+  border: none;
+  background: transparent;
+  color: #333;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.toggle-btn.active {
+  background-color: #ffc300;
+  color: #000;
+}
+
+.toggle-btn:not(.active):hover {
+  background-color: #fce788;
+  color: #000;
+}
+
+.transition-fade {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+  position: absolute;
+  width: 100%;
+}
+.transition-fade.show {
+  opacity: 1;
+  visibility: visible;
+  position: relative;
+}
+.transition-fade.hide {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.popup-animated {
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+.fade-container {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
+}
