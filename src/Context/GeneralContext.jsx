@@ -8,11 +8,14 @@ export const GeneralProvider = ({ children }) => {
 
   const [isSplitTable, setisSplitTable] = useState(false);
 
+  const [OrderBillPopUp, setOrderBillPopUp] = useState(false);
+
+const normalize = (str) => (typeof str === "string" ? str.toLowerCase().replace(/\s+/g, "") : "");
 
 
 
   return (
-    <GeneralContext.Provider value={{ isMergeTable, setIsMergeTable, isSplitTable, setisSplitTable }}>
+    <GeneralContext.Provider value={{ isMergeTable, setIsMergeTable, isSplitTable, setisSplitTable, OrderBillPopUp, setOrderBillPopUp,normalize }}>
       {children}
     </GeneralContext.Provider>
   );

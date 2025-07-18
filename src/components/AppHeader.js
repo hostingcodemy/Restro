@@ -37,13 +37,14 @@ import { MdOutlineMerge } from "react-icons/md";
 import { MdOutlineCallSplit } from "react-icons/md";
 import { useGeneralContext } from '../Context/GeneralContext';
 import { CiBookmarkPlus } from "react-icons/ci";
-
+import { Prev } from 'react-bootstrap/esm/PageItem';
+import OrderAndBillModal from '../views/pages/pos/OrderAndBillModal';
 
 const AppHeader = ({ sidebarShow, setSidebarShow }) => {
   const [isMerged, setIsMerged] = useState(false);
   const location = useLocation();
   const headerRef = useRef();
-  const { isMergeTable, setIsMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
+  const { isMergeTable, setIsMergeTable, isSplitTable, setisSplitTable, OrderBillPopUp, setOrderBillPopUp } = useGeneralContext();
 
   const isTablePage = location.pathname === "/table-management";
   const isOrderPage = location.pathname === '/order-management';
@@ -59,7 +60,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
     '/dashboard': 'Dashboard',
     '/item-groups': 'Item Group',
     '/item-sub-type': 'Item Sub Category',
-    '/item-type': 'Item Category',
+    '/item-type': 'Item Type',
     '/orders': 'Orders',
     '/item-sub-groups': 'Item Sub Group',
     '/items': 'Item',
@@ -83,13 +84,25 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
     '/address-type': 'Address Type',
     '/customer-type': 'Customer Type',
     '/customer-doc-type': 'Customer Doc Type',
+    '/section': 'Section',
+    '/offer-type': 'Offer Type',
+    '/offer': 'Offer',
+    '/business-sourcetype': 'Business Source Type',
+    '/business-source': 'Business Source',
+    '/coupon': 'Coupon',
+    '/finyear': 'FinYear',
+    '/security-question': 'Security Question',
+    '/section': 'Section',
+    '/table-reservation-rate': 'Table Reservation Rate',
+    '/item-size': 'Item Size',
+    '/item-category': 'Item Category'
   };
 
   const currentPath = location.pathname
   const pageTitle = routeTitles[currentPath] || ''
 
   return (
-    <CHeader position="sticky" className=" p-0" ref={headerRef}>
+    <CHeader position="sticky" className="header p-0"  ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
         <div className='d-flex gap-2 align-items-center'>
 
@@ -114,7 +127,7 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
 
 
         <CHeaderNav className='d-flex gap-3'>
-          <div className="d-flex gap-3 align-items-center"
+          <div className="button-group-wrapper d-flex gap-3 align-items-center"
           >
             {(isTablePage || isOrderPage) ? (
               <>
@@ -137,51 +150,12 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
 
                 <div className="d-flex gap-2 align-items-center">
                   <div
-                    // style={{color:"#28A745"}}
                     className=' tableHeaderButton d-flex align-items-center gap-1'
 
                   >
                     <IoAnalytics />
                     Cost Analysis
                   </div>
-                  {/* <div
-                    // style={{color:"#28A745"}}
-                    className=' tableHeaderButton d-flex align-items-center gap-1'
-
-                  >
-                    <IoAnalytics />
-                    Order Analysis
-                  </div> */}
-                </div>
-
-                <div className="d-flex gap-2 align-items-center">
-                  {/* <div
-                    className=' tableHeaderButton d-flex align-items-center gap-1'
-
-                  >
-                    <PiPencilSimpleLineThin />
-                    Order
-                  </div>
-                  <div
-                    className=' tableHeaderButton d-flex align-items-center gap-1'
-                  >
-                    <PiBowlFoodThin />
-                    Bill
-                  </div> */}
-                  {/* <div className="d-flex align-items-center gap-3">
-                    <div
-                      className={`custom-toggle-btn ${isMerged ? 'merged' : ''}`}
-                      onClick={() => setIsMerged(prev => !prev)}
-                    >
-                      <div className="toggle-switch">
-                        <div className="switch-text">
-                          <div className={`merge-label ${!isMerged ? 'active' : ''}`}>Merge</div>
-                          <div className={`split-label ${isMerged ? 'active' : ''}`}>Split</div>
-                        </div>
-                        <div className="switch-circle" />
-                      </div>
-                    </div>
-                  </div> */}
                   <div className="tableHeaderButton" onClick={() => setIsMergeTable(true)}>
                     <MdOutlineMerge />
                     Merge
@@ -195,12 +169,16 @@ const AppHeader = ({ sidebarShow, setSidebarShow }) => {
 
 
                 <div className="d-flex gap-2 align-items-center">
-                  <div
-                    className=' tableHeaderButton d-flex align-items-center gap-1'
+                  <div>
+                    <div
+                      className=' tableHeaderButton d-flex align-items-center gap-1'
+                      onClick={() => setOrderBillPopUp((prev) => !prev)}
+                    >
+                      <PiPencilSimpleLineThin />
+                      Order
+                    </div>
+                    <OrderAndBillModal OrderBillPopUp={OrderBillPopUp} onClose={() => setOrderBillPopUp(false)} />
 
-                  >
-                    <PiPencilSimpleLineThin />
-                    Order
                   </div>
                   <div
                     className=' tableHeaderButton d-flex align-items-center gap-1'

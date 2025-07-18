@@ -1,8 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from "react-data-table-component";
-import { Form, Button, Offcanvas, InputGroup, Row, Col, Accordion, Modal } from "react-bootstrap";
+import {
+    Form,
+    Button,
+    Offcanvas,
+    InputGroup,
+    Row,
+    Col,
+    Accordion,
+    Modal
+}
+    from "react-bootstrap";
 import { MdDeleteForever } from "react-icons/md";
-import { FaRegEdit, FaRegFile } from "react-icons/fa";
+import { FaRegEdit, FaRegFile, FaSearch } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
 import { Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
@@ -29,16 +39,22 @@ import {
     FaTrash,
     FaTimesCircle,
     FaExclamationTriangle,
+    FaMicrophone,
+    FaUnlock,
     FaTools,
     FaHotel
 }
     from "react-icons/fa";
 import { RxHamburgerMenu } from "react-icons/rx";
+import { CiSettings, CiSearch } from "react-icons/ci";
+import { FaArrowLeft } from "react-icons/fa";
+import { decryptData } from '../../../config/secureStorage';
 
 const Employee = () => {
 
     const fetchCalled = useRef(false);
-    const channelId = localStorage.getItem("channelId");
+    const encryptedChannelId = localStorage.getItem("channelId");
+    const channelId = encryptedChannelId ? decryptData(encryptedChannelId) : null;
 
     const initialValues = {
         employeeID: "",
@@ -59,6 +75,7 @@ const Employee = () => {
         designation: "",
         isAllowBackDays: false,
         noOfDays: "",
+        isDefaultChannel: false,
     };
 
     useEffect(() => {
@@ -68,21 +85,6 @@ const Employee = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    useEffect(() => {
-        const menuInfo = JSON.parse(localStorage.getItem('authChannels'))
-
-        if (menuInfo?.length > 0) {
-            const channelData = menuInfo[0]
-            const outletsList = channelData.channelOutlets || []
-            setOutlets(outletsList)
-            setSelectedOutletId(outletsList[0]?.outletID || null)
-
-            const modules = channelData.subscriptionModules || []
-            setRestaurantModule(modules.find(m => m.moduleName === 'Restaurant') || null)
-            setConfigurationModule(modules.find(m => m.moduleName === 'Configuration') || null)
-        }
-    }, [])
-
     const [formValues, setFormValues] = useState(initialValues);
     const [errors, setErrors] = useState({});
     const [loadingIndicator, setLoadingIndicator] = useState(false);
@@ -90,7 +92,9 @@ const Employee = () => {
     const [employeeTypeData, setEmployeeTypeData] = useState([]);
     const [filterText, setFilterText] = useState("");
     const [employeeData, setEmployeeData] = useState([]);
-    const searchParam = ["itemGroupName", "itemGroupCode", "isActive"];
+    const [menuData, setMenuData] = useState([]);
+    const [outletData, setOutletData] = useState([]);
+    const searchParam = ["name", "email", "joiningDate", "mobile", "isActive"];
     const [isEditMode, setIsEditMode] = useState(false);
     const [show, setShow] = useState(false);
     const [expoShow, setExpoShow] = useState(false);
@@ -98,23 +102,25 @@ const Employee = () => {
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const handleExpoClose = () => setExpoShow(false);
     const handleExpoShow = () => setExpoShow(true);
-    const [accessshow, setAccessShow] = useState(false);
-    const handleAccessClose = () => setAccessShow(false);
-    const handleAccessShow = () => setAccessShow(true);
     const [loading, setLoading] = useState(true);
-    const [outlets, setOutlets] = useState([]);
-    const [restaurantModule, setRestaurantModule] = useState(null);
-    const [configurationModule, setConfigurationModule] = useState(null);
-    const [selectedOutletId, setSelectedOutletId] = useState(null);
-    const [activeKey, setActiveKey] = useState("config");
-    const [showDetails, setShowDetails] = useState(true);
-
-
-    const toggleDetails = () => {
-        setShowDetails((prev) => !prev);
-    };
-
-
+    const [accessshow, setAccessShow] = useState(false);
+    const [employeeSearch, setEmployeeSearch] = useState('');
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [outletSearch, setOutletSearch] = useState('');
+    const [availableMenus, setAvailableMenus] = useState([]);
+    const [showMenuSelection, setShowMenuSelection] = useState(false);
+    const [menuSearch, setMenuSearch] = useState('');
+    const [selectedMenu, setSelectedMenu] = useState([]);
+    const [activePermissionMenuId, setActivePermissionMenuId] = useState(null);
+    const [menuPermissions, setMenuPermissions] = useState({});
+    const [advanceSwitches, setAdvanceSwitches] = useState({});
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [pendingOutlet, setPendingOutlet] = useState(null);
+    const [defaultOutlet, setDefaultOutlet] = useState(null);
+    const [selectedOutletIds, setSelectedOutletIds] = useState([]);
+    const [outletEmpTypes, setOutletEmpTypes] = useState({});
+    const [hasMappedOutlets, setHasMappedOutlets] = useState(false);
+    const [accessData, setAccessData] = useState([]);
 
     const handleClose = () => {
         setShow(false);
@@ -129,7 +135,58 @@ const Employee = () => {
         setErrors({});
         setShow(true);
         fetchDepartmentData();
+    };
+
+    const handleAccessClose = () => {
+        setAccessShow(false);
+        setSelectedEmployee(null);
+    };
+
+    // const handleAccessShow = (employeeID) => {
+    //     setAccessShow(true);
+    //     fetchEmployeeData();
+    //     fetchOutletData();
+    //     fetchEmployeeTypeData();
+    //     fetchMenuAction();
+    //     fetchAccessData(employeeID);
+    // };
+
+    const handleAccessShow = (employeeID) => {
+        setAccessShow(true);
+        fetchEmployeeData(); 
+        fetchOutletData();
         fetchEmployeeTypeData();
+        fetchMenuAction();
+        fetchAccessData(employeeID); 
+    };
+
+
+    const filteredEmployeeData = employeeData?.filter(emp =>
+        emp.name?.toLowerCase().includes(employeeSearch.toLowerCase())
+    );
+
+    const filteredOutletData = outletData.filter(outlet =>
+        outlet.outletName?.toLowerCase().includes(outletSearch.toLowerCase())
+    );
+
+    useEffect(() => {
+        if (outletData.length > 0 && defaultOutlet === null) {
+            setDefaultOutlet(outletData[0].outletId);
+        }
+    }, [outletData, defaultOutlet]);
+
+    const toggleOutlet = (outletId) => {
+        setSelectedOutletIds((prev) =>
+            prev.includes(outletId)
+                ? prev.filter((id) => id !== outletId)
+                : [...prev, outletId]
+        );
+    };
+
+    const handleDefaultChange = (newOutletId) => {
+        if (newOutletId === defaultOutlet) return;
+        setPendingOutlet(newOutletId);
+        setShowConfirm(true);
     };
 
     useEffect(() => {
@@ -138,6 +195,116 @@ const Employee = () => {
         fetchEmployeeData();
     }, []);
 
+    useEffect(() => {
+        const encryptedAuthChannels = localStorage.getItem("authChannels");
+        if (!encryptedAuthChannels) return;
+
+        try {
+            const decryptedChannels = decryptData(encryptedAuthChannels);
+            console.log(decryptedChannels, 'ff');
+
+            const menus = decryptedChannels.flatMap(channel =>
+                channel.subscriptionModules.flatMap(mod =>
+                    mod.menus.map(menu => ({
+                        menuId: menu.menuId,
+                        menuName: menu.menuName,
+                    }))
+                )
+            );
+
+            setAvailableMenus(menus);
+            setShowMenuSelection(true);
+        } catch (err) {
+            console.error("Failed to decrypt authChannels", err);
+        }
+    }, []);
+
+    const advancePermissions = menuData
+        ?.filter(item => item.menuId === activePermissionMenuId && item.parentActionName)
+        ?.map(item => item.parentActionName);
+
+    const uniqueAdvancePermissions = [...new Set(advancePermissions)];
+
+
+    useEffect(() => {
+        if (accessData?.outlets) {
+            const defaultOutlet = accessData.outlets.find(o => o.isDefaultOutlet);
+            if (defaultOutlet) {
+                setSelectedEmployee(prev => ({
+                    ...prev,
+                    defaultOutletName: defaultOutlet.outletName,
+                }));
+            }
+        }
+    }, [accessData]);
+
+
+    const handleEmployeeSelect = async (emp) => {
+        setSelectedEmployee(emp);
+        setSelectedOutletIds([]);
+        setOutletEmpTypes({});
+        setDefaultOutlet('');
+        setHasMappedOutlets(false);
+        await fetchAccessData(emp.employeeID);
+    };
+
+    // const fetchAccessData = async (employeeID) => {
+    //     try {
+    //         const res = await api.get(`/employeeaccess/${employeeID}`);
+    //         const rawData = res?.data?.data;
+    //         console.log(rawData, 'kk');
+
+    //         // If it's a single object, wrap it in an array
+    //         if (rawData && typeof rawData === 'object') {
+    //             const sortedData = [rawData].sort(
+    //                 (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+    //             );
+    //             setAccessData(sortedData);
+    //         } else {
+    //             setAccessData([]);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error fetching table data", error);
+    //         setAccessData([]);
+    //         setLoadingIndicator(false);
+    //     }
+    // };
+
+    // console.log(accessData, 'oo');
+
+    // const fetchAccessData = async (employeeID) => {
+    //     try {
+    //         const res = await api.get(`/employeeaccess/${employeeID}`);
+    //         setAccessData(res?.data?.data);
+    //     } catch (error) {
+    //         setLoadingIndicator(false)
+    //         console.error("Error fetching department data", error);
+    //     }
+    // };
+    console.log(accessData, 'oo');
+
+
+    const fetchAccessData = async (employeeID) => {
+        try {
+            const res = await api.get(`/employeeaccess/${employeeID}`);
+            const data = res?.data?.data;
+            setAccessData(data);
+
+            const defaultOutlet = data?.outlets?.find(outlet => outlet.isDefaultOutlet);
+
+            // Set selectedEmployee with name and defaultOutletName
+            setSelectedEmployee({
+                employeeID: data.employeeID,
+                name: data.name,
+                defaultOutletName: defaultOutlet?.outletName || null,
+            });
+        } catch (error) {
+            setLoadingIndicator(false);
+            console.error("Error fetching department data", error);
+        }
+    };
+
+
     const fetchDepartmentData = async () => {
         try {
             const res = await api.get(`/department`);
@@ -145,6 +312,32 @@ const Employee = () => {
         } catch (error) {
             setLoadingIndicator(false)
             console.error("Error fetching department data", error);
+        }
+    };
+
+    const fetchEmployeeData = async () => {
+        try {
+            const res = await api.get(`/employee`);
+            const sortedData = res?.data?.list?.sort(
+                (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+            );
+            setEmployeeData(sortedData);
+        } catch (error) {
+            setLoadingIndicator(false)
+            console.error("Error fetching table data", error);
+        }
+    };
+
+    const fetchOutletData = async () => {
+        try {
+            const res = await api.get("/outlets");
+            const sortedData = res?.data?.list?.sort(
+                (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+            );
+            setOutletData(sortedData);
+        } catch (error) {
+            console.error("Error fetching table data", error);
+            setLoadingIndicator(false);
         }
     };
 
@@ -158,13 +351,13 @@ const Employee = () => {
         }
     };
 
-    const fetchEmployeeData = async () => {
+    const fetchMenuAction = async () => {
         try {
-            const res = await api.get(`/employee`);
-            const sortedData = res?.data?.list?.sort(
+            const res = await api.get(`/menuaction`);
+            const sortedData = res?.data?.data?.sort(
                 (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
             );
-            setEmployeeData(sortedData);
+            setMenuData(sortedData);
         } catch (error) {
             setLoadingIndicator(false)
             console.error("Error fetching table data", error);
@@ -291,8 +484,24 @@ const Employee = () => {
 
     const columns = [
         {
-            name: <h5>Name</h5>,
-            selector: (row) => row.name,
+            name: <h6 className="fw-bold">Name</h6>,
+            selector: row => row.name,
+            cell: row => (
+                <div className="d-flex align-items-center gap-2">
+                    <img
+                        src={
+                            row.photo
+                                ? `${import.meta.env.VITE_IMG_BASE_URL}/${row.photo}`
+                                : 'src/assets/person.png'
+                        }
+                        alt="Profile"
+                        width={35}
+                        height={35}
+                        style={{ borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                    <div>{row.name}</div>
+                </div>
+            ),
             sortable: true,
         },
         {
@@ -348,10 +557,10 @@ const Employee = () => {
                         <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
                     </Link>
                     <Link
-                        onClick={handleAccessShow}
+                        onClick={() => handleAccessShow(row.employeeID)}
                         style={{ cursor: "pointer" }}
                     >
-                        <LiaSitemapSolid size={30} style={{ margin: "0.2vh" }} color="green" title='Access Mapping' />
+                        <LiaSitemapSolid size={30} style={{ margin: "0.2vh" }} color="green" title='Outlet & Access Mapping' />
                     </Link>
                 </>
             ),
@@ -361,7 +570,7 @@ const Employee = () => {
     const subHeaderComponentMemo = useMemo(() => {
         return (
             <div className="d-flex justify-content-end gap-2 align-items-center w-100">
-                <Form className="d-flex">
+                <div className="position-relative ">
                     <Form.Control
                         type="search"
                         placeholder="Search..."
@@ -369,7 +578,18 @@ const Employee = () => {
                         aria-label="Search"
                         onChange={(e) => setFilterText(e.target.value)}
                     />
-                </Form>
+                    <FaMicrophone
+                        size={20}
+                        color="#ffc800"
+                        style={{
+                            position: "absolute",
+                            right: "15px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            cursor: "pointer"
+                        }}
+                    />
+                </div>
                 <Button variant="info"
                     onClick={handleExpoShow}
                 >
@@ -386,14 +606,13 @@ const Employee = () => {
         );
     }, [filterText]);
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
         const payloadForPost = {
             channelID: channelId,
-            psid: formValues.psId,
+            psid: Number(formValues.psId),
             name: formValues.employeeName,
             password: formValues.password,
             email: formValues.email,
@@ -404,7 +623,8 @@ const Employee = () => {
             empCode: formValues.empCode,
             isActive: formValues.isActive,
             isAllowBackDays: formValues.isAllowBackDays,
-            noOfDays: formValues.noOfDays
+            noOfDays: Number(formValues.noOfDays),
+            isDefaultChannel: true,
         }
 
         const payloadForPut = {
@@ -440,94 +660,137 @@ const Employee = () => {
         fetchEmployeeData();
     };
 
-
-
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [showConfigurationMenus, setShowConfigurationMenus] = useState(false);
-    const [activeOutletId, setActiveOutletId] = useState(null);
-
-    // Handler
-    // const handleMenuClick = (menu) => {
-    //     handleModalShow();
-    //     setSelectedMenu((prev) => (prev?.menuId === menu.menuId ? null : menu));
-    // };
-
-    const handleMenuClick = (menu) => {
-        const savedData = menuDataMap[menu.menuId];
-
-        setSelectedMenu({
-            ...menu,
-            ...savedData, // if available, override defaults
-        });
-
-        handleModalShow();
+    const validateSubmission = () => {
+        if (!selectedEmployee) {
+            toast.warning("Please select an employee");
+            return false;
+        }
+        if (selectedOutletIds.length === 0) {
+            toast.warning("Select at least one outlet");
+            return false;
+        }
+        if (!defaultOutlet) {
+            toast.warning("Choose a default outlet");
+            return false;
+        }
+        if (selectedMenu.length === 0) {
+            toast.warning("Select at least one menu");
+            return false;
+        }
+        // ensure empType chosen for every outlet
+        const missingType = selectedOutletIds.find(id => !outletEmpTypes[id]);
+        if (missingType) {
+            toast.warning("Assign employee type for every outlet");
+            return false;
+        }
+        return true;
     };
 
+    const handleAccess = async (e) => {
+        e.preventDefault();
+        if (!selectedEmployee) {
+            toast.error("Please select an employee.");
+            return;
+        }
+        if (selectedOutletIds.length === 0) {
+            toast.error("Please choose at least one outlet.");
+            return;
+        }
+        if (selectedMenu.length === 0) {
+            toast.error("Please choose at least one menu.");
+            return;
+        }
+        const buildActionIds = (menuId) => {
+            const ids = new Set();
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen((prev) => {
-            const next = !prev;
-            if (!next) {
-                setShowConfigurationMenus(false);
-                setActiveOutletId(null);
+            Object.entries(advanceSwitches).forEach(([key, on]) => {
+                if (!on || !key.startsWith(menuId + "-")) return;
+
+                const rest = key.slice(menuId.length + 1);
+                if (rest.length === 36) {
+                    ids.add(rest);
+                } else if (rest.length === 73) {
+                    const parentActionId = rest.slice(0, 36);
+                    const actionId = rest.slice(37);
+                    ids.add(parentActionId);
+                    ids.add(actionId);
+                } else {
+                    console.warn("Unexpected switch key:", key);
+                }
+            });
+
+            return Array.from(ids);
+        };
+        const buildMenuPermissions = (menuId) => {
+            const basic = menuPermissions[menuId] || {};
+            return {
+                menuId,
+                permissions: {
+                    read: basic.read || false,
+                    write: basic.write || false,
+                    delete: basic.delete || false,
+                    import: basic.import || false,
+                    export: basic.export || false,
+                    print: basic.print || false,
+                    approve: basic.approve || false,
+                    printLimit: basic.printLimit || 0,
+                    printCount: basic.printCount || 0,
+                    maxDiscount: basic.maxDiscount || 0,
+                    actionIds: buildActionIds(menuId),
+                },
+            };
+        };
+        const configuration = selectedMenu.map(buildMenuPermissions);
+        const outlets = selectedOutletIds.map((outletId) => ({
+            outletId,
+            empTypeId: outletEmpTypes[outletId] || null,
+            isDefaultOutlet: outletId === defaultOutlet,
+            menus: selectedMenu.map(buildMenuPermissions),
+        }));
+        const payload = {
+            employeeID: selectedEmployee.employeeID,
+            configuration,
+            outlets,
+            isActive: true,
+        };
+
+        console.log("%cFinal payload →", "color:orange;font-weight:bold", payload);
+        setLoading(true);
+        try {
+            let res;
+            if (hasMappedOutlets) {
+                res = await api.put(`/employeeaccess/${selectedEmployee.employeeID}`, payload);
+            } else {
+                res = await api.post("/employeeaccess", payload);
             }
-            return next;
-        });
+            // const res = isEditMode
+            //     ? await api.put(`/employeeaccess/${accessId}`, payload)
+            //     : await api.post("/employeeaccess", payload);
+
+            toast.success(res.data?.successMessage || "Access saved!");
+            resetPermissionState();
+            handleAccessClose();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.errorMessage || "Save failed, try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const toggleConfigurationMenus = () => {
-        setShowConfigurationMenus((prev) => {
-            if (!prev) setActiveOutletId(null);
-            return !prev;
-        });
+    const resetPermissionState = () => {
+        setSelectedEmployee(null);
+        setEmployeeSearch("");
+        setSelectedOutletIds([]);
+        setOutletSearch("");
+        setOutletEmpTypes({});
+        setDefaultOutlet(null);
+        setSelectedMenu([]);
+        setMenuSearch("");
+        setMenuPermissions({});
+        setAdvanceSwitches({});
+        setActivePermissionMenuId(null);
     };
-
-    const toggleOutletMenus = (id) => {
-        setActiveOutletId((prev) => (prev === id ? null : id));
-        setShowConfigurationMenus(false);
-    };
-
-    const [showModal, setShowModal] = useState(false);
-
-    const handleModalClose = () => setShowModal(false);
-    const handleModalShow = () => setShowModal(true);
-    const [selectedMenu, setSelectedMenu] = useState(null);
-    const [menuDataMap, setMenuDataMap] = useState({});
-
-    const handlePermissionChange = (perm) => {
-        setSelectedMenu((prev) => ({
-            ...prev,
-            [perm]: !prev[perm],
-        }));
-    };
-
-    const handleInputChange = (field, value) => {
-        setSelectedMenu((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-    const handleModalSave = () => {
-        setMenuDataMap((prev) => ({
-            ...prev,
-            [selectedMenu.menuId]: {
-                write: selectedMenu.write || false,
-                delete: selectedMenu.delete || false,
-                export: selectedMenu.export || false,
-                import: selectedMenu.import || false,
-                print: selectedMenu.print || false,
-                approve: selectedMenu.approve || false,
-                printLimit: selectedMenu.printLimit || '',
-                printCount: selectedMenu.printCount || '',
-            },
-        }));
-
-        handleModalClose();
-    };
-
-
-
 
     return (
         <>
@@ -1053,190 +1316,510 @@ const Employee = () => {
                 onHide={handleAccessClose}
                 backdrop="static"
                 placement="end"
-                className="custom-offcanvass"
+                className="emp-offcanvas"
             >
                 <Offcanvas.Header closeButton>
                     <div className="w-100 text-center">
                         <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
-                            Employee Access
-                        </Offcanvas.Title>
-                    </div>
-                </Offcanvas.Header>
-                <Offcanvas.Body>
-                    <div className="d-flex" style={{ minHeight: "100vh" }}>
-                        <div className="flex-grow-1 p-4">
-                            {isSidebarOpen && showConfigurationMenus && (
-                                <div className="mb-3 ms-4">
-                                    <div className="d-flex flex-wrap gap-2">
-                                        {configurationModule?.menus?.map((menu) => (
-                                            <div key={menu.menuId}>
-                                                <Button
-                                                    variant="warning"
-                                                    onClick={() => handleMenuClick(menu)}
-                                                >
-                                                    {menu.menuName}
-                                                </Button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {isSidebarOpen && !showConfigurationMenus && activeOutletId !== null && (
-                                <div className="mb-3 ms-4">
-                                    <div className="d-flex flex-wrap gap-2">
-                                        {restaurantModule?.menus?.map((menu) => (
-                                            <div key={menu.menuId}>
-                                                <Button
-                                                    variant="warning"
-                                                    onClick={() => handleMenuClick(menu)}
-                                                >
-                                                    {menu.menuName}
-                                                </Button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div
-                            className="bg-light p-2 d-flex flex-column"
-                            style={{
-                                width: isSidebarOpen ? "240px" : "72px",
-                                transition: "width 0.3s",
-                                minHeight: "100vh",
-                                borderLeft: "1px solid #dee2e6",
-                            }}
-                        >
-                            <div
-                                className="d-flex align-items-center justify-content-center mb-3"
-                                style={{ cursor: "pointer", height: "48px" }}
-                                onClick={toggleSidebar}
-                            >
-                                <RxHamburgerMenu size={24} />
-                            </div>
-                            {configurationModule && (
+                            Add Outlet Assignment for Employees
+                            {selectedEmployee && (
                                 <>
-                                    <div
-                                        className="d-flex align-items-center mb-2 px-2 py-2 rounded"
-                                        style={{
-                                            backgroundColor: "#eaf1fb",
-                                            cursor: "pointer",
-                                            height: "48px",
-                                        }}
-                                        onClick={toggleConfigurationMenus}
-                                    >
-                                        <FaTools className="text-success" size={20} />
-                                        {isSidebarOpen && (
-                                            <span className="ms-3 fw-semibold text-success">
-                                                {configurationModule.moduleName}
+                                    {' '}|{' '}
+                                    <span style={{ color: 'orange' }}>{selectedEmployee.name}</span>
+                                    {selectedEmployee.defaultOutletName && (
+                                        <>
+                                            {' '}|{' '}
+                                            <span style={{ color: 'green' }}>
+                                                {selectedEmployee.defaultOutletName}
                                             </span>
-                                        )}
-                                    </div>
+                                        </>
+                                    )}
                                 </>
                             )}
-                            {restaurantModule &&
-                                outlets.map((outlet) => (
-                                    <div key={outlet.outletID}>
+                        </Offcanvas.Title>
+
+                        {/* <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
+                            Add Outlet Assignment for Employees
+                            {selectedEmployee && (
+                                <>
+                                    {' '}|{' '}
+                                    <span style={{ color: 'orange' }}>{selectedEmployee.name}</span>
+                                    {accessData?.outlets?.find(o => o.isDefaultOutlet)?.outletName && (
+                                        <>
+                                            {' '}|{' '}
+                                            <span style={{ color: 'green' }}>
+                                                {accessData.outlets.find(o => o.isDefaultOutlet).outletName}
+                                            </span>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </Offcanvas.Title> */}
+
+                    </div>
+                </Offcanvas.Header>
+                <Offcanvas.Body className="d-flex flex-column" style={{ padding: 0, height: '100vh' }}>
+                    <div className="container-fluid h-100 d-flex flex-column">
+                        <div className="row flex-grow-1">
+                            <div className="col border">
+                                <div
+                                    style={{
+                                        width: '200px',
+                                        padding: '10px',
+                                        height: '490px',
+                                        overflowY: 'auto',
+                                    }}
+                                >
+                                    <div
+                                        className="d-flex align-items-center rounded-pill border px-3 py-1 mb-3"
+                                        style={{ backgroundColor: '#f5f5f5' }}
+                                    >
+                                        <CiSearch size={20} className="me-2 text-muted" />
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Search Employee"
+                                            value={employeeSearch}
+                                            onChange={(e) => setEmployeeSearch(e.target.value)}
+                                            className="border-0 bg-transparent shadow-none p-0"
+                                            style={{ height: '30px', flex: 1 }}
+                                        />
+                                        {employeeSearch && (
+                                            <button
+                                                onClick={() => setEmployeeSearch('')}
+                                                className="btn btn-sm btn-link p-0 ms-2"
+                                                style={{ textDecoration: 'none', fontSize: '18px', color: '#999' }}
+                                                type="button"
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+                                    </div>
+                                    {filteredEmployeeData?.map((emp) => (
                                         <div
-                                            className="d-flex align-items-center mb-2 px-2 py-2 rounded"
+                                            key={emp.employeeID}
+                                            onClick={() => handleEmployeeSelect(emp)}
+                                            className="d-flex align-items-center gap-2 px-2 py-2 mb-1 rounded"
                                             style={{
-                                                backgroundColor: "#f0f8ff",
-                                                cursor: "pointer",
-                                                height: "48px",
+                                                cursor: 'pointer',
+                                                backgroundColor:
+                                                    selectedEmployee?.employeeID === emp.employeeID ? '#fff3cd' : '',
                                             }}
-                                            onClick={() => toggleOutletMenus(outlet.outletID)}
                                         >
-                                            <FaHotel className="text-primary" size={18} />
-                                            {isSidebarOpen && (
-                                                <div className="ms-3">
-                                                    <div
-                                                        className="fw-semibold text-primary"
-                                                        style={{ fontSize: "0.95rem" }}
+                                            <div className="d-flex align-items-center">
+                                                {selectedEmployee?.employeeID === emp.employeeID && (
+                                                    <span
+                                                        style={{
+                                                            color: 'orange',
+                                                            fontWeight: 'bold',
+                                                            fontSize: '20px',
+                                                        }}
+                                                        className="me-2"
                                                     >
-                                                        {outlet.outletName}
-                                                    </div>
-                                                    <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                                        {restaurantModule.moduleName}
-                                                    </div>
+                                                        |
+                                                    </span>
+                                                )}
+                                                <img
+                                                    src={
+                                                        emp.photo
+                                                            ? `${import.meta.env.VITE_IMG_BASE_URL}/${emp.photo}`
+                                                            : 'src/assets/person.png'
+                                                    }
+                                                    alt={emp.name}
+                                                    width="45"
+                                                    height="45"
+                                                    className="rounded-circle"
+                                                    style={{ objectFit: 'cover' }}
+                                                />
+                                            </div>
+                                            <div style={{ lineHeight: '1.2' }}>
+                                                <div className="fw-semibold">{emp.name}</div>
+                                                <div className="text-muted small">{emp.designation}</div>
+                                                <div className="text-muted small">{emp.empCode}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="col border">
+                                <div
+                                    style={{
+                                        width: '450px',
+                                        padding: '10px',
+                                        height: '504px',
+                                        overflowY: 'auto',
+                                    }}
+                                >
+                                    <div
+                                        className="d-flex align-items-center rounded-pill border px-3 py-1 mb-3"
+                                        style={{ backgroundColor: '#f5f5f5' }}
+                                    >
+                                        <CiSearch size={20} className="me-2 text-muted" />
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Search Outlet"
+                                            value={outletSearch}
+                                            onChange={(e) => setOutletSearch(e.target.value)}
+                                            className="border-0 bg-transparent shadow-none p-0"
+                                            style={{ height: '30px', flex: 1 }}
+                                        />
+                                        {outletSearch && (
+                                            <button
+                                                onClick={() => setOutletSearch('')}
+                                                className="btn btn-sm btn-link p-0 ms-2"
+                                                style={{ textDecoration: 'none', fontSize: '18px', color: '#999' }}
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+                                    </div>
+                                    {filteredOutletData?.map((outlet, index) => (
+                                        <div
+                                            key={outlet.outletId}
+                                            className="d-flex align-items-center justify-content-between px-3 py-2 mb-2 rounded border"
+                                        >
+                                            <div className="d-flex align-items-start gap-2" style={{ width: '35%' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    className="form-check-input mt-1"
+                                                    checked={selectedOutletIds.includes(outlet.outletId)}
+                                                    onChange={(e) => {
+                                                        const updated = e.target.checked
+                                                            ? [...selectedOutletIds, outlet.outletId]
+                                                            : selectedOutletIds.filter(id => id !== outlet.outletId);
+                                                        setSelectedOutletIds(updated);
+                                                    }}
+                                                />
+                                                <div>
+                                                    <div className="fw-semibold">{outlet.outletName}</div>
+                                                    <div className="text-muted small">{outlet.channelName}</div>
                                                 </div>
+                                            </div>
+                                            <div style={{ width: '40%' }}>
+                                                <Form.Select
+                                                    size="sm"
+                                                    value={outletEmpTypes[outlet.outletId] || ''}
+                                                    onChange={(e) =>
+                                                        setOutletEmpTypes((prev) => ({
+                                                            ...prev,
+                                                            [outlet.outletId]: e.target.value,
+                                                        }))
+                                                    }
+                                                >
+                                                    <option value="">Select Employee Type</option>
+                                                    {employeeTypeData?.map((item) => (
+                                                        <option key={item.empTypeId} value={item.empTypeId}>
+                                                            {item.empTypeName}
+                                                        </option>
+                                                    ))}
+                                                </Form.Select>
+
+                                            </div>
+                                            <div style={{ width: '10%', textAlign: 'end' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="defaultOutlet"
+                                                    className="form-check-input"
+                                                    checked={defaultOutlet === outlet.outletId}
+                                                    onChange={() => handleDefaultChange(outlet.outletId)}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="col border">
+                                <div
+                                    style={{
+                                        width: '300px',
+                                        padding: '10px',
+                                        height: '490px',
+                                        overflowY: 'auto',
+                                    }}
+                                >
+                                    <>
+                                        <div
+                                            className="d-flex align-items-center rounded-pill border px-3 py-1 mb-3"
+                                            style={{ backgroundColor: '#f5f5f5' }}
+                                        >
+                                            <CiSearch size={20} className="me-2 text-muted" />
+                                            <Form.Control
+                                                type="text"
+                                                placeholder="Search Menu"
+                                                value={menuSearch}
+                                                onChange={(e) => setMenuSearch(e.target.value)}
+                                                className="border-0 bg-transparent shadow-none p-0"
+                                                style={{ height: '30px', flex: 1 }}
+                                            />
+                                            {menuSearch && (
+                                                <button
+                                                    onClick={() => setMenuSearch('')}
+                                                    className="btn btn-sm btn-link p-0 ms-2"
+                                                    style={{ textDecoration: 'none', fontSize: '18px', color: '#999' }}
+                                                    type="button"
+                                                >
+                                                    ×
+                                                </button>
                                             )}
                                         </div>
+
+                                        {availableMenus
+                                            .filter(menu => menu.menuName.toLowerCase().includes(menuSearch.toLowerCase()))
+                                            .map(menu => (
+                                                <div
+                                                    key={menu.menuId}
+                                                    className="d-flex align-items-center justify-content-between px-3 py-2 mb-2 rounded border"
+                                                >
+                                                    <div className="fw-semibold">{menu.menuName}</div>
+                                                    <Form.Check
+                                                        type="switch"
+                                                        id={`menu-switch-${menu.menuId}`}
+                                                        checked={selectedMenu.includes(menu.menuId)}
+                                                        onChange={() => {
+                                                            if (selectedMenu.includes(menu.menuId)) {
+                                                                const updated = selectedMenu.filter(id => id !== menu.menuId);
+                                                                setSelectedMenu(updated);
+                                                                if (activePermissionMenuId === menu.menuId) {
+                                                                    setActivePermissionMenuId(null);
+                                                                }
+                                                            } else {
+                                                                const updated = [...selectedMenu, menu.menuId];
+                                                                setSelectedMenu(updated);
+                                                                setActivePermissionMenuId(menu.menuId);
+                                                                console.log("Checked Menu ID:", menu.menuId);
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            ))}
+                                    </>
+                                </div>
+                            </div>
+                            {selectedMenu.length > 0 && activePermissionMenuId && (
+                                <div className="col border">
+                                    <div style={{ width: '200px', padding: '10px' }}>
+                                        <h5>
+                                            Basic Permission -{' '}
+                                            {
+                                                availableMenus.find(menu => menu.menuId === activePermissionMenuId)?.menuName
+                                            }
+                                        </h5>
+                                        <div className="mb-3">
+                                            {['read', 'write', 'delete', 'import', 'export', 'print', 'approve'].map((perm) => (
+                                                <Form.Check
+                                                    key={perm}
+                                                    type="checkbox"
+                                                    id={`perm-${perm}`}
+                                                    label={perm.charAt(0).toUpperCase() + perm.slice(1)}
+                                                    checked={menuPermissions[activePermissionMenuId]?.[perm] || false}
+                                                    onChange={(e) =>
+                                                        setMenuPermissions((prev) => ({
+                                                            ...prev,
+                                                            [activePermissionMenuId]: {
+                                                                ...prev[activePermissionMenuId],
+                                                                [perm]: e.target.checked,
+                                                            },
+                                                        }))
+                                                    }
+                                                    className="mb-2"
+                                                />
+                                            ))}
+                                        </div>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Print Limit</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                min={0}
+                                                value={menuPermissions[activePermissionMenuId]?.printLimit || ''}
+                                                onChange={(e) =>
+                                                    setMenuPermissions((prev) => ({
+                                                        ...prev,
+                                                        [activePermissionMenuId]: {
+                                                            ...prev[activePermissionMenuId],
+                                                            printLimit: parseInt(e.target.value) || 0,
+                                                        },
+                                                    }))
+                                                }
+                                            />
+                                        </Form.Group>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Print Count</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                min={0}
+                                                value={menuPermissions[activePermissionMenuId]?.printCount || ''}
+                                                onChange={(e) =>
+                                                    setMenuPermissions((prev) => ({
+                                                        ...prev,
+                                                        [activePermissionMenuId]: {
+                                                            ...prev[activePermissionMenuId],
+                                                            printCount: parseInt(e.target.value) || 0,
+                                                        },
+                                                    }))
+                                                }
+                                            />
+                                        </Form.Group>
+                                        {(() => {
+                                            const advancePermissions = menuData
+                                                ?.filter(item => item.menuId === activePermissionMenuId && item.parentActionName)
+                                                ?.map(item => ({
+                                                    parentActionId: item.parentActionId,
+                                                    parentActionName: item.parentActionName,
+                                                })) || [];
+
+                                            const uniqueAdvancePermissions = Object.values(
+                                                advancePermissions.reduce((acc, item) => {
+                                                    acc[item.parentActionId] = item;
+                                                    return acc;
+                                                }, {})
+                                            );
+
+                                            return (
+                                                <>
+                                                    {uniqueAdvancePermissions.length > 0 && <h5 className="mt-4">Advance Permission</h5>}
+                                                    {uniqueAdvancePermissions.map(({ parentActionId, parentActionName }) => {
+                                                        const parentKey = `${activePermissionMenuId}-${parentActionId}`;
+                                                        return (
+                                                            <div
+                                                                key={parentActionId}
+                                                                className="d-flex justify-content-between align-items-center mb-2"
+                                                            >
+                                                                <Form.Label className="mb-0">{parentActionName}</Form.Label>
+                                                                <Form.Check
+                                                                    type="switch"
+                                                                    id={`switch-${parentActionId}`}
+                                                                    checked={advanceSwitches[parentKey] || false}
+                                                                    onChange={(e) =>
+                                                                        setAdvanceSwitches((prev) => ({
+                                                                            ...prev,
+                                                                            [parentKey]: e.target.checked,
+                                                                        }))
+                                                                    }
+                                                                />
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </>
+                                            );
+                                        })()}
                                     </div>
-                                ))}
+                                </div>
+                            )}
+                            {selectedMenu.length > 0 && activePermissionMenuId && (
+                                <div className="col border">
+                                    <div
+                                        style={{
+                                            width: '200px',
+                                            padding: '10px',
+                                        }}
+                                    >
+                                        {(() => {
+                                            const parentActionMap = {};
+
+                                            menuData
+                                                ?.filter(item => item.menuId === activePermissionMenuId && item.parentActionName)
+                                                ?.forEach(item => {
+                                                    const parentId = item.parentActionId;
+                                                    if (!parentActionMap[parentId]) {
+                                                        parentActionMap[parentId] = {
+                                                            parentActionName: item.parentActionName,
+                                                            actions: [],
+                                                        };
+                                                    }
+                                                    parentActionMap[parentId].actions.push({
+                                                        actionId: item.actionId,
+                                                        actionName: item.actionName,
+                                                    });
+                                                });
+
+                                            const parentActionEntries = Object.entries(parentActionMap);
+                                            const visibleParents = parentActionEntries.filter(([parentId]) =>
+                                                advanceSwitches[`${activePermissionMenuId}-${parentId}`]
+                                            );
+
+                                            if (visibleParents.length === 0) return null;
+
+                                            return (
+                                                <>
+                                                    <h5>Internal Permission -</h5>
+                                                    {visibleParents.map(([parentId, { parentActionName, actions }]) => (
+                                                        <div key={parentId} className="mb-3">
+                                                            <h6 className="fw-semibold">{parentActionName}</h6>
+                                                            <div className="d-flex flex-column gap-2 ps-2">
+                                                                {actions.map((action) => {
+                                                                    const actionKey = `${activePermissionMenuId}-${parentId}-${action.actionId}`;
+                                                                    return (
+                                                                        <div
+                                                                            key={action.actionId}
+                                                                            className="d-flex justify-content-between align-items-center w-100"
+                                                                            style={{ maxWidth: '270px' }}
+                                                                        >
+                                                                            <Form.Label className="mb-0">{action.actionName}</Form.Label>
+                                                                            <Form.Check
+                                                                                type="switch"
+                                                                                id={`action-switch-${action.actionId}`}
+                                                                                checked={advanceSwitches[actionKey] || false}
+                                                                                onChange={(e) =>
+                                                                                    setAdvanceSwitches(prev => ({
+                                                                                        ...prev,
+                                                                                        [actionKey]: e.target.checked,
+                                                                                    }))
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                    <div className="d-flex justify-content-center mt-4">
-                        <Button type="submit" variant="warning">
-                            Save
-                        </Button>
+                        <div className="row mt-auto">
+                            <div className="col text-end p-3">
+                                <button className="btn btn-warning" onClick={handleAccess}>
+                                    {hasMappedOutlets ? "Update" : "Save"}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </Offcanvas.Body>
             </Offcanvas>
 
             <Modal
-                show={showModal}
-                onHide={handleModalClose}
-                size='lg'
-                backdrop='static'
+                show={showConfirm}
+                onHide={() => setShowConfirm(false)}
+                centered
             >
                 <Modal.Header closeButton>
-                    <Modal.Title className="w-100 text-center">
-                        {selectedMenu?.menuName || "Menu Details"}
-                    </Modal.Title>
+                    <Modal.Title>Confirm Default Outlet</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {selectedMenu && (
-                        <div className="mt-2 ms-3">
-                            <div className="d-flex flex-wrap gap-3">
-                                {["write", "delete", "export", "import", "print", "approve"].map((perm) => (
-                                    <div key={perm} className="form-check">
-                                        <input
-                                            type="checkbox"
-                                            className="form-check-input"
-                                            id={`${selectedMenu.menuId}-${perm}`}
-                                            checked={selectedMenu[perm] || false}
-                                            onChange={() => handlePermissionChange(perm)}
-                                        />
-                                        <label className="form-check-label" htmlFor={`${selectedMenu.menuId}-${perm}`}>
-                                            {perm}
-                                        </label>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="d-flex gap-3 mt-3">
-                                <div>
-                                    <label className="form-label">Print Limit</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={selectedMenu.printLimit || ''}
-                                        onChange={(e) => handleInputChange("printLimit", e.target.value)}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="form-label">Print Count</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={selectedMenu.printCount || ''}
-                                        onChange={(e) => handleInputChange("printCount", e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    Are you sure you want to set{' '}
+                    <strong>{outletData.find(o => o.outletId === pendingOutlet)?.outletName}</strong>{' '}
+                    as the default outlet instead of{' '}
+                    <strong>{outletData.find(o => o.outletId === defaultOutlet)?.outletName}</strong>?
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button type="submit" variant="warning" onClick={() => {
-                        handleModalSave();
-                        handleModalClose();
-                    }}>
-                        Save
+                    <Button variant="secondary" onClick={() => setShowConfirm(false)}>
+                        No
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            setDefaultOutlet(pendingOutlet);
+                            setPendingOutlet(null);
+                            setShowConfirm(false);
+                        }}
+                    >
+                        Yes
                     </Button>
                 </Modal.Footer>
             </Modal>
+
         </>
     );
 };

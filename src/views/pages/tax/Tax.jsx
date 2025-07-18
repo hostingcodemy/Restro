@@ -20,6 +20,7 @@ import { Spinner } from 'react-bootstrap';
 
 const Tax = () => {
 
+    const commonRef = useRef(null);
     const initialValues = {
         taxId: "",
         taxName: "",
@@ -29,7 +30,7 @@ const Tax = () => {
         restrictedFrom: "",
         restrictedTo: "",
     };
-   
+
     const initialImpValues = {
         File: "",
     };
@@ -67,10 +68,13 @@ const Tax = () => {
     };
 
     useEffect(() => {
+        if (setShow && commonRef.current) {
+            commonRef.current.focus();
+        }
         if (fetchCalled.current) return;
         fetchCalled.current = true;
         fetchTaxData();
-    }, []);
+    }, [setShow]);
 
     const handleChange = (name, value) => {
         setFormValues((prevValues) => ({
@@ -261,12 +265,12 @@ const Tax = () => {
             center: true,
             cell: (row) => (
                 <>
-                        <Link className="action-icon" onClick={() => handleEditClick(row)}>
-                            <FaRegEdit size={24} color="#87CEEB" />
-                        </Link>
-                        <Link className="action-icon" onClick={() => handleDeleteClick(row.taxId, row.taxName)}>
-                            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-                        </Link>
+                    <Link className="action-icon" onClick={() => handleEditClick(row)}>
+                        <FaRegEdit size={24} color="#87CEEB" title='Edit'/>
+                    </Link>
+                    <Link className="action-icon" onClick={() => handleDeleteClick(row.taxId, row.taxName)}>
+                        <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" title='Delete'/>
+                    </Link>
                 </>
             ),
         },
@@ -283,15 +287,15 @@ const Tax = () => {
                     onChange={(e) => setFilterText(e.target.value)}
                 />
             </Form>
-                <Button variant="info" onClick={handleExpoShow}>
-                    <CiExport size={20} /> Import
-                </Button>
-                <Button variant="success" onClick={downloadExcel}>
-                    <CiImport size={20} /> Export
-                </Button>
-                <Button variant="warning" onClick={handleShow}>
-                    <GoPlus size={20} /> Add
-                </Button>
+            <Button variant="info" onClick={handleExpoShow}>
+                <CiExport size={20} /> Import
+            </Button>
+            <Button variant="success" onClick={downloadExcel}>
+                <CiImport size={20} /> Export
+            </Button>
+            <Button variant="warning" onClick={handleShow}>
+                <GoPlus size={20} /> Add
+            </Button>
         </div>
     ), [filterText]);
 
@@ -460,7 +464,11 @@ const Tax = () => {
                 onHide={handleClose}
                 placement="end"
                 backdrop="false"
-                style={{ "--bs-offcanvas-width": "800px" }}
+                onEntered={() => {
+                    if (commonRef.current) {
+                        commonRef.current.focus();
+                    }
+                }}
             >
                 <Offcanvas.Header closeButton>
                     <div className="w-100 text-center">
@@ -473,10 +481,11 @@ const Tax = () => {
                     <Form className='h-90' onSubmit={handleSubmit}>
                         <InputGroup className="mb-4">
                             <InputGroup.Text id="taxName">
-                                <HiOutlineReceiptTax size={25} color='#ffc800' />
+                                <HiOutlineReceiptTax size={25} color='#ffc800' title='Tax name'/>
                             </InputGroup.Text>
                             <Form.Control
                                 name="taxName"
+                                ref={commonRef}
                                 value={formValues.taxName || ""}
                                 onChange={(e) => handleChange("taxName", e.target.value)}
                                 placeholder="Tax name"
@@ -488,7 +497,7 @@ const Tax = () => {
                         </InputGroup>
                         <InputGroup className="mb-4">
                             <InputGroup.Text id="taxRate">
-                                <MdOutlinePriceCheck size={25} color='#ffc800' />
+                                <MdOutlinePriceCheck size={25} color='#ffc800' title='Tax rate'/>
                             </InputGroup.Text>
                             <Form.Control
                                 name="taxRate"
@@ -507,7 +516,7 @@ const Tax = () => {
                         </InputGroup>
                         <InputGroup className="mb-4">
                             <InputGroup.Text id="fromAmount">
-                                <MdOutlinePriceCheck size={25} color='#ffc800' />
+                                <MdOutlinePriceCheck size={25} color='#ffc800' title='From amount'/>
                             </InputGroup.Text>
                             <Form.Control
                                 name="fromAmount"
@@ -526,7 +535,7 @@ const Tax = () => {
                         </InputGroup>
                         <InputGroup className="mb-4">
                             <InputGroup.Text id="toAmount">
-                                <MdOutlinePriceCheck size={25} color='#ffc800' />
+                                <MdOutlinePriceCheck size={25} color='#ffc800' title='To amount'/>
                             </InputGroup.Text>
                             <Form.Control
                                 name="toAmount"
@@ -545,7 +554,7 @@ const Tax = () => {
                         </InputGroup>
                         <InputGroup className="mb-4">
                             <InputGroup.Text id="restrictedFrom">
-                                <MdOutlinePriceCheck size={25} color='#ffc800' />
+                                <MdOutlinePriceCheck size={25} color='#ffc800' title='Restricted from'/>
                             </InputGroup.Text>
                             <Form.Control
                                 name="restrictedFrom"
@@ -564,7 +573,7 @@ const Tax = () => {
                         </InputGroup>
                         <InputGroup className="mb-4">
                             <InputGroup.Text id="restrictedTo">
-                                <MdOutlinePriceCheck size={25} color='#ffc800' />
+                                <MdOutlinePriceCheck size={25} color='#ffc800' title='Restricted To'/>
                             </InputGroup.Text>
                             <Form.Control
                                 name="restrictedTo"

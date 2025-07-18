@@ -1,152 +1,38 @@
-// import axios from "axios";
-
-// const apiBaseURL = import.meta.env.VITE_BASE_URL;
-
-// //Create Axios instance
-// const api = axios.create({
-//     baseURL: apiBaseURL
-// });
-
-// //Function to get token from Storage
-// const getAccessToken = () => localStorage.getItem('accessToken');
-// const getRefreshToken = () => localStorage.getItem('refreshToken');
-
-// //Function to remove tokens and redirect to login
-
-// const handleLogout = () => {
-//     localStorage.removeItem('accessToken');
-//     localStorage.removeItem('refreshToken');
-//     window.location.href = '/';
-// };
-
-// let isRefreshing = false;
-// let refreshSubscribers = [];
-
-// //Function to subscribe to token refresh
-// const subscribeTokenRefresh = (callback) => {
-//     refreshSubscribers.push(callback);
-// }
-
-// //Function to subscribe all the tokens with new Token
-// const onRefreshed = (newToken) => {
-//     refreshSubscribers.forEach((callback) => callback(newToken));
-//     refreshSubscribers = [];
-// }
-
-// //List of endpoints where token is NOT required
-// const noAuthRoutes = ['/adminauth/login'];
-
-// api.interceptors.request.use(
-//     (config) => {
-//         if (!noAuthRoutes.includes(config.url)) {
-//             const token = getAccessToken();
-//             if (token) {
-//                 config.headers.Authorization = `Bearer ${token}`
-//             }
-//         }
-//         return config;
-//     },
-//     (error) => Promise.reject(error)
-// );
-
-// api.interceptors.response.use(
-//     (response) => {
-//         const contentType = response.headers['content-type'];
-
-//         if (!contentType?.includes('application/json')) {
-//             return response;
-//         }
-
-//         if (!response.data?.isValid) {
-//             alert(response.data?.errorMessage || 'Something went wrong');
-//             return Promise.reject(new Error(response.data?.errorMessage || 'Invalid response'));
-//         }
-
-//         return response;
-//     },
-//     async (error) => {
-//         const originalRequest = error.config;
-
-//         if (error.response?.status === 401 &&
-//             error.response?.data === 'Token Expired' &&
-//             !originalRequest._retry) {
-
-//             originalRequest._retry = true;
-
-//             if (!isRefreshing) {
-//                 isRefreshing = true;
-//                 try {
-//                     const refreshToken = getRefreshToken();
-//                     const accessToken = getAccessToken();
-
-//                     if (!refreshToken) {
-//                         handleLogout();
-//                         return Promise.reject(new Error('No refresh token available'));
-//                     }
-
-//                     const refreshResponse = await api.post("adminauth/refresh-token",
-
-
-//                         { refreshToken, accessToken }, {
-//                         headers: {
-//                             Authorization: `Bearer ${accessToken}`,
-//                         },
-//                     });
-//                     console.log(refreshResponse, 'kk');
-//                     const newAccessToken = refreshResponse.data.data.accessToken;
-//                     console.log(newAccessToken, 'hh');
-
-//                     localStorage.setItem('accessToken', newAccessToken);
-//                     onRefreshed(newAccessToken);
-//                 }
-//                 catch (refreshError) {
-//                     if (refreshError.response?.status === 401) {
-//                         handleLogout();
-//                     }
-//                     return Promise.reject(refreshError);
-//                 }
-//                 finally {
-//                     isRefreshing = false;
-//                 }
-//             }
-
-//             return new Promise((resolve) => {
-//                 subscribeTokenRefresh((newToken) => {
-//                     originalRequest.headers.Authorization = `Bearer ${newToken}`;
-//                     resolve(api(originalRequest));
-//                 });
-//             });
-//         }
-
-//         return Promise.reject(error);
-//     }
-// );
-
-// export default api;
-
-
-
 import axios from "axios";
+import { decryptData } from "./secureStorage";
 
 const apiBaseURL = import.meta.env.VITE_BASE_URL;
 
-// Create Axios instance
 const api = axios.create({
     baseURL: apiBaseURL
 });
 
 // Token getters
-const getAccessToken = () => localStorage.getItem('accessToken');
-const getRefreshToken = () => localStorage.getItem('refreshToken');
+ const getAccessToken = () => {
+  const encryptedToken = localStorage.getItem('accessToken');
+  return encryptedToken ? decryptData(encryptedToken) : null;
+};
 
-// Logout handler
+ const getRefreshToken = () => {
+  const encryptedToken = localStorage.getItem('refreshToken');
+  return encryptedToken ? decryptData(encryptedToken) : null;
+};
+
 const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    window.location.href = '/';
+    localStorage.removeItem('channelId');
+    localStorage.removeItem('outletId');
+    localStorage.removeItem('authChannels');
+    localStorage.removeItem('currentOutletId');
+    localStorage.removeItem('navigateTable');
+    localStorage.removeItem('tableLayout');
+    localStorage.removeItem('outletIds');
+    localStorage.removeItem("tableChairs");
+    localStorage.removeItem('coreui-free-react-admin-template-theme');
+    window.location.href = "/login";
 };
 
-// Token refresh handling
 let isRefreshing = false;
 let refreshSubscribers = [];
 
@@ -155,11 +41,11 @@ const subscribeTokenRefresh = (callback) => {
 };
 
 const onRefreshed = (newToken) => {
-    refreshSubscribers.forEach(callback => callback(newToken));
+    refreshSubscribers.forEach((callback) => callback(newToken));
     refreshSubscribers = [];
 };
 
-const noAuthRoutes = ['/adminauth/login'];
+const noAuthRoutes = ["/adminauth/login"];
 
 api.interceptors.request.use(
     (config) => {
@@ -176,15 +62,12 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
     (response) => {
-        const contentType = response.headers['content-type'];
-
-        if (!contentType?.includes('application/json')) {
-            return response;
-        }
+        const contentType = response.headers["content-type"];
+        if (!contentType?.includes("application/json")) return response;
 
         if (response.data && !response.data.isValid) {
-            alert(response.data?.errorMessage || 'Something went wrong');
-            return Promise.reject(new Error(response.data?.errorMessage || 'Invalid response'));
+            alert(response.data?.errorMessage || "Something went wrong");
+            return Promise.reject(new Error(response.data?.errorMessage || "Invalid response"));
         }
 
         return response;
@@ -192,52 +75,16 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        if (
+        const isTokenExpired =
             error.response?.status === 401 &&
-            error.response?.data === 'Token Expired' &&
-            !originalRequest._retry
-        ) {
-            originalRequest._retry = true;
+            error.response?.statusText === "Unauthorized" &&
+            !originalRequest._retry;
 
-            if (!isRefreshing) {
-                isRefreshing = true;
-                try {
-                    const refreshToken = getRefreshToken();
-                    const accessToken = getAccessToken();
+        if (!isTokenExpired) return Promise.reject(error);
 
-                    if (!refreshToken) {
-                        handleLogout();
-                        return Promise.reject(new Error('No refresh token available'));
-                    }
+        originalRequest._retry = true;
 
-                    const refreshResponse = await api.post(
-                        "adminauth/refresh-token",
-                        { refreshToken, accessToken },
-                        {
-                            headers: {
-                                Authorization: `Bearer ${accessToken}`,
-                            },
-                        }
-                    );
-
-                    const newAccessToken = refreshResponse.data.data.accessToken;
-
-                    localStorage.setItem('accessToken', newAccessToken);
-                    onRefreshed(newAccessToken);
-                 
-                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-                    return api(originalRequest);
-
-                } catch (refreshError) {
-                    if (refreshError.response?.status === 401) {
-                        handleLogout();
-                    }
-                    return Promise.reject(refreshError);
-                } finally {
-                    isRefreshing = false;
-                }
-            }
-          
+        if (isRefreshing) {
             return new Promise((resolve) => {
                 subscribeTokenRefresh((newToken) => {
                     originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -246,7 +93,45 @@ api.interceptors.response.use(
             });
         }
 
-        return Promise.reject(error);
+        isRefreshing = true;
+
+        try {
+            const refreshToken = getRefreshToken();
+            const oldAccessToken = getAccessToken();
+
+            if (!refreshToken) {
+                handleLogout();
+                return Promise.reject(new Error("No refresh token available"));
+            }
+
+            const refreshResponse = await axios.post(
+                `${apiBaseURL}adminauth/refresh-token`,
+                { refreshToken, accessToken: oldAccessToken },
+                {
+                    headers: {
+                        Authorization: `Bearer ${oldAccessToken}`
+                    }
+                }
+            );
+
+            const newAccessToken = refreshResponse.data?.data?.accessToken;
+
+            if (newAccessToken) {
+                localStorage.setItem("accessToken", newAccessToken);
+                onRefreshed(newAccessToken);
+
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                return api(originalRequest);
+            } else {
+                handleLogout();
+                return Promise.reject(new Error("Failed to get new access token"));
+            }
+        } catch (refreshError) {
+            handleLogout();
+            return Promise.reject(refreshError);
+        } finally {
+            isRefreshing = false;
+        }
     }
 );
 

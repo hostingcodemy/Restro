@@ -15,7 +15,6 @@ import { toast, ToastContainer } from 'react-toastify';
 const ItemTypes = {
     TABLE: "table",
 };
-
 const groupTablesBySection = (tables) => {
     return tables.reduce((acc, table) => {
         const section = table.sectionName || "Unassigned";
@@ -41,14 +40,14 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
     const userDetails = authChannels[0]?.adminDetails;
 
     const groupedTables = groupTablesBySection(
-        tableList.filter((t) => !droppedTables.find((dt) => dt.tableId === t.tableId))
+        tableList?.filter((t) => !droppedTables?.find((dt) => dt?.tableId === t?.tableId))
     );
 
     const [, dropAvailableRef] = useDrop({
         accept: ItemTypes.TABLE,
         drop: (item) => {
             if (item.from === "dropped") {
-                setDroppedTables((prev) => prev.filter((t) => t.tableId !== item.tableId));
+                setDroppedTables((prev) => prev.filter((t) => t?.tableId !== item.tableId));
             }
         },
     });
@@ -65,10 +64,10 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
     });
 
     const validateName = (name) => {
-        const exists = tableList.some(
+        const exists = tableList?.some(
             (table) =>
-                !droppedTables.find((dropped) => dropped.tableId === table.tableId) &&
-                table.tableName.toLowerCase() === name.toLowerCase()
+                !droppedTables.find((dropped) => dropped.tableId === table?.tableId) &&
+                table?.tableName.toLowerCase() === name.toLowerCase()
         );
         setNameError(exists ? "Table name already exists." : "");
     };
@@ -88,8 +87,7 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
         const payload = {
             tableId: droppedTables.map(t => t.tableId),
             sectionId: selectedSection,
-            // outletId: outletId,
-            outletId: "a546dd1d-9963-47e4-aa92-47ee1d2770f1",
+            outletId: outletId,
             name: mergeName,
             orderTaker: userId,
             pax: mergePax,
@@ -133,8 +131,8 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
         });
 
         const facilityColorMap = {};
-        facility.forEach(facility => {
-            facilityColorMap[facility.facilityStatusId] = facility.colour;
+        facility?.forEach(facility => {
+            facilityColorMap[facility?.facilityStatusId] = facility?.colour;
         });
 
         return (
@@ -142,7 +140,7 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
                 ref={dragRef}
                 style={{
                     padding: "8px 12px",
-                    background: facilityColorMap[table.facilityStatusId] || "black",
+                    background: facilityColorMap[table?.facilityStatusId] || "black",
                     boxShadow: "4px 4px 4px #e0e0e0",
                     borderRadius: "4px",
                     cursor: "grab",
@@ -153,7 +151,7 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
                     fontWeight: "600",
                 }}
             >
-                {table.tableName}
+                {table?.tableName}
             </div>
         );
     };
@@ -232,14 +230,14 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
 
                                     <div className="TableSearch"><PiMicrophoneThin size={20} color="#ffc300" /></div>
                                 </div>
-                                {Object.keys(groupedTables).map((section) => (
+                                {Object.keys(groupedTables)?.map((section) => (
                                     <div key={section} style={{ marginBottom: "1rem" }}>
                                         <h5 className="mb-2">{section}</h5>
                                         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                                             {groupedTables[section]
-                                                .filter((t) => t.tableName.toLowerCase().includes(searchTerm))
-                                                .map((table) => (
-                                                    <DraggableTable key={table.tableId} table={{ ...table, from: "available" }} />
+                                                ?.filter((t) => t?.tableName?.toLowerCase().includes(searchTerm))
+                                                ?.map((table) => (
+                                                    <DraggableTable key={table?.tableId} table={{ ...table, from: "available" }} />
                                                 ))}
                                         </div>
                                     </div>
@@ -270,8 +268,8 @@ const MergeModal = ({ tableList, setIsMergeTable, facility, section, fetchTableD
                                     Drop Tables Here
                                 </h5>
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", height: "80%" }}>
-                                    {droppedTables.map((table) => (
-                                        <DraggableTable key={table.tableId} table={{ ...table, from: "dropped" }} />
+                                    {droppedTables?.map((table) => (
+                                        <DraggableTable key={table?.tableId} table={{ ...table, from: "dropped" }} />
                                     ))}
                                 </div>
 

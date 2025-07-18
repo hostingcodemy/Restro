@@ -6,7 +6,9 @@ import { MdDeleteForever, MdOutlineDiscount } from "react-icons/md";
 import {
   FaRegEdit, FaTrash,
   FaTimesCircle,
-  FaExclamationTriangle, FaRegFile
+  FaExclamationTriangle,
+  FaRegFile,
+  FaMicrophone,
 } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
 import { Link } from 'react-router-dom';
@@ -21,6 +23,8 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const DiscountList = () => {
 
+  const commonRef = useRef(null);
+
   const initialValues = {
     discountID: "",
     discountName: "",
@@ -30,6 +34,7 @@ const DiscountList = () => {
     prefix: "",
     onGrossOrNet: "",
     discountOn: "",
+    isActive: true,
   };
 
   const discountOption = [
@@ -241,12 +246,12 @@ const DiscountList = () => {
       center: true,
       cell: (row) => (
         <>
-            <Link className="action-icon" onClick={() => handleEditClick(row)}>
-              <FaRegEdit size={24} color="#87CEEB" />
-            </Link>
-            <Link className="action-icon" onClick={() => handleDeleteClick(row.discountID, row.discountName)}>
-              <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-            </Link>
+          <Link className="action-icon" onClick={() => handleEditClick(row)}>
+            <FaRegEdit size={24} color="#87CEEB" title='Edit' />
+          </Link>
+          <Link className="action-icon" onClick={() => handleDeleteClick(row.discountID, row.discountName)}>
+            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" title='Delete' />
+          </Link>
         </>
       ),
     },
@@ -254,7 +259,7 @@ const DiscountList = () => {
 
   const subHeaderComponentMemo = useMemo(() => (
     <div className="d-flex justify-content-end gap-2 align-items-center w-100">
-      <Form className="d-flex">
+      <div className="position-relative ">
         <Form.Control
           type="search"
           placeholder="Search..."
@@ -262,18 +267,29 @@ const DiscountList = () => {
           aria-label="Search"
           onChange={(e) => setFilterText(e.target.value)}
         />
-      </Form>
-        <Button variant="info" onClick={handleExpoShow}>
-          <CiExport size={20} /> Import
-        </Button>
-        <Button variant="success">
-          <CiImport size={20} /> Export
-        </Button>
-        <Button variant="warning" onClick={handleShow}>
-          <GoPlus size={20} /> Add
-        </Button>
+        <FaMicrophone
+          size={20}
+          color="#ffc800"
+          style={{
+            position: "absolute",
+            right: "15px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer"
+          }}
+        />
+      </div>
+      <Button variant="info" onClick={handleExpoShow}>
+        <CiExport size={20} /> Import
+      </Button>
+      <Button variant="success">
+        <CiImport size={20} /> Export
+      </Button>
+      <Button variant="warning" onClick={handleShow}>
+        <GoPlus size={20} /> Add
+      </Button>
     </div>
-  ), [ filterText]);
+  ), [filterText]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -289,7 +305,7 @@ const DiscountList = () => {
 
     const payload = {
       discountName: formValues.discountName,
-      discountRate: formValues.discountRate,
+      discountRate: Number(formValues.discountRate),
       discountStart: discountStartUTC,
       discountEnd: discountEndUTC,
       prefix: formValues.prefix,
@@ -429,7 +445,11 @@ const DiscountList = () => {
         onHide={handleClose}
         placement="end"
         backdrop="false"
-        style={{ "--bs-offcanvas-width": "800px" }}
+        onEntered={() => {
+          if (commonRef.current) {
+            commonRef.current.focus();
+          }
+        }}
       >
         <Offcanvas.Header closeButton>
           <div className="w-100 text-center">
@@ -442,10 +462,11 @@ const DiscountList = () => {
           <Form className='h-90' onSubmit={handleSubmit}>
             <InputGroup className="mb-4">
               <InputGroup.Text id="discountName">
-                <MdOutlineDiscount size={25} color='#ffc800' />
+                <MdOutlineDiscount size={25} color='#ffc800' title='Discount Name'/>
               </InputGroup.Text>
               <Form.Control
                 name="discountName"
+                ref={commonRef}
                 value={formValues.discountName || ""}
                 onChange={(e) =>
                   handleChange("discountName", e.target.value)
@@ -460,7 +481,7 @@ const DiscountList = () => {
             </InputGroup>
             <InputGroup className="mb-4">
               <InputGroup.Text id="discountRate">
-                <CiDiscount1 size={25} color='#ffc800' />
+                <CiDiscount1 size={25} color='#ffc800' title='Discount Rate'/>
               </InputGroup.Text>
               <Form.Control
                 name="discountRate"
@@ -481,7 +502,7 @@ const DiscountList = () => {
             </InputGroup>
             <InputGroup className="mb-4">
               <InputGroup.Text id="discountStart">
-                <CiClock1 size={25} color='#ffc800' />
+                <CiClock1 size={25} color='#ffc800' title='Discount start date & time'/>
               </InputGroup.Text>
               <DatePicker
                 className='form-control custom-datepicker'
@@ -497,7 +518,7 @@ const DiscountList = () => {
             </InputGroup>
             <InputGroup className="mb-4">
               <InputGroup.Text id="discountEnd">
-                <CiClock1 size={25} color='#ffc800' />
+                <CiClock1 size={25} color='#ffc800' title='Discount end date & time'/>
               </InputGroup.Text>
               <DatePicker
                 className='form-control custom-datepicker'
@@ -513,7 +534,7 @@ const DiscountList = () => {
             </InputGroup>
             <InputGroup className="mb-4">
               <InputGroup.Text id="discountOn">
-                <CiDiscount1 size={25} color='#ffc800' />
+                <CiDiscount1 size={25} color='#ffc800' title='Discount type'/>
               </InputGroup.Text>
               <Form.Select
                 name="discountOn"
@@ -539,7 +560,7 @@ const DiscountList = () => {
             </InputGroup>
             <InputGroup className="mb-4">
               <InputGroup.Text id="prefix">
-                <HiOutlineRectangleGroup size={25} color='#ffc800' />
+                <HiOutlineRectangleGroup size={25} color='#ffc800' title='Prefix'/>
               </InputGroup.Text>
               <Form.Select
                 name="prefix"
@@ -565,7 +586,7 @@ const DiscountList = () => {
             </InputGroup>
             <InputGroup className="mb-4">
               <InputGroup.Text id="onGrossOrNet">
-                <CiDiscount1 size={25} color='#ffc800' />
+                <CiDiscount1 size={25} color='#ffc800' title='Gross or Net'/>
               </InputGroup.Text>
               <Form.Select
                 name="onGrossOrNet"
@@ -590,37 +611,16 @@ const DiscountList = () => {
               {errors.onGrossOrNet && <span className="error-msg">{errors.onGrossOrNet}</span>}
             </InputGroup>
             <InputGroup className="mb-3">
-              <InputGroup.Text id="isActive">
+              <InputGroup.Text>
                 <TbHandClick size={25} color="#ffc800" />
               </InputGroup.Text>
               <Form.Check
                 type="checkbox"
-                id="custom-checkbox"
                 label="IsActive"
-                name="isActive"
-
+                checked={formValues.isActive}
+                onChange={(e) => handleChange("isActive", e.target.checked)}
                 className="ms-3"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  fontSize: '1rem',
-                }}
-                custom="true"
-              >
-                <Form.Check.Input
-                  type="checkbox"
-                  checked={formValues.isActive}
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    cursor: "pointer",
-                    marginRight: "8px",
-                  }}
-                />
-                <Form.Check.Label htmlFor="custom-checkbox">
-                  IsActive
-                </Form.Check.Label>
-              </Form.Check>
+              />
             </InputGroup>
             <div className="d-flex justify-content-center mt-4">
               <Button type="submit" variant="warning">

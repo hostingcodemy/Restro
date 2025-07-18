@@ -14,6 +14,7 @@ import CIcon from '@coreui/icons-react'
 import avatar8 from './../../assets/images/avatars/8.jpg'
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/AxiosInterceptor';
+import { toast, ToastContainer } from 'react-toastify';
 
 const AppHeaderDropdown = () => {
 
@@ -41,6 +42,8 @@ const AppHeaderDropdown = () => {
       localStorage.removeItem('navigateTable');
       localStorage.removeItem('tableLayout');
       localStorage.removeItem('outletIds');
+      localStorage.removeItem('tableChairs');
+      localStorage.removeItem('currentTableId');
       localStorage.removeItem('coreui-free-react-admin-template-theme');
 
       navigate('/login');
@@ -66,15 +69,7 @@ const AppHeaderDropdown = () => {
   // };
 
 
-  const logout = async () => {
-    try {
-      const logout = await api.post("adminauth/logout");
-
-    } catch (error) {
-      console.log(error);
-
-    }
-  }
+ 
 
   return (
     <>

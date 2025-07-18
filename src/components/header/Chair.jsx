@@ -4,7 +4,7 @@ import { useDrag } from "react-dnd";
 
 const ItemTypes = { CHAIR: "chair" };
 
-const Chair = ({ table, chair, fromTableId, dragEnabled }) => {
+const Chair = ({ table, chair, fromTableId, dragEnabled,isMarked  }) => {
   const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const Chair = ({ table, chair, fromTableId, dragEnabled }) => {
   return (
     <div
       ref={drag}
-      className={`chair ${animate ? "chair-drop-animate" : ""}`}
+      className={`chair ${isMarked ? "marked" : ""} ${animate ? "chair-drop-animate" : ""}`}
       onMouseDown={(e) => e.stopPropagation()}
       style={{
         width: "20px",

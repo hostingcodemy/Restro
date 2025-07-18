@@ -51,15 +51,16 @@ const TablePage = () => {
     const initialValues = {
         tableId: "",
         tableName: "",
-        capacity: "",
         outletId: "",
+        capacity: "",
+        addonCapacity: "",
+        facilityStatusId: "",
         direction: "",
         type: "",
+        isActive: true,
         serial: "",
         tableShapes: "",
-        section: "",
-        openTable: false,
-        isActive: false,
+        sectionId: ""
     }
 
     const [formValues, setFormValues] = useState(initialValues);
@@ -70,6 +71,8 @@ const TablePage = () => {
     const [outletData, setOutletData] = useState([]);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [tableToDelete, settableToDelete] = useState(null);
+    const [tableTypeData, setTableTypeData] = useState([]);
+    const [facilityData, setFacilityData] = useState([]);
     const handleExpoClose = () => setExpoShow(false);
     const handleExpoShow = () => setExpoShow(true);
     const handleClose = () => {
@@ -77,7 +80,6 @@ const TablePage = () => {
         setFormValues(initialValues);
         setErrors({});
         setIsEditMode(false);
-        fetchOutletData();
     };
 
     const handleShow = () => {
@@ -86,6 +88,9 @@ const TablePage = () => {
         setErrors({});
         setShow(true);
         fetchOutletData();
+        fetchSectionData();
+        fetchTableTypeData();
+        fetchFacilityData();
     };
 
     useEffect(() => {
@@ -93,11 +98,6 @@ const TablePage = () => {
         fetchCalled.current = true;
         fetchTableData();
     }, []);
-
-    useEffect(() => {
-        fetchSectionData();
-    }, [])
-
 
     const fetchOutletData = async () => {
         try {
@@ -125,15 +125,43 @@ const TablePage = () => {
     const fetchSectionData = async () => {
 
         try {
-
             const response = await api.get("/section");
-
             setSection(response.data.list);
 
         } catch (error) {
             console.log(error);
         }
 
+    };
+
+    const fetchTableTypeData = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get(`/tabletype`);
+            const sortedData = res?.data?.list?.sort(
+                (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+            );
+            setTableTypeData(sortedData);
+        } catch (error) {
+            console.error("Error fetching table data", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchFacilityData = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get(`/facilitystatus`);
+            const sortedData = res?.data?.list?.sort(
+                (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+            );
+            setFacilityData(sortedData);
+        } catch (error) {
+            console.error("Error fetching table data", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleChange = (name, value) => {
@@ -203,7 +231,7 @@ const TablePage = () => {
             tableLocation: row.tableLocation,
             openTable: row.openTable,
             isActive: row.isActive,
-            section: row.section
+            sectionId: row.sectionId
         });
         setShow(true);
     };
@@ -236,8 +264,6 @@ const TablePage = () => {
         settableToDelete(null);
     };
 
-
-
     const columns = [
         {
             name: <h5>Table Name</h5>,
@@ -250,8 +276,13 @@ const TablePage = () => {
             sortable: true,
         },
         {
-            name: <h5>Outlet</h5>,
+            name: <h5>Channel</h5>,
             selector: (row) => row.channelName,
+            sortable: true,
+        },
+        {
+            name: <h5>Outlet</h5>,
+            selector: (row) => row.outletName,
             sortable: true,
         },
         {
@@ -321,15 +352,16 @@ const TablePage = () => {
 
         const payload = {
             tableName: formValues.tableName,
-            capacity: formValues.capacity,
+            capacity: Number(formValues.capacity),
+            addonCapacity: 0,
+            facilityStatusId: formValues.facilityStatusId,
             outletId: formValues.outletId,
             direction: formValues.direction,
             type: formValues.type,
             isActive: formValues.isActive,
             serial: formValues.serial,
-            section: formValues.section,
+            sectionId: formValues.sectionId,
             tableShapes: formValues.tableShapes,
-            openTable: formValues.openTable
         };
 
 
@@ -343,8 +375,6 @@ const TablePage = () => {
             }
 
             handleClose();
-
-
             toast.success(res.data.successMessage || "Success!", {
                 position: "top-right",
                 autoClose: 3000,
@@ -471,11 +501,11 @@ const TablePage = () => {
                         <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
-                                    <InputGroup.Text id="Tablename">
-                                        <MdOutlineTableRestaurant size={25} color='#ffc800' />
+                                    <InputGroup.Text id="tableName">
+                                        <MdOutlineTableRestaurant size={25} color='#ffc800' title='Table Name' />
                                     </InputGroup.Text>
                                     <Form.Control
-                                        name="Tablename"
+                                        name="tableName"
                                         value={formValues.tableName || ""}
                                         onChange={(e) =>
                                             setFormValues({ ...formValues, tableName: e.target.value })
@@ -490,7 +520,7 @@ const TablePage = () => {
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
-                                        <MdOutlinePersonOutline size={24} color='#ffc800' />
+                                        <MdOutlinePersonOutline size={24} color='#ffc800' title='Capacity' />
                                     </InputGroup.Text>
                                     <Form.Control
                                         name="capacity"
@@ -510,7 +540,7 @@ const TablePage = () => {
                             <Col md={6}>
                                 <InputGroup className="mb-4">
                                     <InputGroup.Text id="employeeTypeId">
-                                        <FaRegBuilding size={25} color="#ffc800" />
+                                        <FaRegBuilding size={25} color="#ffc800" title='Outlet' />
                                     </InputGroup.Text>
                                     <Form.Select
                                         value={formValues.outletId}
@@ -532,16 +562,16 @@ const TablePage = () => {
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
-                                        <GrDirections size={24} color='#ffc800' />
+                                        <GrDirections size={24} color='#ffc800' title='Direction' />
                                     </InputGroup.Text>
                                     <Form.Control
-                                        name="Direction"
+                                        name="direction"
                                         value={formValues.direction || ""}
                                         onChange={(e) =>
                                             setFormValues({ ...formValues, direction: e.target.value })
                                         }
                                         placeholder="Enter Direction"
-                                        aria-label="capacity"
+                                        aria-label="direction"
                                         isInvalid={!!errors.direction}
                                         isValid={formValues.direction && !errors.direction}
                                     />
@@ -552,34 +582,38 @@ const TablePage = () => {
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
-                                        <LuType size={24} color='#ffc800' />
+                                        <LuType size={24} color='#ffc800' title='Table Type' />
                                     </InputGroup.Text>
-                                    <Form.Control
-                                        name="Direction"
-                                        value={formValues.type || ""}
+                                    <Form.Select
+                                        value={formValues.outletId}
                                         onChange={(e) =>
-                                            setFormValues({ ...formValues, type: e.target.value })
+                                            setFormValues({ ...formValues, outletId: e.target.value })
                                         }
-                                        placeholder="Enter Table Type"
-                                        aria-label="capacity"
-                                        isInvalid={!!errors.type}
-                                        isValid={formValues.type && !errors.type}
-                                    />
+                                        required
+                                        isInvalid={!!errors.outletId}
+                                    >
+                                        <option value="">Select table type</option>
+                                        {tableTypeData?.map((item) => (
+                                            <option key={item.tableTypeId} value={item.tableTypeId}>
+                                                {item.tableTypeName}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
                                 </InputGroup>
                             </Col>
                             <Col md={6}>
                                 <InputGroup hasValidation className="mb-4">
                                     <InputGroup.Text>
-                                        <MdFormatListNumberedRtl size={24} color='#ffc800' />
+                                        <MdFormatListNumberedRtl size={24} color='#ffc800' title='Serial' />
                                     </InputGroup.Text>
                                     <Form.Control
-                                        name="Direction"
+                                        name="serial"
                                         value={formValues.serial || ""}
                                         onChange={(e) =>
                                             setFormValues({ ...formValues, serial: e.target.value })
                                         }
                                         placeholder="Enter Serial Number"
-                                        aria-label="capacity"
+                                        aria-label="serial"
                                         isInvalid={!!errors.serial}
                                         isValid={formValues.serial && !errors.serial}
                                     />
@@ -589,19 +623,19 @@ const TablePage = () => {
                         <Row>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
-                                    <InputGroup.Text id="employeeTypeId">
+                                    <InputGroup.Text id="sectionId">
                                         <IoLayersOutline size={24} color='#ffc800' />
                                     </InputGroup.Text>
                                     <Form.Select
-                                        value={formValues.section}
+                                        value={formValues.sectionId}
                                         onChange={(e) =>
-                                            setFormValues({ ...formValues, section: e.target.value })
+                                            setFormValues({ ...formValues, sectionId: e.target.value })
                                         }
                                         required
-                                        isInvalid={!!errors.section}
+                                        isInvalid={!!errors.sectionId}
                                     >
                                         {section?.map(section => (
-                                            <option key={section.sectionId} value={section.floorName}>
+                                            <option key={section.sectionId} value={section.sectionId}>
                                                 {section.floorName}
                                             </option>
                                         ))}
@@ -627,6 +661,28 @@ const TablePage = () => {
                             </Col>
                         </Row>
                         <Row>
+                            <Col md={6}>
+                                <InputGroup className="mb-4">
+                                    <InputGroup.Text id="facilityStatusId">
+                                        <FaRegBuilding size={25} color="#ffc800" title='Outlet' />
+                                    </InputGroup.Text>
+                                    <Form.Select
+                                        value={formValues.facilityStatusId}
+                                        onChange={(e) =>
+                                            setFormValues({ ...formValues, facilityStatusId: e.target.value })
+                                        }
+                                        required
+                                        isInvalid={!!errors.facilityStatusId}
+                                    >
+                                        <option value="">Select facility status</option>
+                                        {facilityData?.map((item) => (
+                                            <option key={item.facilityStatusId} value={item.facilityStatusId}>
+                                                {item.facilityStatus}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </InputGroup>
+                            </Col>
                             <Col md={6}>
                                 <InputGroup className="mb-4">
                                     <InputGroup.Text id="isActive">

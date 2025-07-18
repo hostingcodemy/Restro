@@ -12,6 +12,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { LuPartyPopper } from "react-icons/lu";
+import axios from "axios";
 
 export default function SubscriptionPage() {
 
@@ -102,7 +103,7 @@ export default function SubscriptionPage() {
   const fetchSubscriptionData = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/subscription");
+      const response = await axios.get("/subscription");
       const list = response.data.list;
 
       const totals = {};

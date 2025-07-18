@@ -12,7 +12,7 @@ import {
 }
   from "react-icons/md";
 import { CgWebsite } from "react-icons/cg";
-import { FaRegEdit, FaRegFile, FaRegAddressCard } from "react-icons/fa";
+import { FaRegEdit, FaRegFile, FaRegAddressCard, FaMicrophone } from "react-icons/fa";
 import api from '../../../config/AxiosInterceptor';
 import { Link, useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
@@ -40,21 +40,14 @@ const Channel = () => {
     afterBillHoldStatus: "",
     gstBillPrint: "",
     channelImage: "",
-    isActive: false,
+    isActive: true,
   };
 
   const [formValues, setFormValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toDelete, setToDelete] = useState(null);
-  const location = useLocation();
-  const [permissions, setPermissions] = useState({});
 
-  useEffect(() => {
-    if (location.state?.permissions) {
-      setPermissions(location.state.permissions);
-    }
-  }, [location.state?.permissions]);
   const fetchCalled = useRef(false);
   const [loadingIndicator, setLoadingIndicator] = useState(false);
   const [filterText, setFilterText] = useState("");
@@ -316,16 +309,13 @@ const Channel = () => {
       center: true,
       cell: (row) => (
         <>
-          {permissions?.write && (
-            <Link className="action-icon" onClick={() => handleEditClick(row)}>
-              <FaRegEdit size={24} color="#87CEEB" />
-            </Link>
-          )}
-          {permissions?.delete && (
-            <Link className="action-icon" onClick={() => handleDeleteClick(row.channelId, row.channelName)}>
-              <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
-            </Link>
-          )}
+
+          <Link className="action-icon" onClick={() => handleEditClick(row)}>
+            <FaRegEdit size={24} color="#87CEEB" title='Edit' />
+          </Link>
+          <Link className="action-icon" onClick={() => handleDeleteClick(row.channelId, row.channelName)}>
+            <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" title='Delete' />
+          </Link>
         </>
       ),
     },
@@ -333,7 +323,7 @@ const Channel = () => {
 
   const subHeaderComponentMemo = useMemo(() => (
     <div className="d-flex justify-content-end gap-2 align-items-center w-100">
-      <Form className="d-flex">
+      <div className="position-relative ">
         <Form.Control
           type="search"
           placeholder="Search..."
@@ -341,24 +331,30 @@ const Channel = () => {
           aria-label="Search"
           onChange={(e) => setFilterText(e.target.value)}
         />
-      </Form>
-      {permissions?.import && (
-        <Button variant="info" onClick={handleExpoShow}>
-          <CiExport size={20} /> Import
-        </Button>
-      )}
-      {permissions?.export && (
-        <Button variant="success">
-          <CiImport size={20} /> Export
-        </Button>
-      )}
-      {permissions?.write && (
-        <Button variant="warning" onClick={handleShow}>
-          <GoPlus size={20} /> Add
-        </Button>
-      )}
+        <FaMicrophone
+          size={20}
+          color="#ffc800"
+          style={{
+            position: "absolute",
+            right: "15px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer"
+          }}
+        />
+      </div>
+      <Button variant="info" onClick={handleExpoShow}>
+        <CiExport size={20} /> Import
+      </Button>
+      <Button variant="success">
+        <CiImport size={20} /> Export
+      </Button>
+      <Button variant="warning" onClick={handleShow}>
+        <GoPlus size={20} /> Add
+      </Button>
+
     </div>
-  ), [permissions, filterText]);
+  ), [filterText]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -909,38 +905,16 @@ const Channel = () => {
             <Row>
               <Col md={4}>
                 <InputGroup className="mb-3">
-                  <InputGroup.Text id="isActive">
+                  <InputGroup.Text>
                     <TbHandClick size={25} color="#ffc800" />
                   </InputGroup.Text>
                   <Form.Check
                     type="checkbox"
-                    id="custom-checkbox"
                     label="IsActive"
-                    name="isActive"
-
+                    checked={formValues.isActive}
+                    onChange={(e) => handleChange("isActive", e.target.checked)}
                     className="ms-3"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '1rem',
-                    }}
-                    custom="true"
-                  >
-                    <Form.Check.Input
-                      type="checkbox"
-                      checked={formValues.isActive}
-                      onChange={(e) => handleChange("isActive", e.target.checked)}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    />
-                    <Form.Check.Label htmlFor="custom-checkbox">
-                      IsActive
-                    </Form.Check.Label>
-                  </Form.Check>
+                  />
                 </InputGroup>
               </Col>
             </Row>
@@ -951,7 +925,7 @@ const Channel = () => {
             </div>
           </Form>
         </Offcanvas.Body>
-      </Offcanvas>
+      </Offcanvas >
 
       <Offcanvas
         show={expoShow}

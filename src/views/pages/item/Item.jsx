@@ -18,11 +18,28 @@ import { IoBarcodeOutline } from "react-icons/io5";
 import Select from 'react-select';
 import { LiaSitemapSolid } from "react-icons/lia";
 import { PiMicrophoneThin } from "react-icons/pi";
+import { decryptData } from '../../../config/secureStorage';
 
 const Item = () => {
 
-  const channelId = localStorage.getItem('channelId');
-  const outletId = localStorage.getItem("currentOutletId");
+  const encryptedChannelId = localStorage.getItem("channelId");
+  const channelId = encryptedChannelId ? decryptData(encryptedChannelId) : null;
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const encryptedOutletId = localStorage.getItem("currentOutletId");
+      if (encryptedOutletId) {
+        const outletId = decryptData(encryptedOutletId);
+        fetchItemData(outletId);
+      }
+    };
+    handleStorageChange();
+    window.addEventListener('outlet-changed', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('outlet-changed', handleStorageChange);
+    };
+  }, []);
 
   const initialValues = {
     itemId: "",
@@ -42,7 +59,7 @@ const Item = () => {
     itemPrice: "",
     outletId: "",
     taxId: [],
-    itemSize: "",
+    ItemSizeId: "",
     isSoldMRP: false,
     isDiscountable: false,
     isVisible: false,
@@ -172,12 +189,6 @@ const Item = () => {
     setCurrentRowIndex(null);
   };
 
-  useEffect(() => {
-    if (fetchCalled.current) return;
-    fetchCalled.current = true;
-    fetchItemData();
-  }, []);
-
   const [primaryState, setPrimaryState] = useState({
     itemPrice: false,
     isSoldMRP: false,
@@ -190,10 +201,10 @@ const Item = () => {
     const primaryValue = formRows[0][columnKey];
 
     if (
-      (columnKey === "itemSize" && !primaryValue) ||
+      (columnKey === "ItemSizeId" && !primaryValue) ||
       (columnKey === "itemPrice" && primaryValue === "")
     ) {
-      toast.error(`Please enter a value for "${columnKey === "itemSize" ? "Item Size" : "Item Price"}" in the first row before using this feature.`);
+      toast.error(`Please enter a value for "${columnKey === "ItemSizeId" ? "Item Size" : "Item Price"}" in the first row before using this feature.`);
       return;
     }
 
@@ -223,7 +234,7 @@ const Item = () => {
   const getDefaultValue = (key) => {
     switch (key) {
       case "itemPrice":
-      case "itemSize":
+      case "ItemSizeId":
         return "";
       case "taxId":
         return [];
@@ -244,7 +255,7 @@ const Item = () => {
     { label: "P - Purchase Item", value: "Purchase Item" },
   ];
 
-  const fetchItemData = async () => {
+  const fetchItemData = async (outletId) => {
     setLoading(true);
     try {
       const res = await api.get(`/items/outlet/${outletId}`);
@@ -341,7 +352,7 @@ const Item = () => {
       const rows = outletData.map((outlet) => ({
         outletId: outlet.outletId,
         outletName: outlet.outletName,
-        itemSize: "",
+        ItemSizeId: "",
         itemPrice: "",
         isSoldMRP: false,
         isDiscountable: false,
@@ -466,13 +477,13 @@ const Item = () => {
     const currentRow = { ...updatedRows[index], [name]: value };
 
     const targetOutlet = name === "outletId" ? value : currentRow.outletId;
-    const targetItemSize = name === "itemSize" ? value : currentRow.itemSize;
+    const targetItemSize = name === "ItemSizeId" ? value : currentRow.ItemSizeId;
 
     if (targetOutlet && targetItemSize) {
       const isDuplicate = formRows.some((row, i) =>
         i !== index &&
         row.outletId === targetOutlet &&
-        row.itemSize === targetItemSize
+        row.ItemSizeId === targetItemSize
       );
 
       if (isDuplicate) {
@@ -572,38 +583,6 @@ const Item = () => {
     if (formValues.itemCategoryId) fetchItemSubTypeData(formValues.itemCategoryId);
   }, [formValues.itemGroupId, formValues.itemSubGroupId, formValues.itemCategoryId]);
 
-
-  // const handleEditClick = (row) => {
-  //   console.log(row, 'oo');
-
-  //   setIsEditMode(true);
-  //   setFormValues({
-  //     ...initialValues,
-  //     itemName: row.itemName,
-  //     itemGroupId: String(row.itemGroupId ?? ""),
-  //     itemSubGroupId: String(row.itemSubGroupId ?? ""),
-  //     itemCategoryId: String(row.itemCategoryId ?? ""),
-  //     itemSubCategoryId: String(row.itemSubCategoryId ?? ""),
-  //     productType: row.productType ?? "",
-  //     itemType: row.itemType ?? "",
-  //     itemCode: row.itemCode ?? "",
-  //     uom: String(row.uomID ?? ""),
-  //     ItemImageFile: row.itemImage,
-  //     HSNCode: row.hsnCode ?? "",
-  //     qrCode: row.qrCode ?? "",
-  //     itemQuantity: row.itemQuantity ?? "",
-  //     itemPrice: row.itemPrice ?? "",
-  //     itemSize: String(row.itemSizeId ?? ""),
-  //     outletId: String(row.outletId ?? ""),
-  //     isVisible: !!row.isVisible,
-  //     isDiscountable: !!row.isDiscountable,
-  //     isSoldMRP: !!row.isSoldMRP,
-  //     isActive: !!row.isActive,
-  //     taxWithDiscount: !!row.taxWithDiscount,
-  //   });
-  //   setShow(true);
-  // };
-
   const handleEditClick = (row) => {
     console.log(row, 'oo');
 
@@ -629,7 +608,7 @@ const Item = () => {
       qrCode: row.qrCode || "",
       itemQuantity: "",
       itemPrice: "",
-      itemSize: "",
+      ItemSizeId: "",
       outletId: "",
       isVisible: !!row.isVisible,
       isDiscountable: !!row.isDiscountable,
@@ -650,7 +629,7 @@ const Item = () => {
     const mappedRows = (row.prices || []).map(price => ({
       outletId: String(price.outletId),
       outletName: price.outletName || "",
-      itemSize: String(price.itemSizeId || ""),
+      ItemSizeId: String(price.itemSizeId || ""),
       itemPrice: String(price.itemPrice || ""),
       isSoldMRP: !!price.isSoldMRP,
       isDiscountable: !!price.isDiscountable,
@@ -881,7 +860,7 @@ const Item = () => {
       ...prevRows,
       {
         outletId: "",
-        itemSize: "",
+        ItemSizeId: "",
         itemPrice: "",
         isSoldMRP: false,
         isDiscountable: false,
@@ -900,7 +879,7 @@ const Item = () => {
     e.preventDefault();
 
     const validMappings = formRows.filter(row =>
-      row.outletId && row.itemSize && row.itemPrice && parseFloat(row.itemPrice) > 0
+      row.outletId && row.ItemSizeId && row.itemPrice && parseFloat(row.itemPrice) > 0
     );
 
     if (validMappings.length === 0) {
@@ -936,7 +915,7 @@ const Item = () => {
 
       const priceBase = `${base}.Prices[0]`;
       formData.append(`${priceBase}.ItemQuantity`, parseFloat(formValues.itemQuantity) || 1);
-      formData.append(`${priceBase}.ItemSizeId`, row.itemSize);
+      formData.append(`${priceBase}.ItemSizeId`, row.ItemSizeId);
       formData.append(`${priceBase}.ItemPrice`, parseFloat(row.itemPrice));
       formData.append(`${priceBase}.IsSoldMRP`, row.isSoldMRP);
       formData.append(`${priceBase}.IsDiscountable`, row.isDiscountable);
@@ -966,7 +945,14 @@ const Item = () => {
       setFormRows([]);
       setMappingShow(false);
       setShow(false);
-      fetchItemData();
+      const encrypted = localStorage.getItem("currentOutletId");
+      const outletId = encrypted ? decryptData(encrypted) : null;
+
+      if (outletId) {
+        await fetchItemData(outletId);
+      } else {
+        console.warn("No outletId found; list not refreshed");
+      }
 
     } catch (error) {
       console.error("Error creating item:", error);
@@ -1445,10 +1431,10 @@ const Item = () => {
                   <th>
                     <span
                       style={{ display: "inline-flex", alignItems: "center", gap: "20px", cursor: "pointer", width: "120px" }}
-                      onClick={() => handleColumnStarClick("itemSize")}
+                      onClick={() => handleColumnStarClick("ItemSizeId")}
                     >
                       Item Size
-                      <FaRegStar size={20} color={primaryState.itemSize ? "gold" : "gray"} />
+                      <FaRegStar size={20} color={primaryState.ItemSizeId ? "gold" : "gray"} />
                     </span>
                   </th>
                   <th>
@@ -1522,14 +1508,14 @@ const Item = () => {
                     </td>
                     <td>
                       <Form.Select
-                        value={row.itemSize || ""}
+                        value={row.ItemSizeId || ""}
                         onChange={(e) =>
-                          handleRowChange(index, "itemSize", e.target.value)
+                          handleRowChange(index, "ItemSizeId", e.target.value)
                         }
                       >
                         <option value="">Select Item Size</option>
                         {itemSizeData?.map((size) => (
-                          <option key={size.id} value={size.id}>
+                          <option key={size.sizeId} value={size.sizeId}>
                             {size.sizeName}
                           </option>
                         ))}
@@ -1773,7 +1759,7 @@ const Item = () => {
                     >
                       <option value="">Select</option>
                       {itemSizeData?.map((size) => (
-                        <option key={size.id} value={size.id}>
+                        <option key={size.sizeId} value={size.sizeId}>
                           {size.sizeName}
                         </option>
                       ))}

@@ -13,7 +13,7 @@ const ItemTypes = { TABLE: "table" };
 
 const groupTablesBySection = (tables) => {
     return tables.reduce((acc, table) => {
-        const section = table.sectionName || "Unassigned";
+        const section = table?.sectionName || "Unassigned";
         if (!acc[section]) acc[section] = [];
         acc[section].push(table);
         return acc;
@@ -33,7 +33,7 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
     const userDetails = authChannels[0]?.adminDetails;
     const userId = userDetails?.userID || "";
     const groupedTables = groupTablesBySection(
-        tableList.filter((t) => !droppedTable || t.tableId !== droppedTable.tableId)
+        tableList?.filter((t) => !droppedTable || t?.tableId !== droppedTable.tableId)
     );
 
     const [, dropMergedRef] = useDrop({
@@ -54,8 +54,8 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
         });
 
         const facilityColorMap = {};
-        facility.forEach((f) => {
-            facilityColorMap[f.facilityStatusId] = f.colour;
+        facility?.forEach((f) => {
+            facilityColorMap[f?.facilityStatusId] = f?.colour;
         });
 
         return (
@@ -63,7 +63,7 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
                 ref={dragRef}
                 style={{
                     padding: "8px 12px",
-                    background: facilityColorMap[table.facilityStatusId] || "black",
+                    background: facilityColorMap[table?.facilityStatusId] || "black",
                     boxShadow: "4px 4px 4px #e0e0e0",
                     borderRadius: "4px",
                     cursor: "grab",
@@ -74,7 +74,7 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
                     fontWeight: "600",
                 }}
             >
-                {table.tableName}
+                {table?.tableName}
             </div>
         );
     };
@@ -84,8 +84,8 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
         do {
             name = `${droppedTable?.tableName || "T"}${index + 1}`;
         } while (
-            tableList.some((t) => t.tableName.toLowerCase() === name.toLowerCase()) ||
-            splitTables.some((t) => t.name.toLowerCase() === name.toLowerCase())
+            tableList?.some((t) => t?.tableName?.toLowerCase() === name.toLowerCase()) ||
+            splitTables?.some((t) => t?.name?.toLowerCase() === name.toLowerCase())
         );
         return name;
     };
@@ -105,8 +105,8 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
     const isNameUnique = (name, index) => {
         const trimmed = name.trim().toLowerCase();
         if (!trimmed) return false;
-        if (tableList.some((t) => t.tableName.trim().toLowerCase() === trimmed)) return false;
-        return !splitTables.some((t, i) => t.name.trim().toLowerCase() === trimmed && i !== index);
+        if (tableList?.some((t) => t?.tableName?.trim().toLowerCase() === trimmed)) return false;
+        return !splitTables.some((t, i) => t?.name?.trim().toLowerCase() === trimmed && i !== index);
     };
 
     const handleChange = (index, field, value) => {
@@ -125,9 +125,9 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
 
 
     const transformedPayload = splitTables.map((table) => ({
-        splitTableNames: table.name,
-        splittedPax: table.pax,
-        sectionId: table.sectionId,
+        splitTableNames: table?.name,
+        splittedPax: table?.pax,
+        sectionId: table?.sectionId,
         customerId: null,
         orderTaker: userId,
         amount: 0,
@@ -138,9 +138,12 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
         isActive: true,
     }));
 
+    console.log(droppedTable);
+    
+
     const handleSubmit = async () => {
 
-        const invalid = splitTables.some((t) => !t.name.trim() || t.pax <= 0 || t.error);
+        const invalid = splitTables.some((t) => !t?.name.trim() || t?.pax <= 0 || t?.error);
         if (invalid) {
             toast.error("Please ensure all names are unique, filled and pax is greater than 0.");
             return;
@@ -150,11 +153,10 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
             tableId: [droppedTable.tableId],
             sectionId: droppedTable.sectionId,
             customerId: null,
-            // outletId: outletId,
-            outletId: "a546dd1d-9963-47e4-aa92-47ee1d2770f1", // hardcoded
+            outletId: outletId,
             name: droppedTable.tableName,
             orderTaker: userId,
-            pax: droppedTable.pax,
+            pax: droppedTable.capacity,
             amount: 0,
             type: "split",
             splitCount: splitCount,
@@ -165,6 +167,8 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
             facilityStatusId: droppedTable.facilityStatusId
         }
 
+        console.log(payload);
+        
         try {
 
             const post = await api.post("/tablelog", payload)
@@ -179,7 +183,6 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
 
         } catch (error) {
             console.log(error);
-
         }
 
     };
@@ -252,14 +255,14 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
 
                                 <div className="TableSearch"><PiMicrophoneThin size={20} color="#ffc300" /></div>
                             </div>
-                            {Object.keys(groupedTables).map((section) => (
+                            {Object.keys(groupedTables)?.map((section) => (
                                 <div key={section} style={{ marginBottom: "1rem" }}>
                                     <h5 className="mb-2"> {section}</h5>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                                         {groupedTables[section]
-                                            .filter((t) => t.tableName.toLowerCase().includes(searchTerm))
-                                            .map((table) => (
-                                                <DraggableTable key={table.tableId} table={{ ...table, from: "available" }} />
+                                            ?.filter((t) => t?.tableName?.toLowerCase().includes(searchTerm))
+                                            ?.map((table) => (
+                                                <DraggableTable key={table?.tableId} table={{ ...table, from: "available" }} />
                                             ))}
                                     </div>
                                 </div>
@@ -290,7 +293,7 @@ const SplitModal = ({ tableList, setIsSplitTable, facility, section,fetchTableDa
                             </h5>
                             <div style={{ height: "90%" }}>
 
-                                {droppedTable && <div className="mb-3 fs-3">Split Table : <span className="text-warning fw-bold">{droppedTable.tableName}</span> </div>}
+                                {droppedTable && <div className="mb-3 fs-3">Split Table : <span className="text-warning fw-bold">{droppedTable?.tableName}</span> </div>}
 
                                 {splitTables.map((table, idx) => (
                                     <div key={idx} className="d-flex gap-2 mb-2">

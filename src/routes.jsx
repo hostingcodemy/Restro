@@ -11,7 +11,6 @@ const Page404 = React.lazy(() => import('./views/pages/page404/Page404'));
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'));
 const TableReservation = React.lazy(() => import('./components/header/TableBook'));
 const PosScreen = React.lazy(() => import('src/views/pages/pos/Pos.jsx'));
-
 //Content page
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'));
 const Group = React.lazy(() => import('./views/pages/group/Group'));
@@ -41,7 +40,18 @@ const MemberType = React.lazy(() => import('./views/pages/memberType/MemberType.
 const AddressType = React.lazy(() => import('./views/pages/addressType/AddressType.jsx'));
 const CustomerDocType = React.lazy(() => import('./views/pages/customerDocType/CustomerDocType.jsx'));
 const CustomerType = React.lazy(() => import('./views/pages/customerType/CustomerType.jsx'));
-
+const OfferType = React.lazy(() => import('./views/pages/offerType/OfferType.jsx'));
+const Offer = React.lazy(() => import('./views/pages/offer/Offer.jsx'));
+const BusinessSourcetype = React.lazy(() => import('./views/pages/businessSourcetype/BusinessSourcetype.jsx'));
+const BusinessSource = React.lazy(() => import('./views/pages/businessSource/BusinessSource.jsx'));
+const Coupon = React.lazy(() => import('./views/pages/coupon/Coupon.jsx'));
+const FinYear = React.lazy(() => import('./views/pages/finYear/FinYear.jsx'));
+const SecurityQuestion = React.lazy(() => import('./views/pages/securityQuestion/SecurityQuestion.jsx'));
+const Section = React.lazy(() => import('./views/pages/section/Section.jsx'));
+const TableReservationRate = React.lazy(() => import('./views/pages/tableReservationRate/TableReservationRate.jsx'));
+const ItemSize = React.lazy(() => import('./views/pages/itemSize/ItemSize.jsx'));
+const ItemCategory = React.lazy(() => import('./views/pages/itemCategory/ItemCategory.jsx'));
+const ReservationPage = React.lazy(() => import('./views/pages/Reservation/Reservation.jsx'));
 
 const AppRoutes = () => {
 
@@ -71,7 +81,9 @@ const AppRoutes = () => {
           <Route path="/item-sub-groups" element={<SubGroup />} />
           <Route path="/item-type" element={<ItemType />} />
           <Route path="/item-sub-type" element={<ItemSubType />} />
+          <Route path="/item-category" element={<ItemCategory />} />
           <Route path="/items" element={<Item />} />
+          <Route path="/item-size" element={<ItemSize />} />
           <Route path="/tables" element={<Table />} />
           <Route path="/table-type" element={<TableType />} />
           <Route path="/channels" element={<Channel />} />
@@ -90,15 +102,26 @@ const AppRoutes = () => {
           <Route path="/address-type" element={<AddressType />} />
           <Route path="/customer-doc-type" element={<CustomerDocType />} />
           <Route path="/customer-type" element={<CustomerType />} />
+          <Route path="/offer-type" element={<OfferType />} />
+          <Route path="/offer" element={<Offer />} />
+          <Route path="/business-sourcetype" element={<BusinessSourcetype />} />
+          <Route path="/business-source" element={<BusinessSource />} />
+          <Route path="/coupon" element={<Coupon />} />
+          <Route path="/finyear" element={<FinYear />} />
+          <Route path="/security-question" element={<SecurityQuestion />} />
+          <Route path="/section" element={<Section />} />
+          <Route path="/table-reservation-rate" element={<TableReservationRate />} />
           <Route path="/restro-pos" element={<TableReservation />} />
           <Route path="/table-management" element={<TableReservation />} />
           <Route path="/customer-form" element={<CustomerForm />} />
           <Route path="/order-management" element={<PosScreen />} />
+          <Route path="/table-reservation" element={<ReservationPage />} />
 
         </Route>
 
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
+
     </Suspense>
   )
 }

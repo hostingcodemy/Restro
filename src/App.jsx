@@ -6,6 +6,7 @@ import AppRoutes from './routes';
 import { Spinner } from 'react-bootstrap';
 import { GeneralProvider } from './Context/GeneralContext';
 import { CartProvider } from './Context/ItemCartContext';
+import { TransferProvider } from './Context/TransferContext';
 
 const App = () => {
 
@@ -30,7 +31,10 @@ const App = () => {
         <BrowserRouter>
             <CartProvider>
           <GeneralProvider>
+            <TransferProvider>
+
               <AppRoutes />
+            </TransferProvider>
           </GeneralProvider>
             </CartProvider>
         </BrowserRouter>

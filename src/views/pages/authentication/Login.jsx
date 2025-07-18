@@ -8,6 +8,7 @@ import { Container, Button } from 'react-bootstrap';
 import Form from 'react-bootstrap/Form';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { encryptData } from '../../../config/secureStorage';
 
 const Login = () => {
 
@@ -96,11 +97,10 @@ const Login = () => {
             const res = await api.post("/adminauth/login", payload);
 
             if (res.data.isValid) {
-                localStorage.setItem("accessToken", res.data.data.accessToken);
-                localStorage.setItem("refreshToken", res.data.data.refreshToken);
-                localStorage.setItem("authChannels", JSON.stringify(res.data.data.authChannels));
-
-
+                localStorage.setItem("accessToken", encryptData(res.data.data.accessToken));
+                localStorage.setItem("refreshToken", encryptData(res.data.data.refreshToken));
+                localStorage.setItem("authChannels", encryptData(JSON.stringify(res.data.data.authChannels)));
+               
                 if (res.data.data.authChannels.length === 0) {
                     navigate("/channel-outlet");
                 } else {

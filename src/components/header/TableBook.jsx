@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import { CiSearch } from "react-icons/ci";
 import { VscMerge } from "react-icons/vsc";
 import { HiDotsVertical } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -9,11 +8,9 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
 import api from "../../config/AxiosInterceptor";
-import Form from 'react-bootstrap/Form';
 import { FaPlus } from "react-icons/fa";
 import { PiHandshakeThin } from "react-icons/pi";
 import { LiaWindowCloseSolid } from "react-icons/lia";
-import { PiMicrophoneThin } from "react-icons/pi";
 import { Spinner } from 'react-bootstrap';
 import { FaChair, FaUser, FaComments } from "react-icons/fa";
 import { MdOutlineTableRestaurant } from "react-icons/md"
@@ -26,16 +23,31 @@ import { useGeneralContext } from "../../Context/GeneralContext";
 import SplitModal from "./SplitTable";
 import { toast, ToastContainer } from 'react-toastify';
 import { MdOutlineFolderDelete } from "react-icons/md";
+import { Number } from "core-js";
+<<<<<<< HEAD
+import { decryptData } from "../../config/secureStorage";
+=======
+import "./TableBook.css";
+import { MdTableRestaurant } from "react-icons/md";
+import { FaExchangeAlt } from "react-icons/fa"
+import UniversalSearch from "../SmallComponents/UniversalSearch";
+import { COffcanvas } from "@coreui/react";
+import LeftPart from "../SmallComponents/Transfer/LeftPart";
+import MiddlePart from "../SmallComponents/Transfer/MiddlePart";
+import RightPart from "../SmallComponents/Transfer/RightPart";
+import { useTransferTable } from "../../Context/TransferContext";
+>>>>>>> cc9c78349cde42d145a78dbfbabfdf950ec2962f
 
 const TableBook = () => {
-
+    const {transferMode,setTransferMode} = useTransferTable();
+    const [visible, setVisible] = useState(true);
+    const [isTransfer, setIsTransfer] = useState(false);
     const [errors, setErrors] = useState({});
     const [isAddChairMode, setIsAddChairMode] = useState(false);
     const { setIsMergeTable, isMergeTable, isSplitTable, setisSplitTable } = useGeneralContext();
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
-    const [selected, setSelected] = useState("table");
-    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [selected, setSelected] = useState("");
     const [selectionMode, setSelectionMode] = useState(false);
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [showAddTableModal, setShowAddTableModal] = useState(false);
@@ -55,6 +67,7 @@ const TableBook = () => {
     const startPos = useRef({ x: 0, y: 0 });
     const [isSelfMode, setIsSelfMode] = useState(false);
     const [tablePositions, setTablePositions] = useState({});
+    const [saveLayoutData, setSaveLayoutData] = useState('');
     const [layoutPos, setLayoutPos] = useState({ x: 0, y: 0 });
     const [isDraggingLayout, setIsDraggingLayout] = useState(false);
     const animationRef = useRef(null);
@@ -65,11 +78,20 @@ const TableBook = () => {
     const [customizationMode, setCustomizationMode] = useState(null);
     const [section, setSection] = useState([]);
     const [facility, setFacility] = useState([]);
-    const authChannelStr = localStorage.getItem("authChannels");
-    const authChannels = JSON.parse(authChannelStr);
+     const authChannelStr = localStorage.getItem('authChannels');
+        const authChannels = decryptData(authChannelStr);
+      console.log(authChannels,'gg')
+    
+    //const authChannelStr = localStorage.getItem("authChannels");
+    //const authChannels = JSON.parse(authChannelStr);
     const userDetails = authChannels[0]?.adminDetails;
-    const outletId = localStorage.getItem("currentOutletId");
-    const [saveLayoutData, setSaveLayoutData] = useState('');
+    console.log(userDetails,'yy')
+    //const outletId = localStorage.getItem("currentOutletId");
+    const encryptedOutletId = localStorage.getItem("currentOutletId");
+    console.log(encryptedOutletId,'jj')
+    if (encryptedOutletId) {
+        const outletId = decryptData(encryptedOutletId);
+    }
     const [tableType, setTableType] = useState('');
     const [selectedStatusId, setSelectedStatusId] = useState(null);
     const [selectedSection, setSelectedSection] = useState("all");
@@ -83,7 +105,7 @@ const TableBook = () => {
             value: "vip",
             name: "Vip Table"
         }
-    ]
+    ];
 
     const postOpenTable = async () => {
 
@@ -92,11 +114,10 @@ const TableBook = () => {
 
             tableId: [],
             sectionId: formData.section,
-            // outletId: outletId,
-            outletId: "a546dd1d-9963-47e4-aa92-47ee1d2770f1",
+            outletId: outletId,
             name: formData.tableName,
             orderTaker: userDetails?.userID,
-            pax: formData.pax,
+            pax: Number(formData.pax),
             amount: 0,
             prefix: "",
             customerId: null,
@@ -108,6 +129,9 @@ const TableBook = () => {
             isActive: true,
             facilityStatusId: formData.status
         };
+
+        console.log(payload);
+
 
         try {
 
@@ -138,14 +162,14 @@ const TableBook = () => {
         document.body.style.overflow = isOpen ? "hidden" : "auto";
     }, [isOpen]);
 
-      useEffect(() => {
-    if (fetchCalled.current) return;
-    fetchCalled.current = true;
-     fetchTableData();
-       fetchSectionData();
+    useEffect(() => {
+        if (fetchCalled.current) return;
+        fetchCalled.current = true;
+        fetchTableData();
+        fetchSectionData();
         fetchFacilityData();
-          getLayout();
-  }, []);
+        getLayout();
+    }, []);
 
 
     const getBackend = () => {
@@ -161,17 +185,14 @@ const TableBook = () => {
 
     const backend = useMemo(() => getBackend(), []);
 
-
     const handleSelect = (id) => {
         setSelectedStatusId(prevId => (prevId === id ? null : id));
     };
 
     const fetchTableData = async () => {
         try {
-            // const response = await api.get(`/tablelog/outlet/${outletId}`);
-            const response = await api.get(`/tablelog/outlet/a546dd1d-9963-47e4-aa92-47ee1d2770f1`);
-            const fetchedTables = response.data.list;
-
+            const response = await api.get(`/tablelog/outlet/${outletId}`);
+            const fetchedTables = response?.data?.list;
             const transformed = fetchedTables.map((t, index) => ({
                 ...t,
 
@@ -190,31 +211,24 @@ const TableBook = () => {
     const fetchSectionData = async () => {
 
         try {
-
             const response = await api.get("/section");
-
-            setSection(response.data.list);
+            setSection(response?.data?.list);
 
         } catch (error) {
             console.log(error);
         }
-
     };
 
     const fetchFacilityData = async () => {
 
         try {
-
             const response = await api.get("/facilitystatus/table");
-
-            setFacility(response.data.list);
+            setFacility(response?.data?.list);
 
         } catch (error) {
             console.log(error);
         }
-
     };
-
 
     const handleSaveLayout = async () => {
 
@@ -262,8 +276,6 @@ const TableBook = () => {
             console.log(error);
 
         }
-
-
     }
 
     const handleDeleteLayout = async () => {
@@ -273,6 +285,7 @@ const TableBook = () => {
 
             if (res?.data?.isValid) {
                 toast.success(`Layout delete successfully`);
+                fetchTableData();
             } else {
                 toast.dismiss(`Failed to delete layout `);
             }
@@ -281,8 +294,6 @@ const TableBook = () => {
 
         }
     }
-
-
 
     const moveTable = (tableId, x, y) => {
 
@@ -294,8 +305,8 @@ const TableBook = () => {
 
     };
 
-    const isDuplicateTableName = tableData.some(
-        (table) => table.tableName.toLowerCase() === formData.tableName.trim().toLowerCase()
+    const isDuplicateTableName = tableData?.some(
+        (table) => table?.tableName?.toLowerCase() === formData.tableName.trim().toLowerCase()
     );
 
     const onDropChair = (chair, fromId, toId) => {
@@ -363,7 +374,6 @@ const TableBook = () => {
         setLabelIndex((prevIndex) => (prevIndex + 1) % labels.length);
     };
 
-
     const animateMomentum = () => {
         velocity.current.x *= 0.95;
         velocity.current.y *= 0.95;
@@ -379,7 +389,6 @@ const TableBook = () => {
         }
     };
 
-
     const toggleSelfMode = () => {
         setIsSelfMode((prev) => {
             const next = !prev;
@@ -392,19 +401,6 @@ const TableBook = () => {
         setIsAddChairMode((prev) => !prev);
 
     };
-
-
-    const handlePlaceOrder = (data) => {
-        setShowOrderModal(false);
-        navigate("/pointofsale", {
-            state: {
-                tableData: data.tables,
-                orderTaker: data.orderTaker,
-                remarks: data.remarks,
-            },
-        });
-    };
-
 
     const handleAddChairs = async (tableId, addonCount, table) => {
 
@@ -439,27 +435,6 @@ const TableBook = () => {
             console.log(error);
 
         }
-
-        // setTableData(prevData =>
-        //     prevData.map(table => {
-        //         if (table.tableId === tableId) {
-        //             let updatedChairs = [...table.chairs];
-        //             if (count > 0) {
-
-        //                 const newChairs = Array.from({ length: count }, (_, i) => ({
-        //                     id: `${tableId}-chair-${Date.now()}-${i}`
-        //                 }));
-        //                 updatedChairs.push(...newChairs);
-        //             } else {
-
-        //                 updatedChairs = updatedChairs.slice(0, updatedChairs.length + count);
-        //             }
-
-        //             return { ...table, chairs: updatedChairs };
-        //         }
-        //         return table;
-        //     })
-        // );
     };
 
     const handleResetFilters = () => {
@@ -469,43 +444,84 @@ const TableBook = () => {
         setTableType("all");
     }
 
+    const transferTable = async ()=>{
+        try {
+            
+        } catch (error) {
+            console.log(error);
+            
+        }
+    }
 
     return (
         <>
-
             <DndProvider backend={backend}>
-                <ToastContainer />
+                <ToastContainer autoClose={2000} />
                 <div className='tableBook d-flex align-items-center justify-content-between bg-white'>
 
                     {isMergeTable && <MergeModal tableList={tableData} section={section} setIsMergeTable={setIsMergeTable} facility={facility} fetchTableData={fetchTableData} />}
                     {isSplitTable && <SplitModal tableList={tableData} section={section} setIsSplitTable={setisSplitTable} facility={facility} fetchTableData={fetchTableData} />}
+                    {/* {selected === "table" && <Transfer tableData={tableData} facility={facility} fetchTableData={fetchTableData} />} */}
+                    {selected === "table" &&
+                        <COffcanvas
+                            placement="top"
+                            visible={visible}
+                            onHide={() => setVisible(false)}
+                            backdrop={true}
+                            scroll={true}
+                            style={{ height: "90vh", marginTop: "3vh", maxWidth: "85vw", margin: "3vh auto" }}
+                            className="rounded shadow border p-2"
+                        >
 
+                                <div className="transfer-toggle-container d-flex justify-content-center py-2">
+                                    <div className="toggle-group bg-white d-flex bg-light rounded-pill shadow-sm">
+                                        {['table', 'kot'].map((mode, idx) => (
+                                            <button
+                                                key={mode}
+                                                className={`toggle-btn px-3 py-1 rounded-pill fw-semibold ${transferMode === mode ? 'active' : ''
+                                                    }`}
+                                                onClick={() => setTransferMode(mode)}
+                                            >
+                                                {mode.toUpperCase()}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="d-flex flex-column flex-md-row h-100 transition-all w-100 h-100">
+                                    <LeftPart facility={facility} transferMode={transferMode} />
+                                    <MiddlePart transferMode={transferMode} />
+                                    <RightPart facility={facility} transferMode={transferMode} />
+                                </div>
+                                <div className="w-100 d-flex justify-content-center align-items-center">
+                                    <button className="btn btn-sm btn-outline-warning">Confirm Transfer</button>
+                                </div>
+     
+                        </COffcanvas>
+                    }
                     <div className="tableBookRight">
                         <div className="rightTop">
-                            <div className='topHeader px-2 w-100 d-flex align-items-center justify-content-end gap-4 bg-white'>
-                                <div className="d-flex align-items-center justify-content-end w-100 gap-3">
+                            <div className='topHeader flex-wrap px-2 w-100 d-flex align-items-center justify-content-end gap-3 bg-white'>
 
-                                 
+                                <div className="d-flex align-items-center gap-3">
+                                    <div className="transfer-toggle-container">
+                                        <div className="transfer-toggle">
+                                            <div className={`slider ${selected}`}></div>
 
-                                    <div>
-                                        <div className="transfer-toggle-container">
-                                            <div className="transfer-toggle">
-                                                <div className={`slider ${selected}`}></div>
+                                            <button
+                                                className={`toggle-option ${selected === "table" ? "active" : ""}`}
+                                                onClick={() => setSelected("table")}
+                                            >
+                                                <MdTableRestaurant className="toggle-icon" />
+                                                <span className="toggle-text">Table Transfer</span>
+                                            </button>
 
-                                                <button
-                                                    className={`toggle-option ${selected === "table" ? "active" : ""}`}
-                                                    onClick={() => setSelected("table")}
-                                                >
-                                                    Table Transfer
-                                                </button>
-
-                                                <button
-                                                    className={`toggle-option ${selected === "item" ? "active" : ""}`}
-                                                    onClick={() => setSelected("item")}
-                                                >
-                                                    Item Transfer
-                                                </button>
-                                            </div>
+                                            <button
+                                                className={`toggle-option ${selected === "item" ? "active" : ""}`}
+                                                onClick={() => setSelected("item")}
+                                            >
+                                                <FaExchangeAlt className="toggle-icon" />
+                                                <span className="toggle-text">Item Transfer</span>
+                                            </button>
                                         </div>
                                     </div>
 
@@ -533,9 +549,14 @@ const TableBook = () => {
 
                                         {isToggled && <span className="fw-semibold primaryColor">Table</span>}
                                     </div>
+
                                     <div className="tableHeaderButton">
                                         <PiHandshakeThin size={14} /> Multi Table Settlement
                                     </div>
+
+                                </div>
+
+                                <div className="d-flex align-items-center gap-3">
                                     <div className="tableHeaderButton">
                                         <VscMerge size={14} /> Multi Table Bill
                                     </div>
@@ -546,188 +567,188 @@ const TableBook = () => {
                                         <MdOutlineFolderDelete color="red" size={14} /> Reset Layout
                                     </div>
 
-                                </div>
+                                    <div className='d-flex align-items-center gap-3'>
 
-                                <div className='d-flex align-items-center gap-3'>
-
-                                    <div
-                                        className="sidebar-trigger"
-                                        onClick={() => {
-                                            setShowAddTableModal(false);
-                                            setIsOpen(true)
-                                        }
-                                        }
-                                    >
-                                        <HiDotsVertical className="text-black" />
-                                    </div>
-
-
-                                    {isOpen && (
                                         <div
-                                            className="sidebar-overlay"
-                                            onClick={() => setIsOpen(false)}
-                                        />
-                                    )}
-
-                                    <div className={`sidebar-panel ${isOpen ? "open" : ""}`}>
-                                        <div className="sidebar-header">
-                                            <h5>{showAddTableModal ? "ADD TABLE INFO" : "ACTIONS"}</h5>
-                                            <LiaWindowCloseSolid className="close-btn" onClick={() => {
-                                                if (showAddTableModal) {
-                                                    setIsToggled(!isToggled);
-                                                }
-                                                setCustomizationMode("");
-                                                setIsOpen(false)
-                                            }} />
-
+                                            className="sidebar-trigger"
+                                            onClick={() => {
+                                                setShowAddTableModal(false);
+                                                setIsOpen(true)
+                                            }
+                                            }
+                                        >
+                                            <HiDotsVertical className="text-black" />
                                         </div>
-                                        <div className="sidebar-content">
-                                            {showAddTableModal && (
 
-                                                <>
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Status</label>
-                                                        <div className="input-group">
-                                                            <span className="input-group-text"><IoLayersOutline /></span>
-                                                            <select
-                                                                className="form-select"
-                                                                value={formData.status}
-                                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                                            >
-                                                                <option value="">Select Status</option>
-                                                                {facility
-                                                                    .filter(item => item.prefix === "V" || item.prefix === "M")
-                                                                    .map(item => (
-                                                                        <option key={item.facilityStatusId} value={item.facilityStatusId}>
-                                                                            {item.facilityStatus}
-                                                                        </option>
-                                                                    ))
-                                                                }
-                                                            </select>
+
+                                        {isOpen && (
+                                            <div
+                                                className="sidebar-overlay"
+                                                onClick={() => setIsOpen(false)}
+                                            />
+                                        )}
+
+                                        <div className={`sidebar-panel ${isOpen ? "open" : ""}`}>
+                                            <div className="sidebar-header">
+                                                <h5>{showAddTableModal ? "ADD TABLE INFO" : "ACTIONS"}</h5>
+                                                <LiaWindowCloseSolid className="close-btn" onClick={() => {
+                                                    if (showAddTableModal) {
+                                                        setIsToggled(!isToggled);
+                                                    }
+                                                    setCustomizationMode("");
+                                                    setIsOpen(false)
+                                                }} />
+
+                                            </div>
+                                            <div className="sidebar-content">
+                                                {showAddTableModal && (
+
+                                                    <>
+                                                        <div className="mb-3">
+                                                            <label className="form-label">Status</label>
+                                                            <div className="input-group">
+                                                                <span className="input-group-text"><IoLayersOutline /></span>
+                                                                <select
+                                                                    className="form-select"
+                                                                    value={formData.status}
+                                                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                                                >
+                                                                    <option value="">Select Status</option>
+                                                                    {facility
+                                                                        .filter(item => item.prefix === "V" || item.prefix === "M")
+                                                                        .map(item => (
+                                                                            <option key={item.facilityStatusId} value={item.facilityStatusId}>
+                                                                                {item.facilityStatus}
+                                                                            </option>
+                                                                        ))
+                                                                    }
+                                                                </select>
+                                                            </div>
+
                                                         </div>
 
-                                                    </div>
+                                                        <div className="mb-3">
+                                                            <label className="form-label">Table Name</label>
+                                                            <div className="input-group">
+                                                                <span className="input-group-text"><MdOutlineTableRestaurant /></span>
+                                                                <input
+                                                                    type="text"
+                                                                    className={`form-control ${(formData.tableName && isDuplicateTableName) || errors.tableName ? "is-invalid" : ""
+                                                                        }`}
+                                                                    placeholder="Enter your Table Name Like t3 t4"
+                                                                    value={formData.tableName}
+                                                                    onChange={(e) => {
+                                                                        const input = e.target.value;
+                                                                        const formattedName = input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
 
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Table Name</label>
-                                                        <div className="input-group">
-                                                            <span className="input-group-text"><MdOutlineTableRestaurant /></span>
-                                                            <input
-                                                                type="text"
-                                                                className={`form-control ${(formData.tableName && isDuplicateTableName) || errors.tableName ? "is-invalid" : ""
-                                                                    }`}
-                                                                placeholder="Enter your Table Name Like t3 t4"
-                                                                value={formData.tableName}
-                                                                onChange={(e) => {
-                                                                    const input = e.target.value;
-                                                                    const formattedName = input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+                                                                        setFormData({ ...formData, tableName: formattedName })
+                                                                    }}
+                                                                />
+                                                                {errors.tableName && <div className="invalid-feedback">{errors.tableName}</div>}
+                                                                {formData.tableName && isDuplicateTableName && (
+                                                                    <div className="invalid-feedback">
+                                                                        Table name already exists.
+                                                                    </div>
+                                                                )}
+                                                            </div>
 
-                                                                    setFormData({ ...formData, tableName: formattedName })
-                                                                }}
-                                                            />
-                                                            {errors.tableName && <div className="invalid-feedback">{errors.tableName}</div>}
-                                                            {formData.tableName && isDuplicateTableName && (
-                                                                <div className="invalid-feedback">
-                                                                    Table name already exists.
-                                                                </div>
-                                                            )}
                                                         </div>
 
-                                                    </div>
-
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Pax</label>
-                                                        <div className="input-group">
-                                                            <span className="input-group-text"><FaChair /></span>
-                                                            <input
-                                                                type="number"
-                                                                className={`form-control ${errors.pax ? "is-invalid" : ""}`}
-                                                                placeholder="1234"
-                                                                value={formData.pax}
-                                                                onChange={(e) => setFormData({ ...formData, pax: e.target.value })}
-                                                            />
-                                                            {errors.pax && <div className="invalid-feedback">{errors.pax}</div>}
+                                                        <div className="mb-3">
+                                                            <label className="form-label">Pax</label>
+                                                            <div className="input-group">
+                                                                <span className="input-group-text"><FaChair /></span>
+                                                                <input
+                                                                    type="number"
+                                                                    className={`form-control ${errors.pax ? "is-invalid" : ""}`}
+                                                                    placeholder="1234"
+                                                                    value={formData.pax}
+                                                                    onChange={(e) => setFormData({ ...formData, pax: e.target.value })}
+                                                                />
+                                                                {errors.pax && <div className="invalid-feedback">{errors.pax}</div>}
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Order Taker</label>
-                                                        <div className="input-group">
-                                                            <span className="input-group-text"><FaUser /></span>
-                                                            <select
-                                                                className="form-select"
-                                                                value={formData.orderTaker}
-                                                                onChange={(e) => setFormData({ ...formData, orderTaker: e.target.value })}
-                                                            >
-                                                                <option value={userDetails.userID}>{userDetails.name}</option>
+                                                        <div className="mb-3">
+                                                            <label className="form-label">Order Taker</label>
+                                                            <div className="input-group">
+                                                                <span className="input-group-text"><FaUser /></span>
+                                                                <select
+                                                                    className="form-select"
+                                                                    value={formData.orderTaker}
+                                                                    onChange={(e) => setFormData({ ...formData, orderTaker: e.target.value })}
+                                                                >
+                                                                    <option value={userDetails.userID}>{userDetails.name}</option>
 
-                                                            </select>
+                                                                </select>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Section</label>
-                                                        <div className="input-group">
-                                                            <span className="input-group-text"><IoLayersOutline /></span>
-                                                            <select
-                                                                className="form-select"
-                                                                value={formData.section}
-                                                                onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                                                            >
-                                                                <option value="">Select Section
-                                                                </option>
-                                                                {section.map(section => (
-                                                                    <option key={section.sectionId} value={section.sectionId}>
-                                                                        {section.floorName}
+                                                        <div className="mb-3">
+                                                            <label className="form-label">Section</label>
+                                                            <div className="input-group">
+                                                                <span className="input-group-text"><IoLayersOutline /></span>
+                                                                <select
+                                                                    className="form-select"
+                                                                    value={formData.section}
+                                                                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                                                                >
+                                                                    <option value="">Select Section
                                                                     </option>
-                                                                ))}
-                                                            </select>
+                                                                    {section.map(section => (
+                                                                        <option key={section.sectionId} value={section.sectionId}>
+                                                                            {section.floorName}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Remarks</label>
-                                                        <div className="input-group">
-                                                            <span className="input-group-text"><FaComments /></span>
-                                                            <textarea
-                                                                className="form-control"
-                                                                rows="2"
-                                                                value={formData.remarks}
-                                                                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                                                            />
+                                                        <div className="mb-3">
+                                                            <label className="form-label">Remarks</label>
+                                                            <div className="input-group">
+                                                                <span className="input-group-text"><FaComments /></span>
+                                                                <textarea
+                                                                    className="form-control"
+                                                                    rows="2"
+                                                                    value={formData.remarks}
+                                                                    onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                                                                />
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <div className="d-flex justify-content-center gap-2">
+                                                        <div className="d-flex justify-content-center gap-2">
 
-                                                        <button
-                                                            className="btn btn-warning"
-                                                            onClick={() => {
-                                                                const newErrors = {};
-                                                                if (!formData.tableName.trim()) newErrors.tableName = "Table name is required.";
-                                                                if (!formData.pax || Number(formData.pax) <= 0) newErrors.pax = "Pax must be greater than 0.";
+                                                            <button
+                                                                className="btn btn-warning"
+                                                                onClick={() => {
+                                                                    const newErrors = {};
+                                                                    if (!formData.tableName.trim()) newErrors.tableName = "Table name is required.";
+                                                                    if (!formData.pax || Number(formData.pax) <= 0) newErrors.pax = "Pax must be greater than 0.";
 
-                                                                if (Object.keys(newErrors).length > 0) {
-                                                                    setErrors(newErrors);
-                                                                    return;
-                                                                }
+                                                                    if (Object.keys(newErrors).length > 0) {
+                                                                        setErrors(newErrors);
+                                                                        return;
+                                                                    }
 
-                                                                postOpenTable();
-                                                                setIsOpen(false);
-                                                                setShowAddTableModal(false);
-                                                                setFormData({ tableName: "", pax: "", orderTaker: "", remarks: "" });
-                                                                setErrors({});
-                                                            }}
+                                                                    postOpenTable();
+                                                                    setIsOpen(false);
+                                                                    setShowAddTableModal(false);
+                                                                    setFormData({ tableName: "", pax: "", orderTaker: "", remarks: "" });
+                                                                    setErrors({});
+                                                                }}
 
-                                                        >
-                                                            Submit
-                                                        </button>
-                                                    </div>
-                                                </>
-                                            )}
+                                                            >
+                                                                Submit
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
 
+
+                                    </div>
 
                                 </div>
 
@@ -735,107 +756,104 @@ const TableBook = () => {
                         </div>
 
                         <div className="rightMBtm">
-                            <div className="rightBtmTop shadow-sm">
-                                <div className=" d-flex justify-content-between gap-3 align-items-center">
-                                    <div className="d-flex align-items-center gap-1">
-                                        <div className="floorSearch">
-                                            <input
-                                                style={{ border: "none", outline: "none", marginRight: "1vw", padding: "0.3vw" }}
-                                                type="text"
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-                                                placeholder='Search...'
-                                            />
+                            <div className="rightBtmTop shadow-sm ">
+                                <div className=" d-flex justify-content-between gap-1 align-items-center flex-wrap">
+                                    <div className="d-flex align-items-center gap-2 ">
+
+                                        <div className="d-flex align-items-center gap-1">
+                                            <UniversalSearch value={searchTerm} onChange={setSearchTerm} placeholder='Search...' />
                                         </div>
-                                        <div className="TableSearch"><PiMicrophoneThin size={20} color="#ffc300" /></div>
-                                    </div>
-                                    <div>
-                                        <select
-                                            value={selectedSection}
-                                            onChange={(e) => setSelectedSection(e.target.value)}
-                                            className="border-0"
-                                        >
-                                            <option value="all">All Floors</option>
-                                            {section?.map(section => (
-                                                <option key={section.sectionId} value={section.floorName}>
-                                                    {section.floorName}
-                                                </option>
-                                            ))}
-                                        </select>
+
+                                        <div>
+                                            <select
+                                                value={selectedSection}
+                                                onChange={(e) => setSelectedSection(e.target.value)}
+                                                className="border-0"
+                                            >
+                                                <option value="all">All Floors</option>
+                                                {section?.map(section => (
+                                                    <option key={section.sectionId} value={section.floorName}>
+                                                        {section.floorName}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                        </div>
+
+                                        <div className="">
+                                            <select className="border-0" value={tableType}
+                                                onChange={(e) => setTableType(e.target.value)}>
+                                                <option value="all"> Select</option>
+                                                {
+                                                    select.map((selectItem) => {
+                                                        return <option key={selectItem.id} value={selectItem.value}>{selectItem.name}</option>
+                                                    })
+                                                }
+
+                                                {/* <option value="Vip Table"></option> */}
+                                            </select>
+                                        </div>
 
                                     </div>
-
-
-                                    <div className="">
-                                        <select className="border-0" value={tableType}
-                                            onChange={(e) => setTableType(e.target.value)}>
-                                            <option value="all"> Select</option>
-                                            {
-                                                select.map((selectItem) => {
-                                                    return <option key={selectItem.id} value={selectItem.value}>{selectItem.name}</option>
-                                                })
-                                            }
-
-                                            {/* <option value="Vip Table"></option> */}
-                                        </select>
-                                    </div>
-
-                                    <div className="d-flex overflow-auto gap-3 py-2 px-1">
-                                        {facility?.map((status) => {
-                                            const isSelected = selectedStatusId === status.facilityStatusId;
-                                            return (
-                                                <div
-                                                    key={status.facilityStatusId}
-                                                    className="d-flex gap-2 align-items-center text-center"
-                                                    style={{
-                                                        cursor: "pointer",
-                                                        minWidth: "50px",
-                                                        padding: "0.2rem 0.5rem",
-                                                        borderRadius: "1rem",
-                                                        backgroundColor: isSelected ? `${status.colour}20` : "transparent",
-                                                        transform: isSelected ? "scale(1.04)" : "scale(1)",
-                                                        boxShadow: isSelected
-                                                            ? "0 4px 12px rgba(0, 0, 0, 0.12)"
-                                                            : "none",
-                                                        transition: "all 0.25s ease-in-out",
-                                                    }}
-                                                    onClick={() => handleSelect(status.facilityStatusId)}
-                                                >
+                                    <div className="d-flex align-items-center gap-2 ">
+                                        <div className="facilityStatusWrapper d-flex   py-2 px-1">
+                                            {facility?.map((status) => {
+                                                const isSelected = selectedStatusId === status?.facilityStatusId;
+                                                return (
                                                     <div
+                                                        key={status?.facilityStatusId}
+                                                        className=" d-flex gap-2 align-items-center text-center"
                                                         style={{
-                                                            borderRadius: "100%",
-                                                            padding: "0.15rem 0.45rem",
-                                                            backgroundColor: status.colour,
-                                                            color: "#fff",
-                                                            fontWeight: "bold",
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            fontSize: "0.65rem",
-                                                            textTransform: "uppercase",
-                                                            transition: "all 0.25s ease",
+                                                            cursor: "pointer",
+                                                            minWidth: "50px",
+                                                            padding: "0.2rem 0.5rem",
+                                                            borderRadius: "1rem",
+                                                            backgroundColor: isSelected ? `${status?.colour}20` : "transparent",
+                                                            transform: isSelected ? "scale(1.04)" : "scale(1)",
+                                                            boxShadow: isSelected
+                                                                ? "0 4px 12px rgba(0, 0, 0, 0.12)"
+                                                                : "none",
+                                                            transition: "all 0.25s ease-in-out",
                                                         }}
+                                                        onClick={() => handleSelect(status?.facilityStatusId)}
                                                     >
-                                                        {status.facilityStatus.charAt(0)}
-                                                    </div>
-                                                    <div
-                                                        className="text-uppercase"
-                                                        style={{
-                                                            fontSize: "0.95rem",
-                                                            fontWeight: "bold",
-                                                            color: isSelected ? status.colour : "#000",
-                                                            transition: "color 0.25s ease",
-                                                        }}
-                                                    >
-                                                        {status.facilityStatus}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                                        <div
+                                                            style={{
+                                                                borderRadius: "100%",
+                                                                padding: "0.15rem 0.45rem",
+                                                                backgroundColor: status?.colour,
+                                                                color: "#fff",
+                                                                fontWeight: "bold",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                fontSize: "0.65rem",
+                                                                textTransform: "uppercase",
+                                                                transition: "all 0.25s ease",
+                                                            }}
+                                                        >
+                                                            {status?.facilityStatus.charAt(0)}
+                                                        </div>
+                                                        <div
+                                                            className="text-uppercase facility-text"
+                                                            style={{
+                                                                fontSize: "0.95rem",
+                                                                fontWeight: "bold",
+                                                                color: isSelected ? status?.colour : "#000",
+                                                                transition: "color 0.25s ease",
+                                                            }}
+                                                        >
+                                                            {status?.facilityStatus}
+                                                        </div>
 
-                                    <div className="tableHeaderButton" onClick={handleResetFilters}>
-                                        <RxReset size={14} /> Reset Filters
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="tableHeaderButton" onClick={handleResetFilters}>
+                                            <RxReset size={14} /> Reset Filters
+                                        </div>
                                     </div>
 
                                 </div>
@@ -867,24 +885,24 @@ const TableBook = () => {
                                     ) : (
                                         Object.entries(
                                             tableData
-                                                .filter((table) => {
+                                                ?.filter((table) => {
                                                     const sectionMatch =
                                                         selectedSection === "" ||
                                                         selectedSection === "all" ||
-                                                        table.sectionName.toLowerCase() === selectedSection.toLowerCase();
+                                                        table?.sectionName?.toLowerCase() === selectedSection?.toLowerCase();
 
                                                     const search = searchTerm.trim();
                                                     const searchMatch =
-                                                        table.tableName.toLowerCase().includes(search) ||
-                                                        table.direction.toLowerCase().includes(search) ||
-                                                        table.capacity.toString().includes(search);
+                                                        table?.tableName?.toLowerCase().includes(search) ||
+                                                        table?.direction?.toLowerCase().includes(search) ||
+                                                        table?.capacity?.toString().includes(search);
 
-                                                    const statusMatch = !selectedStatusId || table.facilityStatusId === selectedStatusId;
-                                                    const typeMatch = tableType === "" || tableType === "all" || table.type === tableType;
+                                                    const statusMatch = !selectedStatusId || table?.facilityStatusId === selectedStatusId;
+                                                    const typeMatch = tableType === "" || tableType === "all" || table?.type === tableType;
                                                     return sectionMatch && statusMatch && searchMatch && typeMatch;
                                                 })
                                                 .reduce((acc, table) => {
-                                                    const section = table.sectionName || "Unknown Section";
+                                                    const section = table?.sectionName || "Unknown Section";
                                                     if (!acc[section]) {
                                                         acc[section] = [];
                                                     }
@@ -898,16 +916,16 @@ const TableBook = () => {
                                                     style={{ borderBottom: '0.01rem solid rgb(217, 217, 217)' }}
                                                 >
                                                     <h5 className="fw-semibold text-dark mb-0">{sectionName}</h5>
-                                                    <span className="badge bg-secondary">{tables.length} Tables</span>
+                                                    <span className="badge bg-secondary">{tables?.length} Tables</span>
                                                 </div>
 
                                                 <div
                                                     className="d-flex flex-wrap mt-4"
                                                     style={{ gap: "2rem", alignItems: "flex-start", justifyContent: "flex-start" }}
                                                 >
-                                                    {tables.map((table) => (
+                                                    {tables?.map((table) => (
                                                         <Table1
-                                                            key={table.tableId}
+                                                            key={table?.tableId}
                                                             facility={facility}
                                                             table={table}
                                                             moveTable={moveTable}

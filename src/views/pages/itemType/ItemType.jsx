@@ -22,11 +22,9 @@ import { Spinner } from 'react-bootstrap';
 const ItemType = () => {
 
     const initialValues = {
-        itemCategoryId: "",
-        itemCategoryName: "",
-        itemSubGroupId: "",
-        itemCategoryCode: "",
-        isActive: false,
+        typeid: "",
+        ItemTypeName: "",
+        IsActive: true,
     };
 
     const initialImpValues = {
@@ -43,12 +41,9 @@ const ItemType = () => {
     const [itemTypesData, setItemTypesData] = useState([]);
     const [isEditMode, setIsEditMode] = useState(false);
     const [show, setShow] = useState(false);
-    const [subGroupData, setSubGroupData] = useState([]);
     const searchParam = [
-        "itemCategoryName",
-        "itemSubGroupName",
-        "itemCategoryCode",
-        "isActive"
+        "ItemTypeName",
+        "IsActive"
     ];
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [toDelete, setToDelete] = useState(null);
@@ -69,7 +64,6 @@ const ItemType = () => {
         setIsEditMode(false);
         setErrors({});
         setShow(true);
-        fetchSubGroupData();
         setLoading(false);
     };
 
@@ -82,23 +76,11 @@ const ItemType = () => {
     const fetchItemTypeData = async () => {
         setLoading(true);
         try {
-            const res = await api.get("/itemcategory");
+            const res = await api.get("/itemtype");
             setItemTypesData(res?.data?.list);
         } catch (error) {
             console.error("Error fetching table data", error);
             setLoadingIndicator(false);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchSubGroupData = async () => {
-        setLoading(true);
-        try {
-            const res = await api.get(`/itemsubgroups`);
-            setSubGroupData(res?.data?.list);
-        } catch (error) {
-            console.error("Error fetching subgroup data", error);
         } finally {
             setLoading(false);
         }
@@ -153,17 +135,15 @@ const ItemType = () => {
     const handleEditClick = (row) => {
         setIsEditMode(true);
         setFormValues({
-            itemCategoryId: row.itemCategoryId,
-            itemCategoryName: row.itemCategoryName,
-            itemSubGroupId: row.itemSubGroupId,
-            itemCategoryCode: row.itemCategoryCode,
-            isActive: row.isActive,
+            typeid: row.typeid,
+            ItemTypeName: row.ItemTypeName,
+            IsActive: row.IsActive,
         });
         setShow(true);
     };
 
-    const handleDeleteClick = (itemCategoryId, itemCategoryName) => {
-        setToDelete({ id: itemCategoryId, name: itemCategoryName });
+    const handleDeleteClick = (typeid, ItemTypeName) => {
+        setToDelete({ id: typeid, name: ItemTypeName });
         setConfirmOpen(true);
     };
 
@@ -173,12 +153,12 @@ const ItemType = () => {
         setLoading(true);
         api.delete(`/itemtypes/${toDelete.id}`)
             .then((res) => {
-                toast.success(res.data.successMessage || "Category deleted successfully!");
+                toast.success(res.data.successMessage || "Item type deleted successfully!");
                 fetchItemTypeData();
             })
             .catch((error) => {
-                console.error("Error deleting category:", error);
-                toast.error("Failed to delete category.");
+                console.error("Error deleting item type:", error);
+                toast.error("Failed to delete item type.");
             })
             .finally(() => {
                 setLoading(false);
@@ -194,18 +174,8 @@ const ItemType = () => {
 
     const columns = [
         {
-            name: <h5>Category Name</h5>,
-            selector: (row) => row.itemCategoryName,
-            sortable: true,
-        },
-        {
-            name: <h5>Sub Group Name</h5>,
-            selector: (row) => row.itemSubGroupName,
-            sortable: true,
-        },
-        {
-            name: <h5>Category Code</h5>,
-            selector: (row) => row.itemCategoryCode,
+            name: <h5>Item type name</h5>,
+            selector: (row) => row.ItemTypeName,
             sortable: true,
         },
         {
@@ -227,10 +197,10 @@ const ItemType = () => {
             center: true,
             cell: (row) => (
                 <>
-                    <Link className="action-icon" onClick={() => handleEditClick(row)} >
+                    <Link className="action-icon" onClick={() => handleEditClick(row)} title='Edit'>
                         <FaRegEdit size={24} color="#87CEEB" />
                     </Link>
-                    <Link className="action-icon" onClick={() => handleDeleteClick(row.itemCategoryId, row.itemCategoryName)}>
+                    <Link className="action-icon" onClick={() => handleDeleteClick(row.typeid, row.ItemTypeName)} title='Delete'>
                         <MdDeleteForever size={30} style={{ margin: "1vh" }} color="#FF474C" />
                     </Link>
                 </>
@@ -263,27 +233,17 @@ const ItemType = () => {
 
     const validateForm = () => {
         const {
-            itemCategoryName,
-            itemSubGroupId,
-            itemCategoryCode,
+            ItemTypeName,
         } = formValues;
         const errors = {};
         let isValid = true;
 
-        if (!itemCategoryName) {
+        if (!ItemTypeName) {
             isValid = false;
-            errors.itemCategoryName = "Category name is required.";
-        } else if (!/^[a-zA-Z ]+$/.test(itemCategoryName)) {
-            errors.itemCategoryName = 'Name must contain only letters';
+            errors.ItemTypeName = "Item type name is required.";
+        } else if (!/^[a-zA-Z ]+$/.test(ItemTypeName)) {
+            errors.ItemTypeName = 'Name must contain only letters';
             isValid = false;
-        }
-        if (!itemSubGroupId) {
-            isValid = false;
-            errors.itemSubGroupId = "Sub group name is required";
-        }
-        if (!itemCategoryCode) {
-            isValid = false;
-            errors.itemCategoryCode = "Category code is required";
         }
 
         setErrors(errors);
@@ -318,18 +278,16 @@ const ItemType = () => {
         }
 
         const payload = {
-            itemCategoryName: formValues.itemCategoryName,
-            itemSubGroupId: formValues.itemSubGroupId,
-            itemCategoryCode: formValues.itemCategoryCode,
-            isActive: formValues.isActive,
+            ItemTypeName: formValues.ItemTypeName,
+            IsActive: formValues.IsActive,
         };
         setLoading(true);
         try {
             let res;
-            if (formValues.itemCategoryId) {
-                res = await api.put(`/itemcategory/${formValues.itemCategoryId}`, payload);
+            if (isEditMode) {
+                res = await api.put(`/itemtype/${formValues.typeid}`, payload);
             } else {
-                res = await api.post("/itemcategory", payload);
+                res = await api.post("/itemtype", payload);
             }
             setFormValues(initialValues);
             setIsEditMode(false);
@@ -481,61 +439,28 @@ const ItemType = () => {
                 <Offcanvas.Header closeButton>
                     <div className="w-100 text-center">
                         <Offcanvas.Title style={{ fontSize: "30px", fontWeight: 600 }}>
-                            {isEditMode ? "Edit Item Category" : "Add Item Category"}
+                            {isEditMode ? "Edit Item Type" : "Add Item Type"}
                         </Offcanvas.Title>
                     </div>
                 </Offcanvas.Header>
                 <Offcanvas.Body style={{ marginTop: "-2vh" }}>
                     <Form className='h-100' onSubmit={handleSubmit}>
                         <InputGroup className="mb-4">
-                            <InputGroup.Text id="itemCategoryName">
+                            <InputGroup.Text id="ItemTypeName">
                                 <VscTypeHierarchySub size={25} color='#ffc800' />
                             </InputGroup.Text>
                             <Form.Control
-                                name="itemCategoryName"
-                                value={formValues.itemCategoryName || ""}
+                                name="ItemTypeName"
+                                value={formValues.ItemTypeName || ""}
                                 onChange={(e) =>
-                                    handleChange("itemCategoryName", e.target.value.replace(/[^a-zA-Z ]/g, ""))
+                                    handleChange("ItemTypeName", e.target.value.replace(/[^a-zA-Z ]/g, ""))
                                 }
-                                placeholder="Category name"
-                                aria-label="itemCategoryName"
-                                isInvalid={!!errors.itemCategoryName}
-                                isValid={formValues.itemCategoryName && !errors.itemCategoryName}
+                                placeholder="Item type name"
+                                aria-label="ItemTypeName"
+                                isInvalid={!!errors.ItemTypeName}
+                                isValid={formValues.ItemTypeName && !errors.ItemTypeName}
                             />
-                            {errors.itemCategoryName && <span className="error-msg">{errors.itemCategoryName}</span>}
-                        </InputGroup>
-                        <InputGroup className="mb-4">
-                            <InputGroup.Text id="itemCategoryCode">
-                                <FaCode size={25} color='#ffc800' />
-                            </InputGroup.Text>
-                            <Form.Control
-                                name="itemCategoryCode"
-                                value={formValues.itemCategoryCode || ""}
-                                onChange={(e) => handleChange("itemCategoryCode", e.target.value)}
-                                placeholder="Category code"
-                                aria-label="itemCategoryCode"
-                                isInvalid={!!errors.itemCategoryCode}
-                                isValid={formValues.itemCategoryCode && !errors.itemCategoryCode}
-                            />
-                            {errors.itemCategoryCode && <span className="error-msg">{errors.itemCategoryCode}</span>}
-                        </InputGroup>
-                        <InputGroup className="mb-4">
-                            <InputGroup.Text id="itemSubGroupId">
-                                <HiOutlineRectangleGroup size={25} color='#ffc800' />
-                            </InputGroup.Text>
-                            <Form.Select
-                                name="itemSubGroupId"
-                                value={formValues.itemSubGroupId || ""}
-                                onChange={(e) => handleChange("itemSubGroupId", e.target.value)}
-                            >
-                                <option>Select sub group</option>
-                                {subGroupData?.map((item) => (
-                                    <option key={item.itemSubGroupId} value={item.itemSubGroupId}>
-                                        {item.itemSubGroupName}
-                                    </option>
-                                ))}
-                            </Form.Select>
-                            {errors.itemSubGroupId && <span className="error-msg">{errors.itemSubGroupId}</span>}
+                            {errors.ItemTypeName && <span className="error-msg">{errors.ItemTypeName}</span>}
                         </InputGroup>
                         <InputGroup className="mb-3">
                             <InputGroup.Text id="IsActive">
@@ -557,8 +482,8 @@ const ItemType = () => {
                             >
                                 <Form.Check.Input
                                     type="checkbox"
-                                    checked={formValues.isActive}
-                                    onChange={(e) => handleChange("isActive", e.target.checked)}
+                                    checked={formValues.IsActive}
+                                    onChange={(e) => handleChange("IsActive", e.target.checked)}
                                     style={{
                                         width: "20px",
                                         height: "20px",

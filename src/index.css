@@ -3701,6 +3701,11 @@ tbody.custom-bg-color {
   }
 }
 
+.chair.marked {
+  background-color: yellow; /* or any visual indicator */
+  border: 2px solid #000;
+}
+
 .chair-wrapper {
   position: absolute;
 }

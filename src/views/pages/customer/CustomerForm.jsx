@@ -1,263 +1,125 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Form, Button, Row, Col } from "react-bootstrap";
-import { toast, ToastContainer } from 'react-toastify';
-//import api from '../../config/AxiosInterceptor';
-import Select from "react-select";
-import { MdOutlineGroupAdd } from "react-icons/md";
-import { FaObjectUngroup } from "react-icons/fa6";
-import { CiPhone } from "react-icons/ci";
-import { MdOutlineMail } from "react-icons/md";
-import { CiMobile3 } from "react-icons/ci";
-import { BsGenderAmbiguous } from "react-icons/bs";
-import { BsPersonVcard } from "react-icons/bs";
-import { BsPersonGear } from "react-icons/bs";
-import { MdOutlineBloodtype } from "react-icons/md";
-import { HiOutlineCalendarDateRange } from "react-icons/hi2";
-import { TbCalendarTime } from "react-icons/tb";
-import { HiOutlineLanguage } from "react-icons/hi2";
-import { CiPassport1 } from "react-icons/ci";
-import { MdOutlineAccountBalanceWallet } from "react-icons/md";
-import { CiDiscount1 } from "react-icons/ci";
-import { TiGroupOutline } from "react-icons/ti";
-import { BsPersonCheck } from "react-icons/bs";
-import { VscPersonAdd } from "react-icons/vsc";
-import { RiOpenSourceLine } from "react-icons/ri";
+import React, { useEffect, useRef } from "react";
 
 const CustomerForm = () => {
 
-    const items = [
-        { label: "PRIMARY", style: { top: '10%', left: '30%' } },
-        { label: "FAMILY", style: { top: '30%', left: '15%' } },
-        { label: "ADDRESS", style: { top: '60%', left: '28%' } },
-        { label: "DOCS", style: { top: '72%', left: '45%' } },
-        { label: "OTHERS", style: { top: '60%', right: '28%' } },
-        { label: "MEMBERS", style: { top: '30%', right: '15%' } },
-        { label: "BUSINESS", style: { top: '10%', right: '30%' } },
-    ];
+const svgRef = useRef(null);
 
-    const containerStyle = {
-        position: 'relative',
-        width: '100%',
-        height: '100vh',
-        backgroundColor: '#fff',
-        fontFamily: 'Arial, sans-serif',
-        overflow: 'hidden',
-    };
+  const users = [
+    { id: "center", top: "50%", left: "50%", bg: "yellow" },
+    { id: "topLeft", top: "10%", left: "15%", bg: "aquamarine" },
+    { id: "bottomLeft", bottom: "10%", left: "15%", bg: "yellow" },
+    { id: "topRight", top: "10%", right: "15%", bg: "aquamarine" },
+    { id: "bottomRight", bottom: "10%", right: "15%", bg: "yellow" },
+  ];
 
-    const nodeStyle = {
-        position: 'absolute',
-        textAlign: 'center',
-    };
+  const drawLines = () => {
+    const svg = svgRef.current;
+    const center = document.getElementById("center");
+    const centerRect = center.getBoundingClientRect();
+    const centerX = centerRect.left + centerRect.width / 2;
+    const centerY = centerRect.top + centerRect.height / 2;
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
 
-    const circleStyle = {
-        width: '90px',
-        height: '90px',
-        borderRadius: '50%',
-        backgroundColor: '#f5c518',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '2px solid #000',
-        fontWeight: 'bold',
-        color: '#000',
-    };
+    svg.innerHTML = "";
 
-    const centerNodeStyle = {
-        position: 'absolute',
-        top: '40%',
-        left: '40%',
-        transform: 'translate(-50%, -50%)',
-    };
+    users.forEach((user) => {
+      if (user.id === "center") return;
+      const el = document.getElementById(user.id);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
 
-    const centerCircleStyle = {
-        width: '120px',
-        height: '120px',
-        borderRadius: '50%',
-        backgroundColor: '#eee',
-        border: '3px solid #000',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 'bold',
-        textAlign: 'center',
-        padding: '10px',
-    };
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", centerX + scrollX);
+        line.setAttribute("y1", centerY + scrollY);
+        line.setAttribute("x2", x + scrollX);
+        line.setAttribute("y2", y + scrollY);
+        line.setAttribute("stroke", "black");
+        line.setAttribute("stroke-dasharray", "5,5");
+        line.setAttribute("stroke-width", "2");
+        svg.appendChild(line);
+      }
+    });
+  };
 
-    const startButtonStyle = {
-        position: 'absolute',
-        bottom: '5%',
-        left: '45%',
-        fontSize: '1.5rem',
-        fontWeight: 'bold',
-        color: '#000',
-        cursor: 'pointer',
-    };
+  useEffect(() => {
+    drawLines();
+    window.addEventListener("resize", drawLines);
+    return () => window.removeEventListener("resize", drawLines);
+  }, []);
 
+  const containerStyle = {
+    position: "relative",
+    width: "100%",
+    height: "100vh",
+    backgroundColor: "#f5f5f5",
+  };
 
-    const navigate = useNavigate();
-    const fetchCalled = useRef(false);
+  const childStyleBase = {
+    position: "absolute",
+    width: "100px",
+    height: "140px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    clipPath: "url(#mangoShape)",
+    WebkitClipPath: "url(#mangoShape)",
+    border: "1px solid #ccc",
+    zIndex: 1,
+  };
 
-    const initialValues = {
-        customerTypeId: "",
-        firstName: "",
-        lastName: "",
-        designation: "",
-        occupation: "",
-        gender: "",
-        religion: "",
-        bloodGroup: "",
-        dateOfBirth: "",
-        dateOfAdmission: "",
-        phone: "",
-        emailAddress: "",
-        mobile: "",
-        citizenshipStatus: "",
-        motherTongue: "",
-        passportNumber: "",
-        mailingAddress: "",
-        billingAddress: "",
-        accountCode: "",
-        discountAllowed: "",
-        status: "",
-        approvedBy: "",
-        authorisedBy: "",
-        pan: "",
-        customerSource: "",
-    };
-
-    const [formValues, setFormValues] = useState(initialValues);
-    const [errors, setErrors] = useState({});
-    const [focus, setFocus] = useState(false);
-
-    const genderOption = [
-        { label: "Male", value: "M" },
-        { label: "Female", value: "F" },
-        { label: "Other", value: "O" }
-    ]
-
-    const handleChange = (name, value) => {
-        setFormValues((prevValues) => ({
-            ...prevValues,
-            [name]: value,
-        }));
-        setErrors((prevErrors) => ({
-            ...prevErrors,
-            [name]: "",
-        }));
-    };
-
-    const validateForm = () => {
-        const {
-            firstName,
-            lastName,
-            gender,
-        } = formValues;
-        const errors = {};
-        let isValid = true;
-
-        if (!firstName) {
-            isValid = false;
-            errors.firstName = "First name is required.";
-        }
-        if (!lastName) {
-            isValid = false;
-            errors.lastName = "Last name is required";
-        }
-        if (!gender) {
-            isValid = false;
-            errors.gender = "Gender is required";
-        }
-
-        setErrors(errors);
-        return isValid;
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
-
-        const payload = {
-            firstName: formValues.firstName,
-            lastName: formValues.lastName,
-            designation: formValues.designation,
-            occupation: formValues.occupation,
-            gender: formValues.gender,
-            religion: formValues.religion,
-            bloodGroup: formValues.bloodGroup,
-            dateOfBirth: formValues.dateOfBirth,
-            dateOfAdmission: formValues.dateOfAdmission,
-            phone: formValues.phone,
-            emailAddress: formValues.emailAddress,
-            mobile: formValues.mobile,
-            citizenshipStatus: formValues.citizenshipStatus,
-            motherTongue: formValues.motherTongue,
-            passportNumber: formValues.passportNumber,
-            mailingAddress: formValues.mailingAddress,
-            accountCode: formValues.accountCode,
-            discountAllowed: formValues.discountAllowed,
-            status: formValues.status,
-            approvedBy: formValues.approvedBy,
-            authorisedBy: formValues.authorisedBy,
-            pan: formValues.pan,
-            customerSource: formValues.customerSource,
-            isActive: true
-        };
-
-        try {
-            let res;
-            if (formValues.customerID) {
-                res = await api.put(`/customers/${formValues.customerID}`, payload);
-            } else {
-                res = await api.post("/customers", payload);
-            }
-
-            setFormValues(initialValues);
-            toast.success(res.data.successMessage || "Success!", {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
-
-            setTimeout(() => {
-                navigate("/customers");
-            }, 3000);
-        } catch (error) {
-            console.error("API Error:", error);
-            toast.error("Something went wrong! Please try again.", {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
-        }
-    };
+  const imgStyle = {
+    width: "60%",
+    height: "60%",
+    objectFit: "cover",
+    borderRadius: "50%",
+  };
 
     return (
 
         <>
             <div style={containerStyle}>
-                {items.map((item, index) => (
-                    <div key={index} style={{ ...nodeStyle, ...item.style }}>
-                        <div style={circleStyle}>{item.label}</div>
+                <svg
+                    ref={svgRef}
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        zIndex: 0,
+                    }}
+                ></svg>
+
+                {/* SVG mango shape clipPath */}
+                <svg style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}>
+                    <defs>
+                        <clipPath id="mangoShape" clipPathUnits="objectBoundingBox">
+                            <path d="M0.5,0.05 C0.8,0.1 0.95,0.4 0.9,0.7 C0.85,0.9 0.65,1.05 0.45,0.95 C0.25,0.85 0.05,0.55 0.1,0.25 C0.15,0.1 0.3,0 0.5,0.05 Z" />
+                        </clipPath>
+                    </defs>
+                </svg>
+
+                {/* Users */}
+                {users.map((user, idx) => (
+                    <div
+                        key={user.id}
+                        id={user.id}
+                        style={{
+                            ...childStyleBase,
+                            backgroundColor: user.bg,
+                            ...(user.top && { top: user.top }),
+                            ...(user.bottom && { bottom: user.bottom }),
+                            ...(user.left && { left: user.left }),
+                            ...(user.right && { right: user.right }),
+                            ...(user.id === "center" ? { transform: "translate(-50%, -50%)" } : {}),
+                        }}
+                    >
+                        <img src="user.png" alt={`User ${idx}`} style={imgStyle} />
                     </div>
                 ))}
-
-                <div style={centerNodeStyle}>
-                    <div style={centerCircleStyle}>SOUMITRA DAS</div>
-                </div>
-
-                <div style={startButtonStyle}>GET STARTED &gt;</div>
             </div>
         </>
     )

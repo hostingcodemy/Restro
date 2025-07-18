@@ -9,7 +9,8 @@ import {
   FaRegFile,
   FaTrash,
   FaTimesCircle,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaMicrophone,
 }
   from "react-icons/fa";
 import { MdOutlinePersonOutline } from "react-icons/md";
@@ -28,7 +29,7 @@ const Group = () => {
     itemGroupId: "",
     itemGroupName: "",
     itemGroupCode: "",
-    isActive: false,
+    isActive: true,
   };
 
   const initialImpValues = {
@@ -274,7 +275,7 @@ const Group = () => {
 
   const subHeaderComponentMemo = useMemo(() => (
     <div className="d-flex justify-content-end gap-2 align-items-center w-100">
-      <Form className="d-flex">
+      <div className="position-relative ">
         <Form.Control
           type="search"
           placeholder="Search..."
@@ -282,7 +283,18 @@ const Group = () => {
           aria-label="Search"
           onChange={(e) => setFilterText(e.target.value)}
         />
-      </Form>
+        <FaMicrophone
+          size={20}
+          color="#ffc800"
+          style={{
+            position: "absolute",
+            right: "15px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer"
+          }}
+        />
+      </div>
       <Button variant="info" onClick={handleExpoShow}>
         <CiExport size={20} /> Import
       </Button>
@@ -440,7 +452,7 @@ const Group = () => {
           <Form className='h-90' onSubmit={handleSubmit}>
             <InputGroup className="mb-4">
               <InputGroup.Text>
-                <MdOutlinePersonOutline size={25} color='#ffc800' />
+                <MdOutlinePersonOutline size={25} color='#ffc800' title='Group Name'/>
               </InputGroup.Text>
               <Form.Control
                 name="itemGroupName"
@@ -449,13 +461,13 @@ const Group = () => {
                 placeholder="Group name"
                 isInvalid={!!errors.itemGroupName}
                 isValid={formValues.itemGroupName && !errors.itemGroupName}
+                autoComplete='off'
               />
               {errors.itemGroupName && <span className="error-msg">{errors.itemGroupName}</span>}
             </InputGroup>
-
             <InputGroup className="mb-3">
               <InputGroup.Text>
-                <FaCodeBranch size={25} color="#ffc800" />
+                <FaCodeBranch size={25} color="#ffc800" title='Group Code'/>
               </InputGroup.Text>
               <Form.Select
                 name="itemGroupCode"
@@ -479,7 +491,6 @@ const Group = () => {
               </Form.Select>
               {errors.itemGroupCode && <span className="error-msg">{errors.itemGroupCode}</span>}
             </InputGroup>
-
             <InputGroup className="mb-3">
               <InputGroup.Text>
                 <TbHandClick size={25} color="#ffc800" />

@@ -10,6 +10,7 @@ import {
 } from '@coreui/react';
 import { AppSidebarNav } from './AppSidebarNav';
 import { useLocation } from 'react-router-dom';
+import { decryptData, encryptData } from '../config/secureStorage';
 
 const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
   const location = useLocation();
@@ -18,7 +19,8 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
   const [selectedOutlet, setSelectedOutlet] = useState(null);
 
   useEffect(() => {
-    const authChannels = JSON.parse(localStorage.getItem('authChannels'));
+    const encryptedChannels = localStorage.getItem('authChannels');
+    const authChannels = decryptData(encryptedChannels);
 
     if (authChannels && Array.isArray(authChannels) && authChannels.length > 0) {
       setAuthChannelsData(authChannels);
@@ -32,8 +34,10 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
           initialChannel = foundChannel;
         }
       }
+
       setSelectedChannel(initialChannel);
-      localStorage.setItem('channelId', initialChannel.channelId);
+      localStorage.setItem('channelId', encryptData(initialChannel.channelId));
+
       if (initialChannel.channelOutlets && initialChannel.channelOutlets.length > 0) {
         const storedOutletId = localStorage.getItem('currentOutletId');
         let initialOutlet = initialChannel.channelOutlets[0];
@@ -44,8 +48,9 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
             initialOutlet = foundOutlet;
           }
         }
+
         setSelectedOutlet(initialOutlet);
-        localStorage.setItem('currentOutletId', initialOutlet.outletID);
+        localStorage.setItem('currentOutletId', encryptData(initialOutlet.outletID));
       } else {
         setSelectedOutlet(null);
         localStorage.removeItem('currentOutletId');
@@ -54,7 +59,7 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
   }, []);
 
   useEffect(() => {
-    const hiddenPaths = ['/table-management', '/order-management'];
+    const hiddenPaths = ['/table-management', '/order-management','/table-reservation'];
     if (hiddenPaths.includes(location.pathname)) {
       setSidebarShow(false);
     }
@@ -76,8 +81,12 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
 
   const handleOutletChange = useCallback((outlet) => {
     setSelectedOutlet(outlet);
-    localStorage.setItem('currentOutletId', outlet.outletID);
+
+    const encryptedOutletId = encryptData(outlet.outletID);
+    localStorage.setItem('currentOutletId', encryptedOutletId);
+    window.dispatchEvent(new Event('outlet-changed'));
   }, []);
+
 
   return (
     <CSidebar
@@ -145,8 +154,13 @@ const AppSidebar = ({ sidebarShow, setSidebarShow }) => {
         modules={selectedChannel?.subscriptionModules || []}
         selectedOutlet={selectedOutlet}
       />
+
     </CSidebar>
   );
 };
 
 export default React.memo(AppSidebar);
+
+
+
+
